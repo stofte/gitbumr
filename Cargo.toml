@@ -1,0 +1,7 @@
+[package]
+name = "gitbum"
+version = "0.1.0"
+authors = ["Svend Tofte <stofte@gmail.com>"]
+
+[dependencies]
+git2 = "0.7.5"
