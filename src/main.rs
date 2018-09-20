@@ -7,9 +7,8 @@ use std::io::{Write, Stdin, Stdout};
 
 fn main_loop(stdin: Stdin, stdout: &mut RawTerminal<Stdout>) {
     for c in stdin.events() {
-        let evt = c.unwrap();
-        match evt {
-            Event::Key(Key::Char('q')) => {
+        match c.unwrap() {
+            Event::Key(Key::Ctrl('q')) => {
                 write!(stdout, "{}", termion::clear::All);
                 break;
             },
@@ -22,13 +21,8 @@ fn main_loop(stdin: Stdin, stdout: &mut RawTerminal<Stdout>) {
 fn main() {
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout().into_raw_mode().unwrap();
-
-    write!(stdout,
-           "{}{}q to exit{}",
-           termion::clear::All,
-           termion::cursor::Goto(1, 1),
-           termion::cursor::Hide)
-            .unwrap();
+    write!(stdout, "{}", termion::clear::All);
+    write!(stdout, "q to exit");
     stdout.flush().unwrap();
     main_loop(stdin, &mut stdout);
 }
