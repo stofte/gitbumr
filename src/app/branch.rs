@@ -1,10 +1,11 @@
-use termion::{style, cursor};
+use termion::{style, cursor, color};
 use app::state::UiState;
 use app::git::local_branches;
+use app::draw::header;
 
 pub fn view(state: &mut UiState) {
-    println!("Branches {} ({:?})", state.repository, state.git_repo.state());
-    println!("{}", cursor::Goto(1,1));
+    header(state.repository, &format!("{:?}", state.git_repo.state()), state.width, state.height);
+    println!("{}", cursor::Goto(1, 1));
     for b in local_branches(&state.git_repo) {
         if b.checkedout == true {
             println!("{}{}{}{}{}", cursor::Save, style::Bold, b.name, style::Reset, cursor::Restore);

@@ -19,7 +19,8 @@ fn main() {
         Err(e) => panic!("failed to open: {}", e),
     };
     
-    let mut ui_state = app::state::UiState { repository: repo_path, git_repo: &repo };
+    let size = termion::terminal_size().unwrap();
+    let mut ui_state = app::state::UiState { repository: repo_path, git_repo: &repo, width: size.0, height: size.1 };
 
     write!(stdout,
            "{}{}q to exit{}",
@@ -29,6 +30,7 @@ fn main() {
             .unwrap();
     stdout.flush().unwrap();
 
+    println!("size: {}x{}", size.0, size.1);
     for c in stdin.keys() {
         write!(stdout,
                "{}{}",
