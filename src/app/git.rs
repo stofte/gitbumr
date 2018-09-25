@@ -19,8 +19,8 @@ pub fn local_branches(git_repo: &Repository) -> Vec<Branch> {
         }
         vec.push(Branch{ name: name, checkedout: chkout });
     }
+    vec.sort_by(|a, b| a.name.cmp(&b.name));
     vec
-
 }
 
 fn get_head(git_repo: &Repository) -> String {
