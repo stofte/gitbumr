@@ -3,12 +3,14 @@ extern crate git2;
 extern crate rusqlite;
 mod app;
 
-use app::branch;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::{Write, stdout, stdin};
 use git2::Repository;
+use app::branch;
+use app::draw::reset_screen;
+use app::db::read_rows;
 
 fn main() {
     let stdin = stdin();
@@ -23,22 +25,17 @@ fn main() {
     let size = termion::terminal_size().unwrap();
     let mut ui_state = app::state::UiState { repository: repo_path, git_repo: &repo, width: size.0, height: size.1 };
 
-    write!(stdout,
-           "{}{}q to exit{}",
-           termion::clear::All,
+    let conn = rusqlite::Connection::open_in_memory().unwrap();
+    
+    write!(stdout, "{}{}{}", termion::clear::All,
            termion::cursor::Goto(1, 1),
            termion::cursor::Hide)
             .unwrap();
     stdout.flush().unwrap();
+    read_rows(&conn);
 
-    println!("size: {}x{}", size.0, size.1);
     for c in stdin.keys() {
-        write!(stdout,
-               "{}{}{}",
-               termion::cursor::Goto(1, 1),
-               termion::clear::CurrentLine,
-               termion::cursor::Hide)
-                .unwrap();
+        reset_screen(&mut stdout);
 
         match c.unwrap() {
             Key::Char('q') => break,
