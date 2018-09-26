@@ -42,7 +42,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gitbum"
+name = "gitbumr"
 version = "0.1.0"
 dependencies = [
  "git2 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
