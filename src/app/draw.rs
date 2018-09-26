@@ -30,7 +30,7 @@ pub fn header(area_title: &str, area_state: &str, width: u16, height: u16) {
 pub fn reset_screen(stdout: &mut Stdout) {
     write!(stdout, "{}{}{}",
         cursor::Goto(1, 1),
-        clear::CurrentLine,
+        clear::All,
         cursor::Hide
     );
     stdout.flush().unwrap();
