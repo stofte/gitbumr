@@ -1,5 +1,6 @@
 extern crate termion;
 extern crate git2;
+extern crate rusqlite;
 mod app;
 
 use app::branch;
@@ -33,9 +34,10 @@ fn main() {
     println!("size: {}x{}", size.0, size.1);
     for c in stdin.keys() {
         write!(stdout,
-               "{}{}",
+               "{}{}{}",
                termion::cursor::Goto(1, 1),
-               termion::clear::CurrentLine)
+               termion::clear::CurrentLine,
+               termion::cursor::Hide)
                 .unwrap();
 
         match c.unwrap() {
