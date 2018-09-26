@@ -1,4 +1,4 @@
-use termion::{style, cursor, color};
+use termion::{style, cursor};
 use app::state::UiState;
 use app::git::local_branches;
 use app::draw::header;
