@@ -35,7 +35,3 @@ pub fn reset_screen(stdout: &mut Stdout) {
     );
     stdout.flush().unwrap();
 }
-
-pub fn main_overview() {
-
-}

@@ -10,7 +10,7 @@ use std::io::{Write, stdout, stdin};
 use git2::Repository;
 use app::branch;
 use app::draw::reset_screen;
-use app::db::read_saved_repos;
+use app::db::{Database, get_repositories, add_repository};
 
 fn main() {
     let stdin = stdin();
@@ -25,10 +25,11 @@ fn main() {
     let size = termion::terminal_size().unwrap();
     let mut ui_state = app::state::UiState { repository: repo_path, git_repo: &repo, width: size.0, height: size.1 };
 
-    let conn = rusqlite::Connection::open_in_memory().unwrap();
+    let sqlite_conn = rusqlite::Connection::open_in_memory().unwrap();
+    let db = Database { conn: &sqlite_conn };
     
     reset_screen(&mut stdout);
-    read_saved_repos(&conn);
+    get_repositories(&db);
 
     for c in stdin.keys() {
         reset_screen(&mut stdout);
