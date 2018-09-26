@@ -27,16 +27,11 @@ fn main() {
 
     let conn = rusqlite::Connection::open_in_memory().unwrap();
     
-    write!(stdout, "{}{}{}", termion::clear::All,
-           termion::cursor::Goto(1, 1),
-           termion::cursor::Hide)
-            .unwrap();
-    stdout.flush().unwrap();
+    reset_screen(&mut stdout);
     read_rows(&conn);
 
     for c in stdin.keys() {
         reset_screen(&mut stdout);
-
         match c.unwrap() {
             Key::Char('q') => break,
             Key::Char('b') => branch::view(&mut ui_state),

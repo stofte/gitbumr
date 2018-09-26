@@ -33,6 +33,7 @@ pub fn reset_screen(stdout: &mut Stdout) {
         clear::CurrentLine,
         cursor::Hide
     );
+    stdout.flush().unwrap();
 }
 
 pub fn main_overview() {
