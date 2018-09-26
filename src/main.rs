@@ -10,7 +10,7 @@ use std::io::{Write, stdout, stdin};
 use git2::Repository;
 use app::branch;
 use app::draw::reset_screen;
-use app::db::read_rows;
+use app::db::read_saved_repos;
 
 fn main() {
     let stdin = stdin();
@@ -28,7 +28,7 @@ fn main() {
     let conn = rusqlite::Connection::open_in_memory().unwrap();
     
     reset_screen(&mut stdout);
-    read_rows(&conn);
+    read_saved_repos(&conn);
 
     for c in stdin.keys() {
         reset_screen(&mut stdout);
