@@ -69,40 +69,32 @@ fn main() {
     loop  {
         select! {
             recv(keys_r, key) => {
-                match key {
-                    Some(c) => {
-                        let mut ud = UpdateData {
-                            console_width: None,
-                            console_height: None,
-                            key_value: None,
-                            git_repo: Some(&repo)
-                        };
-                        match c {
-                            Key::Ctrl('c') => break,
-                            Key::Char(c) => ud.key_value = Some(c),
-                            _ => ()
-                        }
-                        update(&mut app, &ud);
-                        render(&app, &mut stdout);
-                    },
+                let c = key.unwrap();
+                let mut ud = UpdateData {
+                    console_width: None,
+                    console_height: None,
+                    key_value: None,
+                    git_repo: Some(&repo)
+                };
+                match c {
+                    Key::Ctrl('c') => break,
+                    Key::Char(c) => ud.key_value = Some(c),
                     _ => ()
                 }
+                update(&mut app, &ud);
+                render(&app, &mut stdout);
             },
             recv(size_r, size) => {
-                match size {
-                    Some((size_width, size_height)) => {
-                        console::reset();
-                        let ud = UpdateData {
-                            console_width: Some(size_width),
-                            console_height: Some(size_height),
-                            key_value: None,
-                            git_repo: None
-                        };
-                        update(&mut app, &ud);
-                        render(&app, &mut stdout);
-                    },
-                    _ => ()
-                }
+                let (size_width, size_height) = size.unwrap();
+                console::reset();
+                let ud = UpdateData {
+                    console_width: Some(size_width),
+                    console_height: Some(size_height),
+                    key_value: None,
+                    git_repo: None
+                };
+                update(&mut app, &ud);
+                render(&app, &mut stdout);
             }
         }
     }
