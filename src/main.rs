@@ -12,10 +12,10 @@ use std::{
 };
 use termion::{
     event::Key,
-    terminal_size
+    terminal_size,
+    input::TermRead,
+    raw::IntoRawMode,
 };
-use termion::input::TermRead;
-use termion::raw::IntoRawMode;
 use git2::Repository;
 use app::{
     console,
@@ -25,29 +25,30 @@ use app::{
 };
 
 fn main() {
-
-    
-    let mut stdout = stdout().into_raw_mode().unwrap();
-
     let repo_path = "/mnt/c/src/CLEVER";
     let repo = match Repository::open(repo_path) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
-    
     let sqlite_conn = rusqlite::Connection::open_in_memory().unwrap();
     let db = Database { conn: &sqlite_conn };
 
     let (keys_s, keys_r) = channel::bounded(0);
+    let (size_s, size_r) = channel::bounded(0);
+    let poll_interval = time::Duration::from_millis(50);
+
     thread::spawn(move || {
         let stdin = stdin();
         for c in stdin.keys() {
             keys_s.send(c.unwrap());
         }
     });
-    let (size_s, size_r) = channel::bounded(0);
-    let poll_interval = time::Duration::from_millis(50);
+
+    // terminal seems to get fubared if this is done after terminal_size?
+    let mut stdout = stdout().into_raw_mode().unwrap();
+
     thread::spawn(move || {
+        // todo use unix signal instead?
         let (mut size_col, mut size_row) = terminal_size().unwrap();
         loop {
             thread::sleep(poll_interval);
@@ -61,8 +62,8 @@ fn main() {
     });
 
     let mut app = empty_application();
-    console::reset();
     let iud = fill_update_data(&repo);
+    console::reset();
     update(&mut app, &iud);
     render(&app, &mut stdout);
 
