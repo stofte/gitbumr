@@ -3,19 +3,18 @@ extern crate git2;
 extern crate rusqlite;
 mod app;
 
-
+use std::io::{Write, stdout, stdin, Stdout};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
-use std::io::{Write, stdout, stdin};
 use git2::Repository;
-use app::branches::{Branches};
-use app::repo;
-use app::UiControl;
-use app::draw::{reset_screen, RenderableUiControl, RepositoryUiControl};
-use app::db::{Database, get_repositories, add_repository};
+use app::{fill_update_data, Application, UpdateData};
+use app::draw::{reset_screen};
+use app::control::{Control, branches::Branches, header::Header};
+use app::db::{Database};
 
 fn main() {
+
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
@@ -28,40 +27,38 @@ fn main() {
     let sqlite_conn = rusqlite::Connection::open_in_memory().unwrap();
     let db = Database { conn: &sqlite_conn };
 
-    // iterate over the enum list for the controls, and when processing a single control,
-    // grab the data without having to fight with borrowing values from the vec being iterated.
-    let mut ctrl_type = vec![UiControl::Branches];
-    let mut ctrl_data = vec![
-        Branches{ local: vec![], remote: vec![], checkedout_idx: -1 }
-    ];
-    
-    reset_screen(&mut stdout);
+    // struct with all controls. todo: listify this
+    let mut app = Application {
+        header: Header{ repo_path: "".to_string(), state: "".to_string(), width: 0, height: 0 },
+        branches: Branches{ local: vec![], remote: vec![], checkedout_idx: None },
+    };
 
-    // main ui loop:
-    // - grab the console input
-    // - for each control,
-    // - call it's relevant update methods
-    // - call controls render
-    // - first in list is lower in z-index, added at end of list is top most ui z-index
+    reset_screen(&mut stdout);
+    let iud = fill_update_data(&repo);
+    update(&mut app, &iud);
+    render(&app, &mut stdout);
     for c in stdin.keys() {
+        let mut ud = UpdateData{ console_width: None, console_height: None, key_value: None, git_repo: Some(&repo) };
         match c.unwrap() {
             Key::Ctrl('c') => break,
-            Key::Char(c) => {
-                for i in 0..ctrl_type.len() {
-                    match &ctrl_type[i] {
-                        UiControl::Branches => {
-                            let z = &mut ctrl_data[i];
-                            z.update(&repo);
-                        }
-                    }
-                    ctrl_data[i].render(&mut stdout);
-                }
-            },
+            Key::Char(c) => ud.key_value = Some(c),
             _ => ()
         }
-        stdout.flush().unwrap();
+        update(&mut app, &ud);
+        render(&app, &mut stdout);
     }
 
     reset_screen(&mut stdout);
     write!(stdout, "{}", termion::cursor::Show).unwrap();
+}
+
+fn update(app: &mut Application, ud: &UpdateData) {
+    app.header.update(&ud);
+    app.branches.update(&ud);
+}
+
+fn render(app: &Application, stdout: &mut Stdout) {
+    app.header.render(stdout);
+    app.branches.render(stdout);
+    stdout.flush().unwrap();
 }
