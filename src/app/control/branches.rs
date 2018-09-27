@@ -24,7 +24,7 @@ impl Control for Branches {
                 }
                 vec.sort();
                 let head_name = get_head(&repo);
-                for i in 00..vec.len() {
+                for i in 0..vec.len() {
                     if head_name == vec[i] {
                         self.checkedout_idx = Some(i as u16);
                     }
@@ -37,6 +37,7 @@ impl Control for Branches {
     fn render(&self, stdout: &mut Stdout) {
         match self.checkedout_idx {
             Some(i) => {
+                println!("{}", cursor::Goto(1, 1));
                 for j in 0..self.local.len() {
                     let s = &self.local[j];
                     if i as usize == j {
