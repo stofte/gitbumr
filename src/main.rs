@@ -44,7 +44,6 @@ fn main() {
     // - call controls render
     // - first in list is lower in z-index, added at end of list is top most ui z-index
     for c in stdin.keys() {
-        reset_screen(&mut stdout);
         match c.unwrap() {
             Key::Ctrl('c') => break,
             Key::Char(c) => {
@@ -63,5 +62,6 @@ fn main() {
         stdout.flush().unwrap();
     }
 
+    reset_screen(&mut stdout);
     write!(stdout, "{}", termion::cursor::Show).unwrap();
 }
