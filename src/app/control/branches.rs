@@ -37,7 +37,7 @@ impl Control for Branches {
     fn render(&self, stdout: &mut Stdout) {
         match self.checkedout_idx {
             Some(i) => {
-                println!("{}", cursor::Goto(1, 1));
+                print!("{}", cursor::Goto(1, 2));
                 for j in 0..self.local.len() {
                     let s = &self.local[j];
                     if i as usize == j {

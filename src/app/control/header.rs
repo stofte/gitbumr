@@ -1,5 +1,5 @@
 use std::io::{Stdout};
-use termion::cursor;
+use termion::{cursor, clear};
 use app::{UpdateData};
 use app::color::{BG_BRAND, FG_WHITE, BG_GRAY, FG_BLACK, BG_RESET, FG_RESET};
 use app::control::{Control};
@@ -38,7 +38,8 @@ impl Control for Header {
     }
     fn render(&self, stdout: &mut Stdout) {
         let right_off = self.width - self.state.len() as u16 + 1;
-        println!("{}{}{}{}{}{}{}{}{}{}{}", 
+        print!("{}", cursor::Goto(1, 1));
+        print!("{}{}{}{}{}{}{}{}{}{}{}", 
             BG_BRAND,
             FG_WHITE,
             "Gitbumr",
