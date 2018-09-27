@@ -8,7 +8,8 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::{Write, stdout, stdin};
 use git2::Repository;
-use app::branch;
+use app::branches;
+use app::repo;
 use app::draw::reset_screen;
 use app::db::{Database, get_repositories, add_repository};
 
@@ -35,7 +36,8 @@ fn main() {
         reset_screen(&mut stdout);
         match c.unwrap() {
             Key::Char('q') => break,
-            Key::Char('b') => branch::view(&mut ui_state),
+            Key::Char('r') => repo::view(&db),
+            Key::Char('b') => branches::view(&mut ui_state),
             Key::Char(c) => println!("{}", c),
             Key::Alt(c) => println!("^{}", c),
             Key::Ctrl(c) => println!("*{}", c),

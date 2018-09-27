@@ -1,5 +1,5 @@
-use app::db::get_repositories;
+use app::db::{get_repositories, Database};
 
-pub fn view() {
-    
+pub fn view(conn: &Database) {
+    let repos = get_repositories(&conn);
 }

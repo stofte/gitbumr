@@ -1,5 +1,4 @@
-use git2::Repository;
-use git2::BranchType;
+use git2::{Repository, BranchType};
 
 pub struct Branch {
     pub name: String,
@@ -23,7 +22,7 @@ pub fn local_branches(git_repo: &Repository) -> Vec<Branch> {
     vec
 }
 
-fn get_head(git_repo: &Repository) -> String {
+pub fn get_head(git_repo: &Repository) -> String {
     let hr = git_repo.head().unwrap();
     let n = hr.name().unwrap();
     let prefix = "refs/head/";

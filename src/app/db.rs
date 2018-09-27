@@ -5,7 +5,7 @@ pub struct Database<'a> {
 }
 
 pub fn get_repositories(conn: &Database) {
-    println!("read_rows");
+    println!("get_repositories");
 }
 
 pub fn add_repository(conn: &Connection) {
