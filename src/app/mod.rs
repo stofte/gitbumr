@@ -1,5 +1,5 @@
 pub mod git;
-pub mod draw;
+pub mod console;
 pub mod db;
 pub mod repo;
 pub mod control;

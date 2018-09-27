@@ -9,7 +9,7 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use git2::Repository;
 use app::{fill_update_data, Application, UpdateData};
-use app::draw::{reset_screen};
+use app::console;
 use app::control::{Control, branches::Branches, header::Header};
 use app::db::{Database};
 
@@ -33,7 +33,7 @@ fn main() {
         branches: Branches{ local: vec![], remote: vec![], checkedout_idx: None },
     };
 
-    reset_screen(&mut stdout);
+    console::reset();
     let iud = fill_update_data(&repo);
     update(&mut app, &iud);
     render(&app, &mut stdout);
@@ -48,7 +48,7 @@ fn main() {
         render(&app, &mut stdout);
     }
 
-    reset_screen(&mut stdout);
+    console::reset();
     write!(stdout, "{}", termion::cursor::Show).unwrap();
 }
 
