@@ -65,7 +65,7 @@ fn main() {
     let iud = fill_update_data(&repo);
     update(&mut app, &iud);
     render(&app, &mut stdout);
-    
+
     loop  {
         select! {
             recv(keys_r, key) => {
@@ -86,6 +86,9 @@ fn main() {
             recv(size_r, size) => {
                 match size {
                     Some((size_width, size_height)) => {
+                        console::reset();
+                        let ud = UpdateData{ console_width: Some(size_width), console_height: Some(size_height), key_value: None, git_repo: None };
+                        update(&mut app, &ud);
                         render(&app, &mut stdout);
                     },
                     _ => ()
