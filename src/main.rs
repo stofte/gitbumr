@@ -8,10 +8,12 @@ use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use git2::Repository;
-use app::{fill_update_data, Application, UpdateData};
-use app::console;
-use app::control::{Control, branches::Branches, header::Header};
-use app::db::{Database};
+use app::{
+    console,
+    db::{Database},
+    control::{Control, branches::Branches, header::Header},
+    empty_application, fill_update_data, Application, UpdateData,
+};
 
 fn main() {
 
@@ -28,10 +30,7 @@ fn main() {
     let db = Database { conn: &sqlite_conn };
 
     // struct with all controls. todo: listify this
-    let mut app = Application {
-        header: Header{ repo_path: "".to_string(), state: "".to_string(), width: 0, height: 0 },
-        branches: Branches{ local: vec![], remote: vec![], checkedout_idx: None },
-    };
+    let mut app = empty_application();
 
     console::reset();
     let iud = fill_update_data(&repo);

@@ -1,6 +1,6 @@
 use std::io::{Stdout};
 use termion::{cursor, clear};
-use app::{UpdateData};
+use app::{Layout, UpdateData};
 use app::color::{BG_BRAND, FG_WHITE, BG_GRAY, FG_BLACK, BG_RESET, FG_RESET};
 use app::control::{Control};
 
@@ -9,9 +9,13 @@ pub struct Header {
     pub state: String,
     pub width: u16,
     pub height: u16,
+    pub layout: Layout
 }
 
 impl Control for Header {
+    fn layout(&mut self, layout: Layout) {
+
+    }
     fn update(&mut self, data: &UpdateData) {
         match data.git_repo {
             Some(repo) => {

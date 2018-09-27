@@ -3,15 +3,19 @@ use std::io::Stdout;
 use git2::{BranchType};
 use app::git::{get_head};
 use app::control::{Control};
-use app::{UpdateData};
+use app::{Layout, UpdateData};
 
 pub struct Branches {
     pub local: Vec<String>,
     pub remote: Vec<String>,
     pub checkedout_idx: Option<u16>,
+    pub layout: Layout,
 }
 
 impl Control for Branches {
+    fn layout(&mut self, layout: Layout) {
+
+    }
     fn update(&mut self, data: &UpdateData) {
         match data.git_repo {
             Some(repo) => {

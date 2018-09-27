@@ -21,6 +21,29 @@ pub struct Application {
     pub branches: Branches,
 }
 
+pub struct Layout {
+    pub top: u16,
+    pub left: u16,
+    pub width: u16,
+    pub height: u16,
+}
+
+fn empty_layout() -> Layout {
+    Layout {
+        top: 0,
+        left: 0,
+        width: 0,
+        height: 0
+    }
+}
+
+pub fn empty_application() -> Application {
+    Application {
+        header: Header{ repo_path: "".to_string(), state: "".to_string(), width: 0, height: 0, layout: empty_layout() },
+        branches: Branches{ local: vec![], remote: vec![], checkedout_idx: None, layout: empty_layout() },
+    }
+}
+
 pub fn fill_update_data(repo: &Repository) -> UpdateData {
     let (size_col, size_row) = terminal_size().unwrap();
     let ud = UpdateData {
