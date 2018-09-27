@@ -14,7 +14,7 @@ pub struct Header {
 
 impl Control for Header {
     fn layout(&mut self, layout: Layout) {
-
+        
     }
     fn update(&mut self, data: &UpdateData) {
         match data.git_repo {
