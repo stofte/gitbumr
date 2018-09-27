@@ -11,12 +11,23 @@ static BG_BRAND: Bg<Rgb> = Bg(Rgb(255, 150, 50));
 static BG_RESET: Bg<Reset> = Bg(Reset);
 static FG_RESET: Fg<Reset> = Fg(Reset);
 
+// ctrl which can display something about a repository
 pub trait RepositoryUiControl {
     fn update(&mut self, &Repository);
 }
 
-pub trait PositionedUiControl {
+// ctrl which can account for window size
+pub trait SizeAwareUiControl {
     fn update(&mut self, width: u16, height: u16);
+}
+
+// ctrl which can be positioned according to top/left semantics
+pub trait PositionableUiControl {
+    fn place_tl(&mut self, top: u16, left: u16);
+    fn place_tr(&mut self, top: u16, right: u16);
+    fn place_br(&mut self, bottom: u16, right: u16);
+    fn place_bl(&mut self, bottom: u16, left: u16);
+
 }
 
 pub trait RenderableUiControl {
