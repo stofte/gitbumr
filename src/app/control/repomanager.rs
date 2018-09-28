@@ -18,7 +18,9 @@ pub struct RepoManager {
     pub repos: Vec<StoredRepository>,
     pub layout: Layout,
     pub adding: bool,
+    pub pending_add: bool,
     pub input_txt: Vec<char>,
+    pub repo_cursor: Option<u16>,
 }
 
 impl RepoManager {
@@ -68,11 +70,8 @@ impl Control for RepoManager {
         );
         self.print_blank(1);
         let mut bottom_off = 2;
-        if self.repos.len() == 0 {
-            let mut txt = "  No repositories found".to_string();
-            if self.adding {
-                txt = "  Add existing repository".to_string();
-            }
+        if self.adding {
+            let txt = "  Add repository".to_string();
             print!("{move}{fg}{bg}{b_v}{txt}{blank}{b_v}{fg_r}{bg_r}",
                 move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
                 txt=txt,
@@ -84,8 +83,6 @@ impl Control for RepoManager {
                 b_v=console::BOX_V,
             );
             bottom_off = bottom_off + 1;
-        }
-        if self.adding {
             self.print_blank(bottom_off);
             bottom_off = bottom_off + 1;
             let add_txt = "  Path: ".to_string();
@@ -100,6 +97,38 @@ impl Control for RepoManager {
                 b_v=console::BOX_V,
                 s_ul=style::Underline,
                 s_nul=style::NoUnderline,
+            );
+            bottom_off = bottom_off + 1;
+            self.print_blank(bottom_off);
+            bottom_off = bottom_off + 1;
+            self.print_blank(bottom_off);
+            bottom_off = bottom_off + 1;
+        }
+        if self.repos.len() == 0 {
+            let txt = "  No repositories found".to_string();
+            print!("{move}{fg}{bg}{b_v}{txt}{blank}{b_v}{fg_r}{bg_r}",
+                move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
+                txt=txt,
+                blank=" ".repeat(self.layout.width as usize - txt.len() - 2),
+                fg=console::FG_PRIMARY,
+                bg=console::BG_PRIMARY,
+                bg_r=console::BG_RESET,
+                fg_r=console::FG_RESET,
+                b_v=console::BOX_V,
+            );
+            bottom_off = bottom_off + 1;
+        }
+        for repo in &self.repos {
+            let txt = &repo.path;
+            print!("{move}{fg}{bg}{b_v}  {txt}{blank}{b_v}{fg_r}{bg_r}",
+                move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
+                txt=txt,
+                blank=" ".repeat(self.layout.width as usize - txt.len() - 4),
+                fg=console::FG_PRIMARY,
+                bg=console::BG_PRIMARY,
+                bg_r=console::BG_RESET,
+                fg_r=console::FG_RESET,
+                b_v=console::BOX_V,
             );
             bottom_off = bottom_off + 1;
         }
@@ -139,8 +168,21 @@ impl Control for RepoManager {
 }
 
 impl DatabaseControl for RepoManager {
-    fn update(&mut self, db: &Database) {
-
+    fn update(&mut self, db: &mut Database) {
+        if self.pending_add {
+            let path: String = self.input_txt.clone().into_iter().collect();
+            db.add_repository(&path);
+            self.input_txt.clear();
+            self.pending_add = false;
+        }
+        self.repos = db.get_repositories();
+        for i in 0..self.repos.len() {
+            let r = &self.repos[i];
+            if r.open {
+                self.repo_cursor = Some(i as u16);
+                break;
+            }
+        }
     }
 }
 
@@ -167,7 +209,7 @@ impl InputControl for RepoManager {
             Key::Char('\n') => {
                 if self.adding {
                     self.adding = false;
-                    self.input_txt.clear();
+                    self.pending_add = self.input_txt.len() > 0;
                     return (true, UiOption::HideCursor)
                 }
                 pass

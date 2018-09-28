@@ -24,7 +24,7 @@ pub trait RepositoryControl {
 }
 
 pub trait DatabaseControl {
-    fn update(&mut self, &Database);
+    fn update(&mut self, &mut Database);
 }
 
 pub trait InputControl {

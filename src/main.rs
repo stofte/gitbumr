@@ -31,7 +31,8 @@ fn main() {
         Err(e) => panic!("failed to open: {}", e),
     };
     let sqlite_conn = rusqlite::Connection::open_in_memory().unwrap();
-    let db = Database { conn: &sqlite_conn };
+    let mut db = Database { conn: &sqlite_conn };
+    db.init();
 
     let (keys_s, keys_r) = channel::bounded(0);
     let (size_s, size_r) = channel::bounded(0);
@@ -65,7 +66,7 @@ fn main() {
     
     app.console_size();
     app.repository(&repo);
-    app.database(&db);
+    app.database(&mut db);
 
     console::reset();
     app.render(&mut stdout);
@@ -80,6 +81,7 @@ fn main() {
                 };
                 // if we didn't break, pass the input to the controls
                 app.key(c);
+                app.database(&mut db);
                 app.render(&mut stdout);
             },
             recv(size_r, size) => {

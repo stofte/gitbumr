@@ -1,7 +1,6 @@
 pub mod git;
 pub mod console;
 pub mod db;
-pub mod repo;
 pub mod control;
 
 use std::{
@@ -62,7 +61,7 @@ impl Application {
             };
         };
     }
-    pub fn database(&mut self, db: &Database) {
+    pub fn database(&mut self, db: &mut Database) {
         for cp in &mut self.controls {
             let mut matched = false;
             let c = &mut *cp;
@@ -125,6 +124,13 @@ pub fn new_application() -> Application {
     let mut c = Branches { local: vec![], remote: vec![], checkedout_idx: None, layout: empty_layout() };
     c.layout.visible = true;
     app.add_control(Box::new(c));
-    app.add_control(Box::new(RepoManager { repos: vec![], layout: empty_layout(), adding: false, input_txt: vec![] }));
+    app.add_control(Box::new(RepoManager {
+        repos: vec![],
+        layout: empty_layout(),
+        adding: false,
+        pending_add: false,
+        input_txt: vec![],
+        repo_cursor: None,
+    }));
     app
 }
