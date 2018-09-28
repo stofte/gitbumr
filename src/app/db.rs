@@ -4,8 +4,13 @@ pub struct Database<'a> {
     pub conn: &'a Connection
 }
 
-pub fn get_repositories(conn: &Database) {
+pub struct StoredRepository {
+    pub path: String,
+}
+
+pub fn get_repositories(conn: &Database) -> Vec<StoredRepository> {
     println!("get_repositories");
+    vec![]
 }
 
 pub fn add_repository(conn: &Connection) {

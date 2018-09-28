@@ -62,7 +62,7 @@ fn main() {
     });
 
     let mut app = empty_application();
-    let iud = fill_update_data(&repo);
+    let iud = fill_update_data(&repo, &db);
     console::reset();
     update(&mut app, &iud);
     render(&app, &mut stdout);
@@ -75,7 +75,8 @@ fn main() {
                     console_width: None,
                     console_height: None,
                     key_value: None,
-                    git_repo: Some(&repo)
+                    git_repo: Some(&repo),
+                    db: Some(&db),
                 };
                 match c {
                     Key::Ctrl('c') => break,
@@ -92,7 +93,8 @@ fn main() {
                     console_width: Some(size_width),
                     console_height: Some(size_height),
                     key_value: None,
-                    git_repo: None
+                    git_repo: None,
+                    db: None,
                 };
                 update(&mut app, &ud);
                 render(&app, &mut stdout);

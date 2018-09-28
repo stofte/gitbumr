@@ -6,6 +6,7 @@ use app::control::{Control};
 use app::{Layout, UpdateData};
 
 pub struct Branches {
+    pub visible: bool,
     pub local: Vec<String>,
     pub remote: Vec<String>,
     pub checkedout_idx: Option<u16>,
@@ -39,6 +40,7 @@ impl Control for Branches {
         }
     }
     fn render(&self, stdout: &mut Stdout) {
+        if (!self.visible) { return; }
         match self.checkedout_idx {
             Some(i) => {
                 print!("{}", cursor::Goto(1, 2));
