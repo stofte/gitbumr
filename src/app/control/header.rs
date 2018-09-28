@@ -2,9 +2,11 @@ use std::io::{Stdout};
 use std::any::Any;
 use git2::{Repository};
 use termion::{cursor, clear};
-use app::{Layout, LayoutUpdate};
-use app::color::{BG_BRAND, FG_WHITE, BG_GRAY, FG_BLACK, BG_RESET, FG_RESET};
-use app::control::{Control, RepositoryControl};
+use app::{
+    Layout, LayoutUpdate,
+    console::{BG_BRAND, FG_WHITE, BG_GRAY, FG_BLACK, BG_RESET, FG_RESET},
+    control::{Control, RepositoryControl},
+};
 
 pub struct Header {
     pub repo_path: String,
@@ -19,10 +21,10 @@ impl Control for Header {
         self
     }
     fn layout(&mut self, layout: &LayoutUpdate) {
-        self.layout.width = layout.width.unwrap();
-        self.layout.height = layout.height.unwrap();
+        self.layout.width = layout.cols.unwrap();
+        self.layout.height = layout.rows.unwrap();
     }
-    fn render(&self, stdout: &mut Stdout) {
+    fn render(&self, stdout: &mut Stdout) -> bool {
         let right_off = self.layout.width - self.state.len() as u16 + 1;
         print!("{}", cursor::Goto(1, 1));
         print!("{}{}{}{}{}{}{}{}{}{}{}", 
@@ -38,6 +40,7 @@ impl Control for Header {
             BG_RESET,
             FG_RESET
         );
+        false
     }
 }
 

@@ -18,17 +18,11 @@ impl Control for Branches {
         self
     }
     fn layout(&mut self, layout: &LayoutUpdate) {
-        self.layout.width = layout.width.unwrap();
-        self.layout.height = layout.height.unwrap();
-        match layout.visible {
-            Some(b) => {
-                self.layout.visible = b;
-            },
-            _ => ()
-        };
+        self.layout.width = layout.cols.unwrap();
+        self.layout.height = layout.rows.unwrap();
     }
-    fn render(&self, stdout: &mut Stdout) {
-        if !self.layout.visible { return; }
+    fn render(&self, stdout: &mut Stdout) -> bool {
+        if !self.layout.visible { return false }
         match self.checkedout_idx {
             Some(i) => {
                 print!("{}", cursor::Goto(1, 2));
@@ -43,7 +37,8 @@ impl Control for Branches {
                 }
             },
             _ => ()
-        }
+        };
+        false
     }
 }
 
