@@ -68,9 +68,27 @@ impl Control for RepoManager {
         );
         self.print_blank(1);
         let mut bottom_off = 2;
+        if self.repos.len() == 0 {
+            let mut txt = "  No repositories found".to_string();
+            if self.adding {
+                txt = "  Add existing repository".to_string();
+            }
+            print!("{move}{fg}{bg}{b_v}{txt}{blank}{b_v}{fg_r}{bg_r}",
+                move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
+                txt=txt,
+                blank=" ".repeat(self.layout.width as usize - txt.len() - 2),
+                fg=console::FG_PRIMARY,
+                bg=console::BG_PRIMARY,
+                bg_r=console::BG_RESET,
+                fg_r=console::FG_RESET,
+                b_v=console::BOX_V,
+            );
+            bottom_off = bottom_off + 1;
+        }
         if self.adding {
+            self.print_blank(bottom_off);
+            bottom_off = bottom_off + 1;
             let add_txt = "  Path: ".to_string();
-            // let inp_txt = self.input_txt.to_string();
             print!("{move}{fg}{bg}{b_v}{txt}{s_ul}{blank}{s_nul}{fg}{bg}  {b_v}{fg_r}{bg_r}",
                 move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
                 txt=add_txt,
@@ -82,22 +100,6 @@ impl Control for RepoManager {
                 b_v=console::BOX_V,
                 s_ul=style::Underline,
                 s_nul=style::NoUnderline,
-            );
-            bottom_off = bottom_off + 1;
-            self.print_blank(bottom_off);
-            bottom_off = bottom_off + 1;
-        }
-        if self.repos.len() == 0 {
-            let no_repos_txt = "  No repositories found".to_string();
-            print!("{move}{fg}{bg}{b_v}{txt}{blank}{b_v}{fg_r}{bg_r}",
-                move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
-                txt=no_repos_txt,
-                blank=" ".repeat(self.layout.width as usize - no_repos_txt.len() - 2),
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-                bg_r=console::BG_RESET,
-                fg_r=console::FG_RESET,
-                b_v=console::BOX_V,
             );
             bottom_off = bottom_off + 1;
         }
@@ -120,7 +122,7 @@ impl Control for RepoManager {
         if self.adding {
             let inp_txt: String = self.input_txt.clone().into_iter().collect();
             print!("{move}{fg}{bg}{s_ul}{inp}{s_nul}{show}{fg_r}{bg_r}",
-                move=cursor::Goto(self.layout.left + 9, self.layout.top + 2),
+                move=cursor::Goto(self.layout.left + 9, self.layout.top + 4),
                 inp=inp_txt,
                 show=cursor::Show,
                 fg=console::FG_PRIMARY,
@@ -165,6 +167,7 @@ impl InputControl for RepoManager {
             Key::Char('\n') => {
                 if self.adding {
                     self.adding = false;
+                    self.input_txt.clear();
                     return (true, UiOption::HideCursor)
                 }
                 pass
