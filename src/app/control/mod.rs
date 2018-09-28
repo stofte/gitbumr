@@ -1,6 +1,6 @@
 pub mod branches;
 pub mod header;
-pub mod repos;
+pub mod repomanager;
 
 use std::any::Any;
 use std::io::{Stdout};

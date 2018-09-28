@@ -12,12 +12,12 @@ use app::{
     control::{Control, DatabaseControl, InputControl},
 };
 
-pub struct Repos {
+pub struct RepoManager {
     pub repos: Vec<StoredRepository>,
     pub layout: Layout
 }
 
-impl Control for Repos {
+impl Control for RepoManager {
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
@@ -37,13 +37,13 @@ impl Control for Repos {
     }
 }
 
-impl DatabaseControl for Repos {
+impl DatabaseControl for RepoManager {
     fn update(&mut self, db: &Database) {
 
     }
 }
 
-impl InputControl for Repos {
+impl InputControl for RepoManager {
     fn handle(&mut self, key: Key) -> bool {
         match key {
             Key::Ctrl('r') => {

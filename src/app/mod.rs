@@ -12,7 +12,7 @@ use git2::Repository;
 use termion::{terminal_size, event::Key};
 use app::{
     db::{Database},
-    control::{Control, RepositoryControl, DatabaseControl, InputControl, header::Header, branches::Branches, repos::Repos},
+    control::{Control, RepositoryControl, DatabaseControl, InputControl, header::Header, branches::Branches, repomanager::RepoManager},
 };
 
 pub struct Application {
@@ -58,7 +58,7 @@ impl Application {
         for cp in &mut self.controls {
             let mut matched = false;
             let c = &mut *cp;
-            match c.as_any_mut().downcast_mut::<Repos>() {
+            match c.as_any_mut().downcast_mut::<RepoManager>() {
                 Some(ref mut o) => { matched = true; o.update(db); },
                 None => ()
             }
@@ -81,7 +81,7 @@ impl Application {
         for cp in &mut self.controls {
             let mut matched = false;
             let c = &mut *cp;
-            match c.as_any_mut().downcast_mut::<Repos>() {
+            match c.as_any_mut().downcast_mut::<RepoManager>() {
                 Some(ref mut o) => { matched = o.handle(key); },
                 None => ()
             }
@@ -103,6 +103,6 @@ pub fn new_application() -> Application {
     let mut c = Branches { local: vec![], remote: vec![], checkedout_idx: None, layout: empty_layout() };
     c.layout.visible = true;
     app.add_control(Box::new(c));
-    app.add_control(Box::new(Repos { repos: vec![], layout: empty_layout() }));
+    app.add_control(Box::new(RepoManager { repos: vec![], layout: empty_layout() }));
     app
 }
