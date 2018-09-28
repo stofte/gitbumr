@@ -4,10 +4,9 @@ use std::any::Any;
 use git2::{Repository, BranchType};
 use app::git::{get_head};
 use app::control::{Control, RepositoryControl};
-use app::{Layout, LayoutUpdate, UpdateData};
+use app::{Layout, LayoutUpdate};
 
 pub struct Branches {
-    pub visible: bool,
     pub local: Vec<String>,
     pub remote: Vec<String>,
     pub checkedout_idx: Option<u16>,
@@ -21,9 +20,15 @@ impl Control for Branches {
     fn layout(&mut self, layout: &LayoutUpdate) {
         self.layout.width = layout.width.unwrap();
         self.layout.height = layout.height.unwrap();
+        match layout.visible {
+            Some(b) => {
+                self.layout.visible = b;
+            },
+            _ => ()
+        };
     }
     fn render(&self, stdout: &mut Stdout) {
-        if (!self.visible) { return; }
+        if !self.layout.visible { return; }
         match self.checkedout_idx {
             Some(i) => {
                 print!("{}", cursor::Goto(1, 2));

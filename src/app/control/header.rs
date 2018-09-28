@@ -2,7 +2,7 @@ use std::io::{Stdout};
 use std::any::Any;
 use git2::{Repository};
 use termion::{cursor, clear};
-use app::{Layout, LayoutUpdate, UpdateData};
+use app::{Layout, LayoutUpdate};
 use app::color::{BG_BRAND, FG_WHITE, BG_GRAY, FG_BLACK, BG_RESET, FG_RESET};
 use app::control::{Control, RepositoryControl};
 
@@ -11,6 +11,8 @@ pub struct Header {
     pub state: String,
     pub layout: Layout
 }
+
+static APP_NAME: &'static str = "Gitbumr";
 
 impl Control for Header {
     fn as_any_mut(&mut self) -> &mut dyn Any {
@@ -26,11 +28,11 @@ impl Control for Header {
         print!("{}{}{}{}{}{}{}{}{}{}{}", 
             BG_BRAND,
             FG_WHITE,
-            "Gitbumr",
+            APP_NAME,
             BG_GRAY,
             FG_BLACK,
             self.repo_path,
-            " ".repeat(self.layout.width as usize - self.repo_path.len()),
+            " ".repeat(self.layout.width as usize - self.repo_path.len() - APP_NAME.len()),
             cursor::Goto(right_off, 1),
             self.state,
             BG_RESET,

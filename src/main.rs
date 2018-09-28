@@ -21,7 +21,7 @@ use app::{
     console, Layout,
     db::{Database},
     control::{Control, RepositoryControl, DatabaseControl, branches::Branches, header::Header},
-    empty_application, fill_update_data, Application, UpdateData,
+    new_application, Application,
 };
 
 fn main() {
@@ -61,7 +61,7 @@ fn main() {
         }
     });
 
-    let mut app = empty_application();
+    let mut app = new_application();
     
     app.console_size();
     app.repository(&repo);
@@ -74,22 +74,15 @@ fn main() {
         select! {
             recv(keys_r, key) => {
                 let c = key.unwrap();
-                // let mut ud = UpdateData {
-                //     console_width: None,
-                //     console_height: None,
-                //     key_value: None,
-                //     git_repo: Some(&repo),
-                //     db: Some(&db),
-                // };
                 match c {
                     Key::Ctrl('c') => break,
-                    // Key::Char(c) => ud.key_value = Some(c),
                     _ => ()
-                }
+                };
+                // if we didn't break, pass the input to the controls
+                app.key(c);
                 app.render(&mut stdout);
             },
             recv(size_r, size) => {
-                let (size_width, size_height) = size.unwrap();
                 console::reset();
                 app.console_size();
                 app.render(&mut stdout);
