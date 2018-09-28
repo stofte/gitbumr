@@ -1,10 +1,11 @@
 use std::{
     io::Stdout,
+    any::Any,
 };
 use app::{
-    Layout, UpdateData,
-    db::{StoredRepository},
-    control::{Control},
+    Layout, LayoutUpdate, UpdateData,
+    db::{StoredRepository, Database},
+    control::{Control, DatabaseControl},
 };
 
 pub struct Repos {
@@ -14,25 +15,19 @@ pub struct Repos {
 }
 
 impl Control for Repos {
-    fn layout(&mut self, layout: Layout) {
-        
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
-    fn update(&mut self, data: &UpdateData) {
-        match data.git_repo {
-            Some(repo) => {
-
-            },
-            _ => ()
-        };
-        match data.console_width {
-            Some(w) => self.layout.width = w,
-            _ => ()
-        };
-        match data.console_height {
-            Some(h) => self.layout.height = h,
-            _ => ()
-        };
+    fn layout(&mut self, layout: &LayoutUpdate) {
+        self.layout.width = layout.width.unwrap();
+        self.layout.height = layout.height.unwrap();
     }
     fn render(&self, stdout: &mut Stdout) {
+    }
+}
+
+impl DatabaseControl for Repos {
+    fn update(&mut self, db: &Database) {
+
     }
 }

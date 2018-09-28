@@ -1,9 +1,10 @@
 use termion::{style, cursor};
 use std::io::Stdout;
-use git2::{BranchType};
+use std::any::Any;
+use git2::{Repository, BranchType};
 use app::git::{get_head};
-use app::control::{Control};
-use app::{Layout, UpdateData};
+use app::control::{Control, RepositoryControl};
+use app::{Layout, LayoutUpdate, UpdateData};
 
 pub struct Branches {
     pub visible: bool,
@@ -14,30 +15,12 @@ pub struct Branches {
 }
 
 impl Control for Branches {
-    fn layout(&mut self, layout: Layout) {
-
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
-    fn update(&mut self, data: &UpdateData) {
-        match data.git_repo {
-            Some(repo) => {
-                let mut vec = Vec::new();
-                let bs = repo.branches(Some(BranchType::Local)).unwrap();
-                for b in bs {
-                    let bb = b.unwrap().0;
-                    let name = bb.name().unwrap().unwrap().to_owned();
-                    vec.push(name);
-                }
-                vec.sort();
-                let head_name = get_head(&repo);
-                for i in 0..vec.len() {
-                    if head_name == vec[i] {
-                        self.checkedout_idx = Some(i as u16);
-                    }
-                }
-                self.local = vec;
-            },
-            _ => ()
-        }
+    fn layout(&mut self, layout: &LayoutUpdate) {
+        self.layout.width = layout.width.unwrap();
+        self.layout.height = layout.height.unwrap();
     }
     fn render(&self, stdout: &mut Stdout) {
         if (!self.visible) { return; }
@@ -56,5 +39,25 @@ impl Control for Branches {
             },
             _ => ()
         }
+    }
+}
+
+impl RepositoryControl for Branches {
+    fn update(&mut self, repo: &Repository) {
+        let mut vec = Vec::new();
+        let bs = repo.branches(Some(BranchType::Local)).unwrap();
+        for b in bs {
+            let bb = b.unwrap().0;
+            let name = bb.name().unwrap().unwrap().to_owned();
+            vec.push(name);
+        }
+        vec.sort();
+        let head_name = get_head(&repo);
+        for i in 0..vec.len() {
+            if head_name == vec[i] {
+                self.checkedout_idx = Some(i as u16);
+            }
+        }
+        self.local = vec;
     }
 }

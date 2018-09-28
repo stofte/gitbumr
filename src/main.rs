@@ -18,9 +18,9 @@ use termion::{
 };
 use git2::Repository;
 use app::{
-    console,
+    console, Layout,
     db::{Database},
-    control::{Control, branches::Branches, header::Header},
+    control::{Control, RepositoryControl, DatabaseControl, branches::Branches, header::Header},
     empty_application, fill_update_data, Application, UpdateData,
 };
 
@@ -62,57 +62,41 @@ fn main() {
     });
 
     let mut app = empty_application();
-    let iud = fill_update_data(&repo, &db);
+    
+    app.console_size();
+    app.repository(&repo);
+    app.database(&db);
+
     console::reset();
-    update(&mut app, &iud);
-    render(&app, &mut stdout);
+    app.render(&mut stdout);
 
     loop  {
         select! {
             recv(keys_r, key) => {
                 let c = key.unwrap();
-                let mut ud = UpdateData {
-                    console_width: None,
-                    console_height: None,
-                    key_value: None,
-                    git_repo: Some(&repo),
-                    db: Some(&db),
-                };
+                // let mut ud = UpdateData {
+                //     console_width: None,
+                //     console_height: None,
+                //     key_value: None,
+                //     git_repo: Some(&repo),
+                //     db: Some(&db),
+                // };
                 match c {
                     Key::Ctrl('c') => break,
-                    Key::Char(c) => ud.key_value = Some(c),
+                    // Key::Char(c) => ud.key_value = Some(c),
                     _ => ()
                 }
-                update(&mut app, &ud);
-                render(&app, &mut stdout);
+                app.render(&mut stdout);
             },
             recv(size_r, size) => {
                 let (size_width, size_height) = size.unwrap();
                 console::reset();
-                let ud = UpdateData {
-                    console_width: Some(size_width),
-                    console_height: Some(size_height),
-                    key_value: None,
-                    git_repo: None,
-                    db: None,
-                };
-                update(&mut app, &ud);
-                render(&app, &mut stdout);
+                app.console_size();
+                app.render(&mut stdout);
             }
         }
     }
 
     console::reset();
     write!(stdout, "{}", termion::cursor::Show).unwrap();
-}
-
-fn update(app: &mut Application, ud: &UpdateData) {
-    app.header.update(&ud);
-    app.branches.update(&ud);
-}
-
-fn render(app: &Application, stdout: &mut Stdout) {
-    app.header.render(stdout);
-    app.branches.render(stdout);
-    stdout.flush().unwrap();
 }
