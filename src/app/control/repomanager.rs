@@ -132,7 +132,10 @@ impl Control for RepoManager {
         }
         print_blank(&self.layout, bottom_off);
         bottom_off = bottom_off + 1;
-        let help_txt = " Ctrl+A: Add repository ".to_string();
+        let mut help_txt = " a: Add repository, esc: Close ".to_string();
+        if self.adding {
+            help_txt = " esc: Cancel ".to_string();
+        }
         let bottom_b_h = console::BOX_H.to_string().repeat(self.layout.width as usize - 3 - help_txt.len());
         print!("{move}{fg}{bg}{b_ur}{repeat}{help}{b_h}{b_ul}{fg_r}{bg_r}",
             move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
@@ -187,17 +190,18 @@ impl DatabaseControl for RepoManager {
 impl InputControl for RepoManager {
     fn handle(&mut self, key: Key) -> (bool, UiOption) {
         let handled = (true, UiOption::None);
+        let handled_cursor = (true, UiOption::HideCursor);
         let pass = (false, UiOption::None);
         match key {
-            Key::Ctrl('r') => {
+            Key::Char('r') => {
                 if !self.layout.visible {
                     self.layout.visible = true;
                     return handled
                 }
                 pass
             },
-            Key::Ctrl('a') => {
-                if !self.adding {
+            Key::Char('a') => {
+                if self.layout.visible && !self.adding {
                     self.adding = true;
                     return handled
                 }
@@ -208,7 +212,7 @@ impl InputControl for RepoManager {
                 if self.adding {
                     self.adding = false;
                     self.pending_add = self.input_txt.len() > 0;
-                    return (true, UiOption::HideCursor)
+                    return handled_cursor
                 }
                 pass
             },
@@ -229,7 +233,7 @@ impl InputControl for RepoManager {
             Key::Esc => {
                 if self.adding {
                     self.adding = false;
-                    return handled
+                    return handled_cursor
                 } else if self.layout.visible {
                     self.layout.visible = false;
                     return handled
