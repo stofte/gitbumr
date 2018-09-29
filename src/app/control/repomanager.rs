@@ -23,18 +23,16 @@ pub struct RepoManager {
     pub repo_cursor: Option<u16>,
 }
 
-impl RepoManager {
-    fn print_blank(&self, top: u16) {
-        print!("{move}{fg}{bg}{b_v}{blank}{b_v}{fg_r}{bg_r}", 
-            move=cursor::Goto(self.layout.left, self.layout.top + top),
-            blank=" ".repeat(self.layout.width as usize - 2),
-            fg=console::FG_PRIMARY,
-            bg=console::BG_PRIMARY,
-            bg_r=console::BG_RESET,
-            fg_r=console::FG_RESET,
-            b_v=console::BOX_V,
-        );
-    }
+fn print_blank(l: &Layout, top: u16) {
+    print!("{move}{fg}{bg}{b_v}{blank}{b_v}{fg_r}{bg_r}", 
+        move=cursor::Goto(l.left, l.top + top),
+        blank=" ".repeat(l.width as usize - 2),
+        fg=console::FG_PRIMARY,
+        bg=console::BG_PRIMARY,
+        bg_r=console::BG_RESET,
+        fg_r=console::FG_RESET,
+        b_v=console::BOX_V,
+    );
 }
 
 impl Control for RepoManager {
@@ -68,7 +66,7 @@ impl Control for RepoManager {
             b_vr=console::BOX_VR,
             b_dl=console::BOX_DL,
         );
-        self.print_blank(1);
+        print_blank(&self.layout, 1);
         let mut bottom_off = 2;
         if self.adding {
             let txt = "  Add repository".to_string();
@@ -83,7 +81,7 @@ impl Control for RepoManager {
                 b_v=console::BOX_V,
             );
             bottom_off = bottom_off + 1;
-            self.print_blank(bottom_off);
+            print_blank(&self.layout, bottom_off);
             bottom_off = bottom_off + 1;
             let add_txt = "  Path: ".to_string();
             print!("{move}{fg}{bg}{b_v}{txt}{s_ul}{blank}{s_nul}{fg}{bg}  {b_v}{fg_r}{bg_r}",
@@ -99,9 +97,9 @@ impl Control for RepoManager {
                 s_nul=style::NoUnderline,
             );
             bottom_off = bottom_off + 1;
-            self.print_blank(bottom_off);
+            print_blank(&self.layout, bottom_off);
             bottom_off = bottom_off + 1;
-            self.print_blank(bottom_off);
+            print_blank(&self.layout, bottom_off);
             bottom_off = bottom_off + 1;
         }
         if self.repos.len() == 0 {
@@ -132,7 +130,7 @@ impl Control for RepoManager {
             );
             bottom_off = bottom_off + 1;
         }
-        self.print_blank(bottom_off);
+        print_blank(&self.layout, bottom_off);
         bottom_off = bottom_off + 1;
         let help_txt = " Ctrl+A: Add repository ".to_string();
         let bottom_b_h = console::BOX_H.to_string().repeat(self.layout.width as usize - 3 - help_txt.len());
