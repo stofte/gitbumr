@@ -227,7 +227,10 @@ impl InputControl for RepoManager {
                 pass
             },
             Key::Esc => {
-                if self.layout.visible {
+                if self.adding {
+                    self.adding = false;
+                    return handled
+                } else if self.layout.visible {
                     self.layout.visible = false;
                     return handled
                 }
