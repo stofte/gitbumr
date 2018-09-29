@@ -204,6 +204,9 @@ impl InputControl for RepoManager {
                 if self.layout.visible && !self.adding {
                     self.adding = true;
                     return handled
+                } else if self.adding {
+                    self.input_txt.push('a');
+                    return handled
                 }
                 pass
             },
