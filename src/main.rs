@@ -67,11 +67,11 @@ fn main() {
     app.console_size();
     app.repository(&repo);
     app.database(&mut db);
-
+    
     console::reset();
-    app.render(&mut stdout);
 
     loop  {
+        app.render(&mut stdout);
         select! {
             recv(keys_r, key) => {
                 let c = key.unwrap();
@@ -82,12 +82,10 @@ fn main() {
                 // if we didn't break, pass the input to the controls
                 app.key(c);
                 app.database(&mut db);
-                app.render(&mut stdout);
             },
             recv(size_r, size) => {
                 console::reset();
                 app.console_size();
-                app.render(&mut stdout);
             }
         }
     }
