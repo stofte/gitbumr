@@ -43,7 +43,7 @@ pub struct LayoutUpdate {
 }
 
 bitflags! {
-    struct UiFlags: u32 {
+    pub struct UiFlags: u32 {
         const None              = 0;
         const HideCursor        = 0b00000001;
         const AddedRepository   = 0b00000010;
@@ -88,7 +88,8 @@ impl Application {
             }
         }
     }
-    pub fn settings(&mut self, settings: &mut Settings) {
+    pub fn settings(&mut self, settings: &mut Settings) -> UiFlags {
+        let mut res = UiFlags::None;
         for cp in &mut self.controls {
             let mut matched = false;
             let c = &mut *cp;
@@ -100,12 +101,13 @@ impl Application {
                         print!("{}", cursor::Hide);
                     }
                     if f & UiFlags::AddedRepository == UiFlags::AddedRepository {
-                        
+                        res = UiFlags::AddedRepository;
                     }
                 },
                 None => ()
-            }
+            };
         };
+        res
     }
     pub fn console_size(&mut self) {
         let (size_col, size_row) = terminal_size().unwrap();

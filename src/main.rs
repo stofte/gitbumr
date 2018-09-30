@@ -21,7 +21,7 @@ use termion::{
 };
 use git2::Repository;
 use app::{
-    console, Layout,
+    console, Layout, UiFlags,
     settings::{Settings, build_settings},
     control::{Control, RepositoryControl, SettingsControl, branches::Branches, header::Header},
     new_application, Application,
@@ -30,19 +30,8 @@ use app::{
 fn main() {
 
     let mut db = build_settings();
-    let mut repo: Option<Repository> = None;
     db.init();
-    match db.default_repository() {
-        Some(sr) => {
-            match Repository::open(sr.path) {
-                Ok(gr) => {
-                    repo = Some(gr);
-                },
-                _ => (),
-            };
-        },
-        _ => ()
-    };
+    let mut repo = git_repo_opt(&db);
 
     let (keys_s, keys_r) = channel::bounded(0);
     let (size_s, size_r) = channel::bounded(0);
@@ -96,7 +85,11 @@ fn main() {
                 };
                 // if we didn't break, pass the input to the controls
                 app.key(c);
-                app.settings(&mut db);
+                let e = app.settings(&mut db);
+                if e & UiFlags::AddedRepository == UiFlags::AddedRepository {
+                    repo = git_repo_opt(&db);
+                    app.repository(repo);
+                }
             },
             recv(size_r, size) => {
                 console::reset();
@@ -107,4 +100,20 @@ fn main() {
 
     console::reset();
     write!(stdout, "{}", termion::cursor::Show).unwrap();
+}
+
+fn git_repo_opt(db: &Settings) -> Option<Repository> {
+    let mut repo: Option<Repository> = None;
+    match db.default_repository() {
+        Some(sr) => {
+            match Repository::open(sr.path) {
+                Ok(gr) => {
+                    repo = Some(gr);
+                },
+                _ => (),
+            };
+        },
+        _ => ()
+    };
+    repo
 }
