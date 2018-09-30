@@ -4,7 +4,7 @@ use git2::{Repository};
 use termion::{cursor, clear};
 use app::{
     Layout, LayoutUpdate,
-    console::{BG_BRAND, FG_WHITE, BG_GRAY, FG_BLACK, BG_RESET, FG_RESET},
+    console,
     control::{Control, RepositoryControl},
 };
 
@@ -25,20 +25,19 @@ impl Control for Header {
         self.layout.height = layout.rows.unwrap();
     }
     fn render(&self, stdout: &mut Stdout) -> bool {
-        let right_off = self.layout.width - self.state.len() as u16 + 1;
-        print!("{}", cursor::Goto(1, 1));
-        print!("{}{}{}{}{}{}{}{}{}{}{}", 
-            BG_BRAND,
-            FG_WHITE,
-            APP_NAME,
-            BG_GRAY,
-            FG_BLACK,
-            self.repo_path,
-            " ".repeat(self.layout.width as usize - self.repo_path.len() - APP_NAME.len()),
-            cursor::Goto(right_off, 1),
-            self.state,
-            BG_RESET,
-            FG_RESET
+        let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
+        print!("{move}{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
+            move=cursor::Goto(1, 1),
+            name=APP_NAME,
+            path=self.repo_path,
+            blank=" ".repeat(blank_cnt),
+            state=self.state,
+            b_fg=console::FG_BRAND,
+            b_bg=console::BG_BRAND,
+            fg=console::FG_PRIMARY,
+            bg=console::BG_PRIMARY,
+            bg_r=console::BG_RESET,
+            fg_r=console::FG_RESET,
         );
         false
     }
