@@ -119,11 +119,7 @@ impl Application {
     }
     pub fn render(&self, stdout: &mut Stdout) {
         for c in &self.controls {
-            if c.render(stdout) { // show cursor
-
-            } else { // didn't show cursor
-
-            }
+            c.render(stdout);
         }
         stdout.flush().unwrap();
     }

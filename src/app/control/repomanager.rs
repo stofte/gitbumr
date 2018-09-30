@@ -28,13 +28,9 @@ pub struct RepoManager {
 }
 
 fn print_blank(l: &Layout, top: u16) {
-    print!("{move}{fg}{bg}{b_v}{blank}{b_v}{fg_r}{bg_r}", 
+    print!("{move}{b_v}{blank}{b_v}", 
         move=cursor::Goto(l.left, l.top + top),
         blank=" ".repeat(l.width as usize - 2),
-        fg=console::FG_PRIMARY,
-        bg=console::BG_PRIMARY,
-        bg_r=console::BG_RESET,
-        fg_r=console::FG_RESET,
         b_v=console::BOX_V,
     );
 }
@@ -51,19 +47,15 @@ impl Control for RepoManager {
         self.layout.width = self.layout.console_cols - 2 * (self.layout.left - 1);
         self.layout.height = self.layout.console_rows - 2 * (self.layout.top - 1);
     }
-    fn render(&self, stdout: &mut Stdout) -> bool {
-        if !self.layout.visible { return false }
+    fn render(&self, stdout: &mut Stdout) {
+        if !self.layout.visible { return }
         let title = "Repositories".to_string();
         let title_b_h = console::BOX_H.to_string()
             .repeat(self.layout.width as usize - title.len() - 5);
-        print!("{move}{fg}{bg}{b_dr}{b_h}{b_vl}{title}{b_vr}{repeat}{b_dl}{fg_r}{bg_r}",
-            move=cursor::Goto(self.layout.left, self.layout.top),
+        console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
+        print!("{b_dr}{b_h}{b_vl}{title}{b_vr}{repeat}{b_dl}",
             title=title,
             repeat=title_b_h,
-            fg=console::FG_PRIMARY,
-            bg=console::BG_PRIMARY,
-            bg_r=console::BG_RESET,
-            fg_r=console::FG_RESET,
             b_dr=console::BOX_DR,
             b_h=console::BOX_H,
             b_vl=console::BOX_VL,
@@ -80,28 +72,20 @@ impl Control for RepoManager {
                 },
                 _ => ()
             };
-            print!("{move}{fg}{bg}{b_v}{txt}{blank}{b_v}{fg_r}{bg_r}",
-                move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
+            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
+            print!("{b_v}{txt}{blank}{b_v}",
                 txt=txt,
                 blank=" ".repeat(self.layout.width as usize - txt.len() - 2),
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-                bg_r=console::BG_RESET,
-                fg_r=console::FG_RESET,
                 b_v=console::BOX_V,
             );
             bottom_off = bottom_off + 1;
             print_blank(&self.layout, bottom_off);
             bottom_off = bottom_off + 1;
             let add_txt = "  Path: ".to_string();
-            print!("{move}{fg}{bg}{b_v}{txt}{s_ul}{blank}{s_nul}{fg}{bg}  {b_v}{fg_r}{bg_r}",
-                move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
+            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
+            print!("{b_v}{txt}{s_ul}{blank}{s_nul}  {b_v}",
                 txt=add_txt,
                 blank=" ".repeat(self.layout.width as usize - add_txt.len() - 4),
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-                bg_r=console::BG_RESET,
-                fg_r=console::FG_RESET,
                 b_v=console::BOX_V,
                 s_ul=style::Underline,
                 s_nul=style::NoUnderline,
@@ -114,14 +98,10 @@ impl Control for RepoManager {
         }
         if self.repos.len() == 0 {
             let txt = "  No repositories found".to_string();
-            print!("{move}{fg}{bg}{b_v}{txt}{blank}{b_v}{fg_r}{bg_r}",
-                move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
+            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
+            print!("{b_v}{txt}{blank}{b_v}",
                 txt=txt,
                 blank=" ".repeat(self.layout.width as usize - txt.len() - 2),
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-                bg_r=console::BG_RESET,
-                fg_r=console::FG_RESET,
                 b_v=console::BOX_V,
             );
             bottom_off = bottom_off + 1;
@@ -130,27 +110,24 @@ impl Control for RepoManager {
             let repo = &self.repos[i];
             let txt = &repo.path;
             let mut opentxt = "";
+            let mut open_mark = ' ';
             if repo.open {
                 opentxt = " [open]";
+                open_mark = console::PNT_R;
             }
-            let mut cursor_mark = ' ';
             let mut c_fg = console::FG_PRIMARY;
             let mut c_bg = console::BG_PRIMARY;
             if i as u16 == self.repo_cursor {
                 c_bg = console::BG_PRIMARY_CURSOR;
                 c_fg = console::FG_PRIMARY_CURSOR;
-                cursor_mark = console::PNT_R;
             }
-            print!("{move}{fg}{bg}{b_v}  {cm}{c_fg}{c_bg}{txt}{open}{blank}{fg}{bg}  {b_v}{fg_r}{bg_r}",
-                move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
+            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
+            print!("{b_v}  {open_m}{c_fg}{c_bg}{txt}{blank}{fg}{bg}  {b_v}",
                 txt=txt,
-                open=opentxt,
-                cm=cursor_mark,
-                blank=" ".repeat(self.layout.width as usize - txt.len() - opentxt.len() - 7),
+                open_m=open_mark,
+                blank=" ".repeat(self.layout.width as usize - txt.len() - 7),
                 fg=console::FG_PRIMARY,
                 bg=console::BG_PRIMARY,
-                bg_r=console::BG_RESET,
-                fg_r=console::FG_RESET,
                 c_fg=c_fg,
                 c_bg=c_bg,
                 b_v=console::BOX_V,
@@ -164,34 +141,25 @@ impl Control for RepoManager {
             help_txt = " esc: Cancel ".to_string();
         }
         let bottom_b_h = console::BOX_H.to_string().repeat(self.layout.width as usize - 3 - help_txt.len());
-        print!("{move}{fg}{bg}{b_ur}{repeat}{help}{b_h}{b_ul}{fg_r}{bg_r}",
-            move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
+        console::move_cursor(self.layout.left, self.layout.top + bottom_off);
+        print!("{b_ur}{repeat}{help}{b_h}{b_ul}",
             repeat=bottom_b_h,
             help=help_txt,
-            fg=console::FG_PRIMARY,
-            bg=console::BG_PRIMARY,
-            bg_r=console::BG_RESET,
-            fg_r=console::FG_RESET,
             b_ur=console::BOX_UR,
             b_ul=console::BOX_UL,
             b_h=console::BOX_H,
         );
         if self.adding {
             let inp_txt: String = self.input_txt.clone().into_iter().collect();
-            print!("{move}{fg}{bg}{s_ul}{inp}{s_nul}{show}{fg_r}{bg_r}",
-                move=cursor::Goto(self.layout.left + 9, self.layout.top + 4),
+            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
+            print!("{s_ul}{inp}{s_nul}{show}",
                 inp=inp_txt,
                 show=cursor::Show,
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-                bg_r=console::BG_RESET,
-                fg_r=console::FG_RESET,
                 s_ul=style::Underline,
                 s_nul=style::NoUnderline,
             );
-            return true
         }
-        false
+        console::stop_drawing();
     }
 }
 

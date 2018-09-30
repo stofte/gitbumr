@@ -1,6 +1,9 @@
 use termion::{style, cursor};
-use std::io::Stdout;
-use std::any::Any;
+use std::{
+    cmp,
+    io::Stdout,
+    any::Any,
+};
 use git2::{Repository, BranchType};
 use app::git::{get_head};
 use app::control::{Control, RepositoryControl};
@@ -18,11 +21,14 @@ impl Control for Branches {
         self
     }
     fn layout(&mut self, layout: &LayoutUpdate) {
-        self.layout.width = layout.cols.unwrap();
-        self.layout.height = layout.rows.unwrap();
+        self.layout.top = 2;
+        self.layout.left = 1;
+        self.layout.width = 25;
+        self.layout.height = layout.rows.unwrap() - self.layout.top;
     }
-    fn render(&self, stdout: &mut Stdout) -> bool {
-        if !self.layout.visible { return false }
+    fn render(&self, stdout: &mut Stdout) {
+        if !self.layout.visible { return }
+
         match self.checkedout_idx {
             Some(i) => {
                 print!("{}", cursor::Goto(1, 2));
@@ -38,7 +44,6 @@ impl Control for Branches {
             },
             _ => ()
         };
-        false
     }
 }
 

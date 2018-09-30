@@ -2,14 +2,6 @@ use std::io::{Write, Stdout};
 use termion::{cursor, clear};
 use termion::color::{Bg, Fg, Reset, Rgb, Black};
 
-pub fn reset() {
-    print!("{}{}{}",
-        cursor::Goto(1, 1),
-        clear::All,
-        cursor::Hide
-    );
-}
-
 pub static FG_PRIMARY: Fg<Rgb> = Fg(Rgb(20, 20, 20));
 pub static BG_PRIMARY: Bg<Rgb> = Bg(Rgb(245, 245, 245));
 // selection/navigation indicator
@@ -32,3 +24,29 @@ pub static BOX_DL: char = '\u{2513}';
 pub static BOX_UR: char = '\u{2517}';
 pub static BOX_UL: char = '\u{251B}';
 pub static PNT_R: char = '\u{25ba}';
+
+pub fn reset() {
+    print!("{}{}{}",
+        cursor::Goto(1, 1),
+        clear::All,
+        cursor::Hide
+    );
+}
+
+pub fn start_drawing(left: u16, top: u16, fg: Fg<Rgb>, bg: Bg<Rgb>) {
+    print!("{}{}{}",
+        cursor::Goto(left, top),
+        fg,
+        bg,
+    );
+}
+
+pub fn move_cursor(left: u16, top: u16) {
+    print!("{}",
+        cursor::Goto(left, top),
+    );
+}
+
+pub fn stop_drawing() {
+    print!("{}{}", FG_RESET, BG_RESET);
+}
