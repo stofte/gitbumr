@@ -1,5 +1,5 @@
-use std::{env, path::Path, fs::File};
-use rusqlite::Connection;
+use std::{error::Error, env, path::Path, fs::File};
+use rusqlite::{Connection, Transaction};
 
 pub struct Settings {
     conn: Connection
@@ -52,9 +52,21 @@ impl Settings {
         }
         repos
     }
-    pub fn add_repository(&mut self, path: &str) {
-        self.conn.execute("UPDATE repos SET open=0 WHERE 1=1", &[]).unwrap();
-        self.conn.execute("INSERT INTO repos(path, open) VALUES(?1, 0)", &[&path]).unwrap();
+    pub fn add_repository(&mut self, path: &str) -> Result<(), &'static str> {
+        // todo use try! macro https://docs.rs/rusqlite/0.14.0/rusqlite/struct.Transaction.html#example
+        let tx = self.conn.transaction().unwrap();
+        tx.execute("UPDATE repos SET open=0 WHERE 1=1", &[]);
+        // this works for now
+        match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&path]) {
+            Err(..) => {
+                tx.rollback();
+                Err("Failed to add repository")
+            }
+            _ => {
+                tx.commit();
+                Ok(())
+            }
+        }
     }
 }
 

@@ -119,10 +119,15 @@ impl Control for RepoManager {
         }
         for repo in &self.repos {
             let txt = &repo.path;
-            print!("{move}{fg}{bg}{b_v}  {txt}{blank}{b_v}{fg_r}{bg_r}",
+            let mut opentxt = "";
+            if repo.open {
+                opentxt = "open";
+            }
+            print!("{move}{fg}{bg}{b_v}  {txt}{open}{blank}{b_v}{fg_r}{bg_r}",
                 move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
                 txt=txt,
-                blank=" ".repeat(self.layout.width as usize - txt.len() - 4),
+                open=opentxt,
+                blank=" ".repeat(self.layout.width as usize - txt.len() - opentxt.len() - 4),
                 fg=console::FG_PRIMARY,
                 bg=console::BG_PRIMARY,
                 bg_r=console::BG_RESET,
