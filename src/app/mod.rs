@@ -152,7 +152,15 @@ impl Application {
                 },
                 None => ()
             }
-            if matched { break; }
+            if matched { continue; }
+            match c.as_any_mut().downcast_mut::<Log>() {
+                Some(ref mut o) => {
+                    let (handled, fs) = o.handle(key);
+                    matched = handled;
+                },
+                None => ()
+            }
+            if matched { continue; }
         };
         res
     }
