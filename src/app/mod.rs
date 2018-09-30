@@ -18,7 +18,8 @@ use app::{
         InputControl,
         header::Header,
         branches::Branches,
-        repomanager::{RepoManager, build_repomanager}
+        repomanager::{RepoManager, build_repomanager},
+        log::{Log, build_log},
     },
 };
 
@@ -70,6 +71,11 @@ impl Application {
                         Some(ref mut o) => { matched = true; o.update(&repo); },
                         None => ()
                     };
+                    if matched { continue; }
+                    match c.as_any_mut().downcast_mut::<Log>() {
+                        Some(ref mut o) => { matched = true; o.update(&repo); },
+                        None => ()
+                    };
                 };
             },
             None => {
@@ -82,6 +88,11 @@ impl Application {
                     }
                     if matched { continue; }
                     match c.as_any_mut().downcast_mut::<Branches>() {
+                        Some(ref mut o) => { matched = true; o.none(); },
+                        None => ()
+                    };
+                    if matched { continue; }
+                    match c.as_any_mut().downcast_mut::<Log>() {
                         Some(ref mut o) => { matched = true; o.none(); },
                         None => ()
                     };
@@ -158,6 +169,7 @@ pub fn new_application() -> Application {
     };
     // order of insertion is z-index, latter being higher
     app.add_control(Box::new(Header { repo_path: "".to_string(), state: "".to_string(), layout: empty_layout() }));
+    app.add_control(Box::new(build_log()));
     let mut c = Branches { local: vec![], remote: vec![], checkedout_idx: None, layout: empty_layout() };
     c.layout.visible = true;
     app.add_control(Box::new(c));
