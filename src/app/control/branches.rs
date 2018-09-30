@@ -9,6 +9,7 @@ use app::{
     console,
     Layout,
     LayoutUpdate,
+    empty_layout,
     git::{get_head},
     control::{Control, RepositoryControl},
 };
@@ -99,4 +100,15 @@ impl RepositoryControl for Branches {
     fn none(&mut self) {
         self.layout.visible = false;
     }
+}
+
+pub fn build_branches() -> Branches {
+    let mut b = Branches {
+        local: vec![],
+        remote: vec![],
+        checkedout_idx: None,
+        layout: empty_layout()
+    };
+    b.layout.visible = true;
+    b
 }

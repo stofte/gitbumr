@@ -17,7 +17,7 @@ use app::{
         SettingsControl,
         InputControl,
         header::Header,
-        branches::Branches,
+        branches::{Branches, build_branches},
         repomanager::{RepoManager, build_repomanager},
         log::{Log, build_log},
     },
@@ -184,8 +184,6 @@ pub fn new_application() -> Application {
     app.add_control(Box::new(build_repomanager()));
     app.add_control(Box::new(Header { repo_path: "".to_string(), state: "".to_string(), layout: empty_layout() }));
     app.add_control(Box::new(build_log()));
-    let mut c = Branches { local: vec![], remote: vec![], checkedout_idx: None, layout: empty_layout() };
-    c.layout.visible = true;
-    app.add_control(Box::new(c));
+    app.add_control(Box::new(build_branches()));
     app
 }
