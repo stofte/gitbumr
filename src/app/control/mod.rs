@@ -6,7 +6,7 @@ use std::any::Any;
 use std::io::{Stdout};
 use git2::{Repository};
 use termion::{event::Key};
-use app::{settings::Settings, LayoutUpdate, UiOption};
+use app::{settings::Settings, LayoutUpdate, UiFlags};
 
 pub trait Control {
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -20,9 +20,9 @@ pub trait RepositoryControl {
 }
 
 pub trait SettingsControl {
-    fn update(&mut self, &mut Settings) -> UiOption;
+    fn update(&mut self, &mut Settings) -> UiFlags;
 }
 
 pub trait InputControl {
-    fn handle(&mut self, Key) -> (bool, UiOption);
+    fn handle(&mut self, Key) -> (bool, UiFlags);
 }

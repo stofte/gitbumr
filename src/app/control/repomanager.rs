@@ -9,9 +9,9 @@ use termion::{
 };
 use app::{
     console, empty_layout,
-    Layout, LayoutUpdate,
+    Layout, LayoutUpdate, UiFlags,
     settings::{Settings, StoredRepository},
-    control::{Control, SettingsControl, InputControl, UiOption},
+    control::{Control, SettingsControl, InputControl},
 };
 
 pub struct RepoManager {
@@ -182,8 +182,8 @@ impl Control for RepoManager {
 }
 
 impl SettingsControl for RepoManager {
-    fn update(&mut self, setttings: &mut Settings) -> UiOption {
-        let mut res = UiOption::None;
+    fn update(&mut self, setttings: &mut Settings) -> UiFlags {
+        let mut res = UiFlags::None;
         if self.pending_add {
             self.pending_add = false;
             let path: String = self.input_txt.clone().into_iter().collect();
@@ -192,7 +192,7 @@ impl SettingsControl for RepoManager {
                     self.input_txt.clear();
                     self.adding = false;
                     self.add_err = None;
-                    res = UiOption::HideCursor;
+                    res = UiFlags::HideCursor | UiFlags::AddedRepository;
                 },
                 Err(err) => {
                     self.add_err = Some(err.to_string());
@@ -212,10 +212,10 @@ impl SettingsControl for RepoManager {
 }
 
 impl InputControl for RepoManager {
-    fn handle(&mut self, key: Key) -> (bool, UiOption) {
-        let handled = (true, UiOption::None);
-        let handled_cursor = (true, UiOption::HideCursor);
-        let pass = (false, UiOption::None);
+    fn handle(&mut self, key: Key) -> (bool, UiFlags) {
+        let handled = (true, UiFlags::None);
+        let handled_cursor = (true, UiFlags::HideCursor);
+        let pass = (false, UiFlags::None);
         match key {
             Key::Char(c) => {
                 if c == 'r' && !self.layout.visible {

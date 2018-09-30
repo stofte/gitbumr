@@ -3,6 +3,8 @@ extern crate git2;
 extern crate rusqlite;
 #[macro_use]
 extern crate crossbeam_channel as channel;
+#[macro_use]
+extern crate bitflags;
 mod app;
 
 use std::{

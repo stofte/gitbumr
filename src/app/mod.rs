@@ -8,6 +8,7 @@ use std::{
 };
 use git2::Repository;
 use termion::{terminal_size, event::Key, cursor};
+use bitflags;
 use app::{
     settings::{Settings},
     control::{
@@ -41,9 +42,12 @@ pub struct LayoutUpdate {
     pub cols: Option<u16>,
 }
 
-pub enum UiOption {
-    None,
-    HideCursor
+bitflags! {
+    struct UiFlags: u32 {
+        const None              = 0;
+        const HideCursor        = 0b00000001;
+        const AddedRepository   = 0b00000010;
+    }
 }
 
 impl Application {
@@ -91,12 +95,13 @@ impl Application {
             match c.as_any_mut().downcast_mut::<RepoManager>() {
                 Some(ref mut o) => {
                     matched = true;
-                    match o.update(settings) {
-                        UiOption::HideCursor => {
-                            print!("{}", cursor::Hide);
-                        },
-                        UiOption::None => ()
-                    };
+                    let f = o.update(settings);
+                    if f & UiFlags::HideCursor == UiFlags::HideCursor {
+                        print!("{}", cursor::Hide);
+                    }
+                    if f & UiFlags::AddedRepository == UiFlags::AddedRepository {
+                        
+                    }
                 },
                 None => ()
             }
@@ -125,14 +130,11 @@ impl Application {
             let c = &mut *cp;
             match c.as_any_mut().downcast_mut::<RepoManager>() {
                 Some(ref mut o) => {
-                    let (handled, ui_opt) = o.handle(key);
+                    let (handled, fs) = o.handle(key);
                     matched = handled;
-                    match ui_opt {
-                        UiOption::HideCursor => {
-                            print!("{}", cursor::Hide);
-                        },
-                        UiOption::None => ()
-                    };
+                    if fs & UiFlags::HideCursor == UiFlags::HideCursor {
+                        print!("{}", cursor::Hide);
+                    }
                 },
                 None => ()
             }
