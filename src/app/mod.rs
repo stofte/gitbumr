@@ -47,6 +47,7 @@ bitflags! {
         const None              = 0;
         const HideCursor        = 0b00000001;
         const AddedRepository   = 0b00000010;
+        const OpenRepository    = 0b00000100;
     }
 }
 
@@ -126,7 +127,8 @@ impl Application {
         }
         stdout.flush().unwrap();
     }
-    pub fn key(&mut self, key: Key) {
+    pub fn key(&mut self, key: Key) -> UiFlags {
+        let mut res = UiFlags::None;
         for cp in &mut self.controls {
             let mut matched = false;
             let c = &mut *cp;
@@ -137,11 +139,15 @@ impl Application {
                     if fs & UiFlags::HideCursor == UiFlags::HideCursor {
                         print!("{}", cursor::Hide);
                     }
+                    if fs & UiFlags::OpenRepository == UiFlags::OpenRepository {
+                        res = UiFlags::OpenRepository;
+                    }
                 },
                 None => ()
             }
             if matched { break; }
         };
+        res
     }
 }
 

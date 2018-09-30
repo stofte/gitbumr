@@ -1,4 +1,5 @@
 use std::{
+    cmp,
     io::{Write, Stdout},
     any::Any,
 };
@@ -21,8 +22,9 @@ pub struct RepoManager {
     pub pending_add: bool,
     pub input_txt: Vec<char>,
     pub input_cursor: u16,
-    pub repo_cursor: Option<u16>,
+    pub repo_cursor: u16,
     pub add_err: Option<String>,
+    pub open_repo: Option<i64>,
 }
 
 fn print_blank(l: &Layout, top: u16) {
@@ -124,21 +126,33 @@ impl Control for RepoManager {
             );
             bottom_off = bottom_off + 1;
         }
-        for repo in &self.repos {
+        for i in 0..self.repos.len() {
+            let repo = &self.repos[i];
             let txt = &repo.path;
             let mut opentxt = "";
             if repo.open {
                 opentxt = " [open]";
             }
-            print!("{move}{fg}{bg}{b_v}  {txt}{open}{blank}{b_v}{fg_r}{bg_r}",
+            let mut cursor_mark = ' ';
+            let mut c_fg = console::FG_PRIMARY;
+            let mut c_bg = console::BG_PRIMARY;
+            if i as u16 == self.repo_cursor {
+                c_bg = console::BG_PRIMARY_CURSOR;
+                c_fg = console::FG_PRIMARY_CURSOR;
+                cursor_mark = console::PNT_R;
+            }
+            print!("{move}{fg}{bg}{b_v}  {cm}{c_fg}{c_bg}{txt}{open}{blank}{fg}{bg}  {b_v}{fg_r}{bg_r}",
                 move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
                 txt=txt,
                 open=opentxt,
-                blank=" ".repeat(self.layout.width as usize - txt.len() - opentxt.len() - 4),
+                cm=cursor_mark,
+                blank=" ".repeat(self.layout.width as usize - txt.len() - opentxt.len() - 7),
                 fg=console::FG_PRIMARY,
                 bg=console::BG_PRIMARY,
                 bg_r=console::BG_RESET,
                 fg_r=console::FG_RESET,
+                c_fg=c_fg,
+                c_bg=c_bg,
                 b_v=console::BOX_V,
             );
             bottom_off = bottom_off + 1;
@@ -182,12 +196,12 @@ impl Control for RepoManager {
 }
 
 impl SettingsControl for RepoManager {
-    fn update(&mut self, setttings: &mut Settings) -> UiFlags {
+    fn update(&mut self, settings: &mut Settings) -> UiFlags {
         let mut res = UiFlags::None;
         if self.pending_add {
             self.pending_add = false;
             let path: String = self.input_txt.clone().into_iter().collect();
-            match setttings.add_repository(&path) {
+            match settings.add_repository(&path) {
                 Ok(()) => {
                     self.input_txt.clear();
                     self.adding = false;
@@ -199,14 +213,14 @@ impl SettingsControl for RepoManager {
                 }
             };
         }
-        self.repos = setttings.get_repositories();
-        for i in 0..self.repos.len() {
-            let r = &self.repos[i];
-            if r.open {
-                self.repo_cursor = Some(i as u16);
-                break;
+        match self.open_repo {
+            Some(id) => {
+                settings.open_repository(id);
+                res = UiFlags::OpenRepository;
             }
+            _ => ()
         }
+        self.repos = settings.get_repositories();
         res
     }
 }
@@ -215,6 +229,7 @@ impl InputControl for RepoManager {
     fn handle(&mut self, key: Key) -> (bool, UiFlags) {
         let handled = (true, UiFlags::None);
         let handled_cursor = (true, UiFlags::HideCursor);
+        let handled_repo = (true, UiFlags::OpenRepository);
         let pass = (false, UiFlags::None);
         match key {
             Key::Char(c) => {
@@ -228,6 +243,10 @@ impl InputControl for RepoManager {
                     if self.adding {
                         self.pending_add = self.input_txt.len() > 0;
                         return handled
+                    } else if self.layout.visible && !self.adding && self.repos.len() > 0 {
+                        self.open_repo = Some(self.repos[self.repo_cursor as usize].id);
+                        self.layout.visible = false;
+                        return handled_repo                        
                     }
                     return pass
                 } else if c == '\t' && self.adding {
@@ -237,20 +256,34 @@ impl InputControl for RepoManager {
                     return handled
                 }
                 pass
-            },
+            }
             Key::Backspace => {
                 if self.adding && self.input_txt.len() > 0 {
                     self.input_txt.pop();
                     return handled
                 }
                 pass
-            },
+            }
             Key::Esc => {
                 if self.adding {
                     self.adding = false;
                     return handled_cursor
                 } else if self.layout.visible {
                     self.layout.visible = false;
+                    return handled
+                }
+                pass
+            }
+            Key::Up => {
+                if self.layout.visible && !self.adding && self.repos.len() > 0 && self.repo_cursor > 0 {
+                    self.repo_cursor -= 1;
+                    return handled
+                }
+                pass
+            }
+            Key::Down => {
+                if self.layout.visible && !self.adding && self.repos.len() > 0 {
+                    self.repo_cursor = cmp::min(self.repos.len() as u16 - 1, self.repo_cursor + 1);
                     return handled
                 }
                 pass
@@ -268,7 +301,8 @@ pub fn build_repomanager() -> RepoManager {
         pending_add: false,
         input_txt: vec![],
         input_cursor: 0,
-        repo_cursor: None,
+        repo_cursor: 0,
         add_err: None,
+        open_repo: None
     }
 }

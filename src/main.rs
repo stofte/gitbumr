@@ -73,6 +73,7 @@ fn main() {
     app.settings(&mut db);
     
 
+    // todo move into application
     loop  {
         console::reset();
         app.render(&mut stdout);
@@ -84,9 +85,10 @@ fn main() {
                     _ => ()
                 };
                 // if we didn't break, pass the input to the controls
-                app.key(c);
-                let e = app.settings(&mut db);
-                if e & UiFlags::AddedRepository == UiFlags::AddedRepository {
+                let mut e = app.key(c);
+                e |= app.settings(&mut db);
+                if e & UiFlags::AddedRepository == UiFlags::AddedRepository ||
+                   e & UiFlags::OpenRepository == UiFlags::OpenRepository {
                     repo = git_repo_opt(&db);
                     app.repository(repo);
                 }
@@ -104,7 +106,7 @@ fn main() {
 
 fn git_repo_opt(db: &Settings) -> Option<Repository> {
     let mut repo: Option<Repository> = None;
-    match db.default_repository() {
+    match db.get_open_repository() {
         Some(sr) => {
             match Repository::open(sr.path) {
                 Ok(gr) => {

@@ -7,6 +7,7 @@ pub struct Settings {
 }
 
 pub struct StoredRepository {
+    pub id: i64,
     pub path: String,
     pub open: bool,
 }
@@ -41,11 +42,12 @@ impl Settings {
     }
     pub fn get_repositories(&self) -> Vec<StoredRepository> {
         let mut repos = vec![];
-        let mut stmt = self.conn.prepare("SELECT path, open FROM repos ORDER BY path;").unwrap();
+        let mut stmt = self.conn.prepare("SELECT rowid, path, open FROM repos ORDER BY path;").unwrap();
         let rows = stmt.query_map(&[], |row| {
             StoredRepository {
-                path: row.get(0),
-                open: row.get(1),
+                id: row.get(0),
+                path: row.get(1),
+                open: row.get(2),
             }
         }).unwrap();
         for r in rows {
@@ -81,17 +83,31 @@ impl Settings {
             }
         }
     }
-    pub fn default_repository(&self) -> Option<StoredRepository> {
+    pub fn get_open_repository(&self) -> Option<StoredRepository> {
         let repos = self.get_repositories();
         for repo in repos {
             if repo.open {
                 return Some(StoredRepository {
+                    id: repo.id,
                     path: repo.path.clone(),
                     open: repo.open,
                 })
             }
         }
         None
+    }
+    pub fn open_repository(&mut self, id: i64) {
+        let tx = self.conn.transaction().unwrap();
+        tx.execute("UPDATE repos SET open=0 WHERE 1=1", &[]);
+        match tx.execute("UPDATE repos SET open=1 WHERE rowid=?1", &[&id]) {
+            Err(..) => {
+                tx.rollback();
+                panic!("open_repository received unknown id")
+            }
+            _ => {
+                tx.commit();
+            }
+        }
     }
 }
 
