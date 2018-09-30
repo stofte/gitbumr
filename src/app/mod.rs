@@ -129,38 +129,43 @@ impl Application {
         }
     }
     pub fn render(&self, stdout: &mut Stdout) {
-        for c in &self.controls {
-            c.render(stdout);
+        for i in (0..self.controls.len()).rev() {
+            self.controls[i].render(stdout);
         }
         stdout.flush().unwrap();
     }
     pub fn key(&mut self, key: Key) -> UiFlags {
         let mut res = UiFlags::None;
         for cp in &mut self.controls {
-            let mut matched = false;
             let c = &mut *cp;
             match c.as_any_mut().downcast_mut::<RepoManager>() {
                 Some(ref mut o) => {
                     let (handled, fs) = o.handle(key);
-                    matched = handled;
                     if fs & UiFlags::HideCursor == UiFlags::HideCursor {
                         print!("{}", cursor::Hide);
                     }
                     if fs & UiFlags::OpenRepository == UiFlags::OpenRepository {
                         res = UiFlags::OpenRepository;
                     }
+                    if (handled) {
+                        break
+                    } else {
+                        continue
+                    }
                 },
                 None => ()
             }
-            if matched { continue; }
             match c.as_any_mut().downcast_mut::<Log>() {
                 Some(ref mut o) => {
                     let (handled, fs) = o.handle(key);
-                    matched = handled;
+                    if (handled) {
+                        break
+                    } else {
+                        continue
+                    }
                 },
                 None => ()
             }
-            if matched { continue; }
         };
         res
     }
@@ -176,11 +181,11 @@ pub fn new_application() -> Application {
         controls: vec![]
     };
     // order of insertion is z-index, latter being higher
+    app.add_control(Box::new(build_repomanager()));
     app.add_control(Box::new(Header { repo_path: "".to_string(), state: "".to_string(), layout: empty_layout() }));
     app.add_control(Box::new(build_log()));
     let mut c = Branches { local: vec![], remote: vec![], checkedout_idx: None, layout: empty_layout() };
     c.layout.visible = true;
     app.add_control(Box::new(c));
-    app.add_control(Box::new(build_repomanager()));
     app
 }
