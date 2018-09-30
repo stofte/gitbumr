@@ -73,6 +73,9 @@ impl RepositoryControl for Log {
         self.layout.visible = true;
         let mut rv = repo.revwalk().unwrap();
         rv.push_head();
+        self.revwalk.clear();
+        self.rw_idx = 0;
+        self.cursor_idx = 0;
         for r in rv {
             self.revwalk.push(r.unwrap());
         }
