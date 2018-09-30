@@ -59,15 +59,14 @@ impl Control for Log {
                 c_fg = console::FG_PRIMARY_CURSOR;
             }
             let commit = &self.commits[c_idx];
-            let c_ts = commit.time.format("%a %b %e %T %Y").to_string();
+            let c_ts = commit.time.format("%Y/%m/%d %H:%M").to_string();
             let c_auth = &commit.author;
-            let c_size =  commit.id.len() + c_ts.len() + c_auth.len() + 4;
+            let c_size = c_ts.len() + c_auth.len() + 3;
             let msg_cols = self.layout.width as usize - c_size;
             let msg_len = cmp::min(msg_cols, commit.message_line.len());
             let c_msg: String = commit.message_line.chars().take(msg_len).collect();
             let c_msg_blank = self.layout.width as usize - c_msg.len() - c_size;
-            print!("{c_fg}{c_bg} {id} {time} {msg}{blank} {auth} {fg}{bg}",
-                id=commit.id,
+            print!("{c_fg}{c_bg} {time} {msg}{blank} {auth} {fg}{bg}",
                 blank=" ".repeat(c_msg_blank),
                 msg=c_msg,
                 time=c_ts,
