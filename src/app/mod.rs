@@ -60,40 +60,34 @@ impl Application {
         match r {
             Some(repo) => {
                 for cp in &mut self.controls {
-                    let mut matched = false;
                     let c = &mut *cp;
                     match c.as_any_mut().downcast_mut::<Header>() {
-                        Some(ref mut o) => { matched = true; o.update(&repo); },
+                        Some(ref mut o) => { o.update(&repo); continue },
                         None => ()
                     }
-                    if matched { continue; }
                     match c.as_any_mut().downcast_mut::<Branches>() {
-                        Some(ref mut o) => { matched = true; o.update(&repo); },
+                        Some(ref mut o) => { o.update(&repo); continue },
                         None => ()
                     };
-                    if matched { continue; }
                     match c.as_any_mut().downcast_mut::<Log>() {
-                        Some(ref mut o) => { matched = true; o.update(&repo); },
+                        Some(ref mut o) => { o.update(&repo); continue },
                         None => ()
                     };
                 };
             },
             None => {
                 for cp in &mut self.controls {
-                    let mut matched = false;
                     let c = &mut *cp;
                     match c.as_any_mut().downcast_mut::<Header>() {
-                        Some(ref mut o) => { matched = true; o.none(); },
+                        Some(ref mut o) => { o.none(); continue },
                         None => ()
                     }
-                    if matched { continue; }
                     match c.as_any_mut().downcast_mut::<Branches>() {
-                        Some(ref mut o) => { matched = true; o.none(); },
+                        Some(ref mut o) => { o.none(); continue },
                         None => ()
                     };
-                    if matched { continue; }
                     match c.as_any_mut().downcast_mut::<Log>() {
-                        Some(ref mut o) => { matched = true; o.none(); },
+                        Some(ref mut o) => { o.none(); continue },
                         None => ()
                     };
                 };
