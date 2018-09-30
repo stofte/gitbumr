@@ -10,8 +10,8 @@ use termion::{
 use app::{
     console,
     Layout, LayoutUpdate,
-    db::{StoredRepository, Database},
-    control::{Control, DatabaseControl, InputControl, UiOption},
+    settings::{Settings, StoredRepository},
+    control::{Control, SettingsControl, InputControl, UiOption},
 };
 
 pub struct RepoManager {
@@ -169,15 +169,15 @@ impl Control for RepoManager {
     }
 }
 
-impl DatabaseControl for RepoManager {
-    fn update(&mut self, db: &mut Database) {
+impl SettingsControl for RepoManager {
+    fn update(&mut self, setttings: &mut Settings) {
         if self.pending_add {
             let path: String = self.input_txt.clone().into_iter().collect();
-            db.add_repository(&path);
+            setttings.add_repository(&path);
             self.input_txt.clear();
             self.pending_add = false;
         }
-        self.repos = db.get_repositories();
+        self.repos = setttings.get_repositories();
         for i in 0..self.repos.len() {
             let r = &self.repos[i];
             if r.open {

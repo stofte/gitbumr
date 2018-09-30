@@ -6,7 +6,7 @@ use std::any::Any;
 use std::io::{Stdout};
 use git2::{Repository};
 use termion::{event::Key};
-use app::{db::Database, LayoutUpdate};
+use app::{settings::Settings, LayoutUpdate};
 
 pub enum UiOption {
     None,
@@ -23,8 +23,8 @@ pub trait RepositoryControl {
     fn update(&mut self, &Repository);
 }
 
-pub trait DatabaseControl {
-    fn update(&mut self, &mut Database);
+pub trait SettingsControl {
+    fn update(&mut self, &mut Settings);
 }
 
 pub trait InputControl {

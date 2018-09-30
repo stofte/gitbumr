@@ -1,19 +1,20 @@
+use std::{env, path::Path, fs::File};
 use rusqlite::Connection;
+
+pub struct Settings {
+    conn: Connection
+}
 
 pub struct StoredRepository {
     pub path: String,
     pub open: bool,
 }
 
-pub struct Database<'a> {
-    pub conn: &'a Connection
-}
-
 struct Table {
     name: String
 }
 
-impl<'a> Database<'a> {
+impl Settings {
     pub fn init(&mut self) {
         let mut stmt = self.conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='repos';").unwrap();
         let tbl_iter = stmt.query_map(&[], |row| {
@@ -22,8 +23,10 @@ impl<'a> Database<'a> {
             }
         }).unwrap();
         let mut has_repos = false;
+        let mut has_version = false;
         for tbl in tbl_iter {
-            if tbl.unwrap().name == "repos" {
+            let n = tbl.unwrap().name;
+            if n == "repos" {
                 has_repos = true;
             }
         }
@@ -53,4 +56,14 @@ impl<'a> Database<'a> {
         self.conn.execute("UPDATE repos SET open=0 WHERE 1=1", &[]).unwrap();
         self.conn.execute("INSERT INTO repos(path, open) VALUES(?1, 0)", &[&path]).unwrap();
     }
+}
+
+pub fn build_settings() -> Settings {
+    let db_path = format!("{}/.gitbumrdb", env::var("HOME").unwrap());
+    let p = Path::new(&db_path);
+    if !p.exists() {
+        File::create(&db_path);
+    }
+    let sqlite_conn = Connection::open(p).unwrap();
+    Settings { conn: sqlite_conn }
 }

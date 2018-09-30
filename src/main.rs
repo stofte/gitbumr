@@ -20,8 +20,8 @@ use termion::{
 use git2::Repository;
 use app::{
     console, Layout,
-    db::{Database},
-    control::{Control, RepositoryControl, DatabaseControl, branches::Branches, header::Header},
+    settings::{Settings, build_settings},
+    control::{Control, RepositoryControl, SettingsControl, branches::Branches, header::Header},
     new_application, Application,
 };
 
@@ -31,8 +31,8 @@ fn main() {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
-    let sqlite_conn = rusqlite::Connection::open_in_memory().unwrap();
-    let mut db = Database { conn: &sqlite_conn };
+    
+    let mut db = build_settings();
     db.init();
 
     let (keys_s, keys_r) = channel::bounded(0);

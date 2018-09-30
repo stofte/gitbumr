@@ -1,6 +1,6 @@
 pub mod git;
 pub mod console;
-pub mod db;
+pub mod settings;
 pub mod control;
 
 use std::{
@@ -9,11 +9,11 @@ use std::{
 use git2::Repository;
 use termion::{terminal_size, event::Key, cursor};
 use app::{
-    db::{Database},
+    settings::{Settings},
     control::{
         Control,
         RepositoryControl,
-        DatabaseControl,
+        SettingsControl,
         InputControl,
         UiOption,
         header::Header,
@@ -61,12 +61,12 @@ impl Application {
             };
         };
     }
-    pub fn database(&mut self, db: &mut Database) {
+    pub fn database(&mut self, settings: &mut Settings) {
         for cp in &mut self.controls {
             let mut matched = false;
             let c = &mut *cp;
             match c.as_any_mut().downcast_mut::<RepoManager>() {
-                Some(ref mut o) => { matched = true; o.update(db); },
+                Some(ref mut o) => { matched = true; o.update(settings); },
                 None => ()
             }
         };
