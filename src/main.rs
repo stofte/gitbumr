@@ -46,9 +46,11 @@ fn main() {
         }
     });
 
-    // lock the scrollbar https://gitlab.redox-os.org/redox-os/termion/issues/117
-    let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
-    write!(screen, "{}", termion::cursor::Hide).unwrap();
+    if false {
+        // lock the scrollbar https://gitlab.redox-os.org/redox-os/termion/issues/117
+        let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
+        write!(screen, "{}", termion::cursor::Hide).unwrap();
+    }
 
     // terminal seems to get fubared if this is done after terminal_size?
     let mut stdout = stdout().into_raw_mode().unwrap();
