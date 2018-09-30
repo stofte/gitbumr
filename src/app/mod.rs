@@ -18,7 +18,7 @@ use app::{
         UiOption,
         header::Header,
         branches::Branches,
-        repomanager::RepoManager
+        repomanager::{RepoManager, build_repomanager}
     },
 };
 
@@ -61,12 +61,20 @@ impl Application {
             };
         };
     }
-    pub fn database(&mut self, settings: &mut Settings) {
+    pub fn settings(&mut self, settings: &mut Settings) {
         for cp in &mut self.controls {
             let mut matched = false;
             let c = &mut *cp;
             match c.as_any_mut().downcast_mut::<RepoManager>() {
-                Some(ref mut o) => { matched = true; o.update(settings); },
+                Some(ref mut o) => {
+                    matched = true;
+                    match o.update(settings) {
+                        UiOption::HideCursor => {
+                            print!("{}", cursor::Hide);
+                        },
+                        UiOption::None => ()
+                    };
+                },
                 None => ()
             }
         };
@@ -110,7 +118,7 @@ impl Application {
     }
 }
 
-fn empty_layout() -> Layout {
+pub fn empty_layout() -> Layout {
     Layout { top: 0, left: 0, width: 0, height: 0, visible: false, console_rows: 0, console_cols: 0 }
 }
 
@@ -124,14 +132,6 @@ pub fn new_application() -> Application {
     let mut c = Branches { local: vec![], remote: vec![], checkedout_idx: None, layout: empty_layout() };
     c.layout.visible = true;
     app.add_control(Box::new(c));
-    app.add_control(Box::new(RepoManager {
-        repos: vec![],
-        layout: empty_layout(),
-        adding: false,
-        pending_add: false,
-        input_txt: vec![],
-        input_cursor: 0,
-        repo_cursor: None,
-    }));
+    app.add_control(Box::new(build_repomanager()));
     app
 }

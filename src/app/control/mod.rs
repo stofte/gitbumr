@@ -24,7 +24,7 @@ pub trait RepositoryControl {
 }
 
 pub trait SettingsControl {
-    fn update(&mut self, &mut Settings);
+    fn update(&mut self, &mut Settings) -> UiOption;
 }
 
 pub trait InputControl {

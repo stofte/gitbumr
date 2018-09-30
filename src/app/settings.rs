@@ -1,5 +1,6 @@
-use std::{error::Error, env, path::Path, fs::File};
+use std::{error::Error, env, path::{Path, PathBuf}, fs::{File, canonicalize}};
 use rusqlite::{Connection, Transaction};
+use git2::Repository;
 
 pub struct Settings {
     conn: Connection
@@ -53,14 +54,26 @@ impl Settings {
         repos
     }
     pub fn add_repository(&mut self, path: &str) -> Result<(), &'static str> {
+        // get canonical name (using os functions, so hits the filesystem)
+        let mut p = path.to_string();
+        match canonicalize(path) {
+            Ok(cpb) => p = cpb.into_os_string().into_string().unwrap(),
+            // can't return err msg itself, must explicitly return static strings
+            Err(..) => return Err("accessing path")
+        };
+        // verify we have git repo
+        let repo = match Repository::open(&p) {
+            Ok(repo) => (),
+            Err(e) => return Err("not a git repository")
+        };
         // todo use try! macro https://docs.rs/rusqlite/0.14.0/rusqlite/struct.Transaction.html#example
         let tx = self.conn.transaction().unwrap();
         tx.execute("UPDATE repos SET open=0 WHERE 1=1", &[]);
         // this works for now
-        match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&path]) {
+        match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&p]) {
             Err(..) => {
                 tx.rollback();
-                Err("Failed to add repository")
+                Err("already in list")
             }
             _ => {
                 tx.commit();

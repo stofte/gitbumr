@@ -8,7 +8,7 @@ use termion::{
     event::Key
 };
 use app::{
-    console,
+    console, empty_layout,
     Layout, LayoutUpdate,
     settings::{Settings, StoredRepository},
     control::{Control, SettingsControl, InputControl, UiOption},
@@ -22,6 +22,7 @@ pub struct RepoManager {
     pub input_txt: Vec<char>,
     pub input_cursor: u16,
     pub repo_cursor: Option<u16>,
+    pub add_err: Option<String>,
 }
 
 fn print_blank(l: &Layout, top: u16) {
@@ -70,7 +71,13 @@ impl Control for RepoManager {
         print_blank(&self.layout, 1);
         let mut bottom_off = 2;
         if self.adding {
-            let txt = "  Add repository".to_string();
+            let mut txt = "  Add repository".to_string();
+            match &self.add_err {
+                Some(err) => {
+                    txt = format!("  Error: {}", err).to_string();
+                },
+                _ => ()
+            };
             print!("{move}{fg}{bg}{b_v}{txt}{blank}{b_v}{fg_r}{bg_r}",
                 move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
                 txt=txt,
@@ -121,7 +128,7 @@ impl Control for RepoManager {
             let txt = &repo.path;
             let mut opentxt = "";
             if repo.open {
-                opentxt = "open";
+                opentxt = " [open]";
             }
             print!("{move}{fg}{bg}{b_v}  {txt}{open}{blank}{b_v}{fg_r}{bg_r}",
                 move=cursor::Goto(self.layout.left, self.layout.top + bottom_off),
@@ -175,12 +182,21 @@ impl Control for RepoManager {
 }
 
 impl SettingsControl for RepoManager {
-    fn update(&mut self, setttings: &mut Settings) {
+    fn update(&mut self, setttings: &mut Settings) -> UiOption {
+        let mut res = UiOption::None;
         if self.pending_add {
-            let path: String = self.input_txt.clone().into_iter().collect();
-            setttings.add_repository(&path);
-            self.input_txt.clear();
             self.pending_add = false;
+            let path: String = self.input_txt.clone().into_iter().collect();
+            match setttings.add_repository(&path) {
+                Ok(()) => {
+                    self.input_txt.clear();
+                    self.adding = false;
+                    res = UiOption::HideCursor;
+                },
+                Err(err) => {
+                    self.add_err = Some(err.to_string());
+                }
+            };
         }
         self.repos = setttings.get_repositories();
         for i in 0..self.repos.len() {
@@ -190,6 +206,7 @@ impl SettingsControl for RepoManager {
                 break;
             }
         }
+        res
     }
 }
 
@@ -208,9 +225,8 @@ impl InputControl for RepoManager {
                     return handled
                 } else if c == '\n' {
                     if self.adding {
-                        self.adding = false;
                         self.pending_add = self.input_txt.len() > 0;
-                        return handled_cursor
+                        return handled
                     }
                     return pass
                 } else if c == '\t' && self.adding {
@@ -240,5 +256,18 @@ impl InputControl for RepoManager {
             }
             _ => pass
         }
+    }
+}
+
+pub fn build_repomanager() -> RepoManager {
+    RepoManager {
+        repos: vec![],
+        layout: empty_layout(),
+        adding: false,
+        pending_add: false,
+        input_txt: vec![],
+        input_cursor: 0,
+        repo_cursor: None,
+        add_err: None,
     }
 }

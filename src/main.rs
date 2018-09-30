@@ -73,7 +73,7 @@ fn main() {
     
     app.console_size();
     app.repository(&repo);
-    app.database(&mut db);
+    app.settings(&mut db);
     
     console::reset();
 
@@ -88,7 +88,7 @@ fn main() {
                 };
                 // if we didn't break, pass the input to the controls
                 app.key(c);
-                app.database(&mut db);
+                app.settings(&mut db);
             },
             recv(size_r, size) => {
                 console::reset();
