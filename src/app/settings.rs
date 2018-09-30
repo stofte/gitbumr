@@ -1,6 +1,7 @@
 use std::{error::Error, env, path::{Path, PathBuf}, fs::{File, canonicalize}};
 use rusqlite::{Connection, Transaction};
 use git2::Repository;
+use chrono::prelude::*;
 
 pub struct Settings {
     conn: Connection
@@ -18,14 +19,13 @@ struct Table {
 
 impl Settings {
     pub fn init(&mut self) {
-        let mut stmt = self.conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='repos';").unwrap();
+        let mut stmt = self.conn.prepare("SELECT name FROM sqlite_master WHERE type='table';").unwrap();
         let tbl_iter = stmt.query_map(&[], |row| {
             Table {
                 name: row.get(0)
             }
         }).unwrap();
         let mut has_repos = false;
-        let mut has_version = false;
         for tbl in tbl_iter {
             let n = tbl.unwrap().name;
             if n == "repos" {
@@ -108,6 +108,11 @@ impl Settings {
                 tx.commit();
             }
         }
+    }
+    pub fn get_timesize_offset_secs(&mut self) -> i32 {
+        let ldt = Local::now();
+        let z = ldt.offset().local_minus_utc();
+        z
     }
 }
 
