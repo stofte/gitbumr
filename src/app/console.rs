@@ -10,11 +10,11 @@ pub fn reset() {
     );
 }
 
-pub static FG_PRIMARY: Fg<Rgb> = Fg(Rgb(0, 0, 0));
-pub static BG_PRIMARY: Bg<Rgb> = Bg(Rgb(240, 240, 240));
+pub static FG_PRIMARY: Fg<Rgb> = Fg(Rgb(20, 20, 20));
+pub static BG_PRIMARY: Bg<Rgb> = Bg(Rgb(245, 245, 245));
 // selection/navigation indicator
 pub static FG_PRIMARY_CURSOR: Fg<Rgb> = Fg(Rgb(0, 0, 0));
-pub static BG_PRIMARY_CURSOR: Bg<Rgb> = Bg(Rgb(255, 255, 255));
+pub static BG_PRIMARY_CURSOR: Bg<Rgb> = Bg(Rgb(200, 200, 200));
 
 pub static BG_BRAND: Bg<Rgb> = Bg(Rgb(255, 150, 50));
 pub static FG_BRAND: Fg<Rgb> = Fg(Rgb(255, 255, 255));
