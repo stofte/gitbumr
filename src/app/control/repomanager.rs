@@ -20,6 +20,7 @@ pub struct RepoManager {
     pub adding: bool,
     pub pending_add: bool,
     pub input_txt: Vec<char>,
+    pub input_cursor: u16,
     pub repo_cursor: Option<u16>,
 }
 
@@ -193,34 +194,23 @@ impl InputControl for RepoManager {
         let handled_cursor = (true, UiOption::HideCursor);
         let pass = (false, UiOption::None);
         match key {
-            Key::Char('r') => {
-                if !self.layout.visible {
+            Key::Char(c) => {
+                if c == 'r' && !self.layout.visible {
                     self.layout.visible = true;
                     return handled
-                }
-                pass
-            },
-            Key::Char('a') => {
-                if self.layout.visible && !self.adding {
+                } else if c == 'a' && self.layout.visible && !self.adding {
                     self.adding = true;
                     return handled
+                } else if c == '\n' {
+                    if self.adding {
+                        self.adding = false;
+                        self.pending_add = self.input_txt.len() > 0;
+                        return handled_cursor
+                    }
+                    return pass
+                } else if c == '\t' && self.adding {
+                    return pass
                 } else if self.adding {
-                    self.input_txt.push('a');
-                    return handled
-                }
-                pass
-            },
-            Key::Char('\t') => pass,
-            Key::Char('\n') => {
-                if self.adding {
-                    self.adding = false;
-                    self.pending_add = self.input_txt.len() > 0;
-                    return handled_cursor
-                }
-                pass
-            },
-            Key::Char(c) => {
-                if self.adding {
                     self.input_txt.push(c);
                     return handled
                 }

@@ -130,6 +130,7 @@ pub fn new_application() -> Application {
         adding: false,
         pending_add: false,
         input_txt: vec![],
+        input_cursor: 0,
         repo_cursor: None,
     }));
     app
