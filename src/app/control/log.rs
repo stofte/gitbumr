@@ -24,6 +24,7 @@ pub struct Log {
     rw_read_fw: bool,
     layout: Layout,
     commits: Vec<Commit>,
+    tz_offset_secs: i32,
 }
 
 impl Control for Log {
@@ -58,7 +59,7 @@ impl Control for Log {
                 c_fg = console::FG_PRIMARY_CURSOR;
             }
             let commit = &self.commits[c_idx];
-            let c_ts = commit.time.to_string();
+            let c_ts = commit.time.format("%a %b %e %T %Y").to_string();
             let c_auth = &commit.author;
             let c_size =  commit.id.len() + c_ts.len() + c_auth.len() + 4;
             let msg_cols = self.layout.width as usize - c_size;
@@ -99,7 +100,7 @@ impl RepositoryControl for Log {
         self.commits.clear();
         for i in self.rw_idx..(self.rw_idx + vis_c) {
             let oid = self.revwalk[i];
-            let commit = get_commit(oid, &repo);
+            let commit = get_commit(oid, self.tz_offset_secs, &repo);
             self.commits.push(commit);
         }
     }
@@ -107,13 +108,13 @@ impl RepositoryControl for Log {
         if self.rw_read_fw {
             self.commits.remove(0);
             let oid = self.revwalk[self.cursor_idx];
-            let commit = get_commit(oid, &repo);
+            let commit = get_commit(oid, self.tz_offset_secs, &repo);
             self.commits.push(commit);
             self.rw_read_fw = false;
         } else if self.rw_read_bk {
             self.commits.pop();
             let oid = self.revwalk[self.cursor_idx];
-            let commit = get_commit(oid, &repo);
+            let commit = get_commit(oid, self.tz_offset_secs, &repo);
             self.commits.insert(0, commit);
             self.rw_read_bk = false;
         }
@@ -169,5 +170,6 @@ pub fn build_log() -> Log {
         rw_read_bk: false,
         rw_read_fw: false,
         commits: vec![],
+        tz_offset_secs: 2 * 60 * 60,
     }
 }

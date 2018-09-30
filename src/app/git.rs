@@ -9,7 +9,7 @@ pub struct Branch {
 pub struct Commit {
     pub id_long: String,
     pub id: String,
-    pub time: DateTime<Utc>,
+    pub time: DateTime<FixedOffset>,
     pub author: String,
     pub message: String,
     pub message_line: String,
@@ -40,9 +40,9 @@ pub fn get_head(git_repo: &Repository) -> String {
     return n_str.to_string()
 }
 
-pub fn get_commit(oid: Oid, repo: &Repository) -> Commit {
+pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> Commit {
     let c = repo.find_commit(oid).unwrap();
-    let dt: DateTime<Utc> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), Utc);
+    let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), FixedOffset::east(tz_offset_sec));
     let m = c.message().unwrap();
     let zz = m.chars().into_iter().filter(|c| *c != '\n' && *c != '\r' && *c != '\t').collect();
     let a = c.author();
