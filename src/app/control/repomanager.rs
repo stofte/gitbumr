@@ -191,6 +191,7 @@ impl SettingsControl for RepoManager {
                 Ok(()) => {
                     self.input_txt.clear();
                     self.adding = false;
+                    self.add_err = None;
                     res = UiOption::HideCursor;
                 },
                 Err(err) => {
