@@ -24,6 +24,7 @@ pub static BOX_DL: char = '\u{2513}';
 pub static BOX_UR: char = '\u{2517}';
 pub static BOX_UL: char = '\u{251B}';
 pub static PNT_R: char = '\u{25ba}';
+pub static ELLIP_H: char = '\u{2026}';
 
 pub fn reset() {
     print!("{}{}{}",

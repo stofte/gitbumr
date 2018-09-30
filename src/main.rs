@@ -74,8 +74,8 @@ fn main() {
     
 
     // todo move into application
+    console::reset();
     loop  {
-        console::reset();
         app.render(&mut stdout);
         select! {
             recv(keys_r, key) => {

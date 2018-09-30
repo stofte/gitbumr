@@ -5,9 +5,13 @@ use std::{
     any::Any,
 };
 use git2::{Repository, BranchType};
-use app::git::{get_head};
-use app::control::{Control, RepositoryControl};
-use app::{Layout, LayoutUpdate};
+use app::{
+    console,
+    Layout,
+    LayoutUpdate,
+    git::{get_head},
+    control::{Control, RepositoryControl},
+};
 
 pub struct Branches {
     pub local: Vec<String>,
@@ -23,27 +27,53 @@ impl Control for Branches {
     fn layout(&mut self, layout: &LayoutUpdate) {
         self.layout.top = 2;
         self.layout.left = 1;
-        self.layout.width = 25;
+        self.layout.width = 35;
         self.layout.height = layout.rows.unwrap() - self.layout.top;
     }
     fn render(&self, stdout: &mut Stdout) {
         if !self.layout.visible { return }
-
+        console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
+        let title = "Branches".to_string();
+        let title_b_h = console::BOX_H.to_string()
+            .repeat(self.layout.width as usize - title.len() - 2);
+        print!("{b_h}{title}{repeat}{b_dl}",
+            title=title,
+            repeat=title_b_h,
+            b_h=console::BOX_H,
+            b_dl=console::BOX_DL,
+        );
+        let mut cidx = -1;
         match self.checkedout_idx {
             Some(i) => {
-                print!("{}", cursor::Goto(1, 2));
-                for j in 0..self.local.len() {
-                    let s = &self.local[j];
-                    if i as usize == j {
-                        println!("{}{}{}{}{}", cursor::Save, style::Bold, s, style::Reset, cursor::Restore);
-                    } 
-                    else {
-                        println!("{}{}{}", cursor::Save, s, cursor::Restore);
-                    }
-                }
+                cidx = i as isize;
             },
             _ => ()
         };
+        let mut c_off = 1;
+        for j in 0..self.local.len() {
+            console::move_cursor(self.layout.left, self.layout.top + c_off);
+            let s = &self.local[j];
+            let mut open_mark = ' ';
+            let mut trunc_mark = "".to_string();
+            if cidx == j as isize {
+                open_mark = console::PNT_R;
+            }
+            let mut trunc_c = 0;
+            if s.len() > self.layout.width as usize - 2 {
+                trunc_c = s.len() - (self.layout.width as usize - 3);
+                trunc_mark = format!("{}", console::ELLIP_H).to_string();
+            }
+            let trunc_name: String = s.chars().skip(trunc_c).collect();
+            print!("{c_m}{t_m}{name}{blank}{b_v}",
+                c_m=open_mark,
+                name=trunc_name,
+                t_m=trunc_mark,
+                blank=" ".repeat(self.layout.width as usize - trunc_name.len() - 2 - (if trunc_c > 0 { 1 } else { 0 })),
+                b_v=console::BOX_V,
+            );
+            c_off += 1;
+        }
+        console::stop_drawing();
     }
 }
 
