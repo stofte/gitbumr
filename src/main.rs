@@ -15,6 +15,7 @@ use termion::{
     terminal_size,
     input::TermRead,
     raw::IntoRawMode,
+    screen::AlternateScreen,
 };
 use git2::Repository;
 use app::{
@@ -44,6 +45,10 @@ fn main() {
             keys_s.send(c.unwrap());
         }
     });
+
+    // lock the scrollbar https://gitlab.redox-os.org/redox-os/termion/issues/117
+    let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
+    write!(screen, "{}", termion::cursor::Hide).unwrap();
 
     // terminal seems to get fubared if this is done after terminal_size?
     let mut stdout = stdout().into_raw_mode().unwrap();
