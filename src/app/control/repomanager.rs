@@ -151,7 +151,7 @@ impl Control for RepoManager {
         );
         if self.adding {
             let inp_txt: String = self.input_txt.clone().into_iter().collect();
-            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
+            console::move_cursor(self.layout.left + 9, self.layout.top + 4);
             print!("{s_ul}{inp}{s_nul}{show}",
                 inp=inp_txt,
                 show=cursor::Show,
