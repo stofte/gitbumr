@@ -53,7 +53,7 @@ fn main() {
         }
     });
 
-    if false {
+    if false { // fix panic printing on alternate screen
         // lock the scrollbar https://gitlab.redox-os.org/redox-os/termion/issues/117
         let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
         write!(screen, "{}", termion::cursor::Hide).unwrap();
