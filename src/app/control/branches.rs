@@ -40,7 +40,7 @@ impl Control for Branches {
             title=title,
             repeat=title_b_h,
             b_h=console::BOX_H,
-            b_dl=console::BOX_DL,
+            b_dl=console::BOX_DH,
         );
         let mut cidx = -1;
         match self.checkedout_idx {
