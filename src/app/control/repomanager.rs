@@ -81,14 +81,17 @@ impl Control for RepoManager {
             bottom_off = bottom_off + 1;
             print_blank(&self.layout, bottom_off);
             bottom_off = bottom_off + 1;
-            let add_txt = "  Path: ".to_string();
+            let label_txt = "  Path: ".to_string();
             console::move_cursor(self.layout.left, self.layout.top + bottom_off);
-            print!("{b_v}{txt}{s_ul}{blank}{s_nul}  {b_v}",
-                txt=add_txt,
-                blank=" ".repeat(self.layout.width as usize - add_txt.len() - 4),
+            // we draw input txt at the bottom
+            print!("{b_v}{lbl}{c_fg}{c_bg}{blank}{fg}{bg}  {b_v}",
+                lbl=label_txt,
+                blank=" ".repeat(self.layout.width as usize - label_txt.len() - 4),
                 b_v=console::BOX_V,
-                s_ul=style::Underline,
-                s_nul=style::NoUnderline,
+                c_bg=console::BG_PRIMARY_CURSOR,
+                c_fg=console::FG_PRIMARY_CURSOR,
+                fg=console::FG_PRIMARY,
+                bg=console::BG_PRIMARY,
             );
             bottom_off = bottom_off + 1;
             print_blank(&self.layout, bottom_off);
@@ -117,7 +120,7 @@ impl Control for RepoManager {
             }
             let mut c_fg = console::FG_PRIMARY;
             let mut c_bg = console::BG_PRIMARY;
-            if i as u16 == self.repo_cursor {
+            if i as u16 == self.repo_cursor && !self.adding {
                 c_bg = console::BG_PRIMARY_CURSOR;
                 c_fg = console::FG_PRIMARY_CURSOR;
             }
@@ -152,11 +155,11 @@ impl Control for RepoManager {
         if self.adding {
             let inp_txt: String = self.input_txt.clone().into_iter().collect();
             console::move_cursor(self.layout.left + 9, self.layout.top + 4);
-            print!("{s_ul}{inp}{s_nul}{show}",
+            print!("{c_fg}{c_bg}{inp}{show}",
                 inp=inp_txt,
                 show=cursor::Show,
-                s_ul=style::Underline,
-                s_nul=style::NoUnderline,
+                c_bg=console::BG_PRIMARY_CURSOR,
+                c_fg=console::FG_PRIMARY_CURSOR,
             );
         }
         console::stop_drawing();
