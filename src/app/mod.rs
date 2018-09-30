@@ -49,6 +49,7 @@ bitflags! {
         const HideCursor        = 0b00000001;
         const AddedRepository   = 0b00000010;
         const OpenRepository    = 0b00000100;
+        const RequestRepository = 0b00001000;
     }
 }
 
@@ -56,43 +57,39 @@ impl Application {
     pub fn add_control(&mut self, ctrl: Box<Control>) {
         self.controls.push(ctrl);
     }
-    pub fn repository(&mut self, r: Option<Repository>) {
-        match r {
-            Some(repo) => {
-                for cp in &mut self.controls {
-                    let c = &mut *cp;
-                    match c.as_any_mut().downcast_mut::<Header>() {
-                        Some(ref mut o) => { o.update(&repo); continue },
-                        None => ()
-                    }
-                    match c.as_any_mut().downcast_mut::<Branches>() {
-                        Some(ref mut o) => { o.update(&repo); continue },
-                        None => ()
-                    };
-                    match c.as_any_mut().downcast_mut::<Log>() {
-                        Some(ref mut o) => { o.update(&repo); continue },
-                        None => ()
-                    };
-                };
-            },
-            None => {
-                for cp in &mut self.controls {
-                    let c = &mut *cp;
-                    match c.as_any_mut().downcast_mut::<Header>() {
-                        Some(ref mut o) => { o.none(); continue },
-                        None => ()
-                    }
-                    match c.as_any_mut().downcast_mut::<Branches>() {
-                        Some(ref mut o) => { o.none(); continue },
-                        None => ()
-                    };
-                    match c.as_any_mut().downcast_mut::<Log>() {
-                        Some(ref mut o) => { o.none(); continue },
-                        None => ()
-                    };
-                };
+    pub fn repository(&mut self, repo: &Repository) {
+        for cp in &mut self.controls {
+            let c = &mut *cp;
+            match c.as_any_mut().downcast_mut::<Header>() {
+                Some(ref mut o) => { o.update(repo); continue },
+                None => ()
             }
-        }
+            match c.as_any_mut().downcast_mut::<Branches>() {
+                Some(ref mut o) => { o.update(repo); continue },
+                None => ()
+            };
+            match c.as_any_mut().downcast_mut::<Log>() {
+                Some(ref mut o) => { o.update(repo); continue },
+                None => ()
+            };
+        };
+    }
+    pub fn no_repository(&mut self) {
+        for cp in &mut self.controls {
+            let c = &mut *cp;
+            match c.as_any_mut().downcast_mut::<Header>() {
+                Some(ref mut o) => { o.none(); continue },
+                None => ()
+            }
+            match c.as_any_mut().downcast_mut::<Branches>() {
+                Some(ref mut o) => { o.none(); continue },
+                None => ()
+            };
+            match c.as_any_mut().downcast_mut::<Log>() {
+                Some(ref mut o) => { o.none(); continue },
+                None => ()
+            };
+        };
     }
     pub fn settings(&mut self, settings: &mut Settings) -> UiFlags {
         let mut res = UiFlags::None;
@@ -128,7 +125,7 @@ impl Application {
         }
         stdout.flush().unwrap();
     }
-    pub fn key(&mut self, key: Key) -> UiFlags {
+    pub fn key(&mut self, key: Key, repo: Option<&Repository>) -> UiFlags {
         let mut res = UiFlags::None;
         for cp in &mut self.controls {
             let c = &mut *cp;
@@ -152,6 +149,13 @@ impl Application {
             match c.as_any_mut().downcast_mut::<Log>() {
                 Some(ref mut o) => {
                     let (handled, fs) = o.handle(key);
+                    if fs & UiFlags::RequestRepository == UiFlags::RequestRepository {
+                        match repo {
+                            Some(r) => o.read(&r),
+                            _ => ()
+                        }
+                        // o.read(&repo.unwrap());
+                    }
                     if (handled) {
                         break
                     } else {

@@ -16,8 +16,12 @@ pub trait Control {
 }
 
 pub trait RepositoryControl {
+    // when no repo is selected
     fn none(&mut self);
+    // when repo changes
     fn update(&mut self, &Repository);
+    // control requested read
+    fn read(&mut self, &Repository);
 }
 
 pub trait SettingsControl {

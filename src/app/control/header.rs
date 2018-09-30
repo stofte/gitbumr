@@ -57,4 +57,5 @@ impl RepositoryControl for Header {
     fn none(&mut self) {
         self.repo_path = "None".to_string();
     }
+    fn read(&mut self, repo: &Repository) { }
 }

@@ -5,6 +5,7 @@ extern crate rusqlite;
 extern crate crossbeam_channel as channel;
 #[macro_use]
 extern crate bitflags;
+extern crate chrono;
 mod app;
 
 use std::{
@@ -69,7 +70,10 @@ fn main() {
 
     let mut app = new_application();
     app.console_size();
-    app.repository(repo);
+    match &repo {
+        Some(r) => app.repository(r),
+        _ => app.no_repository()
+    };
     app.settings(&mut db);
     
 
@@ -85,12 +89,18 @@ fn main() {
                     _ => ()
                 };
                 // if we didn't break, pass the input to the controls
-                let mut e = app.key(c);
+                let mut e = match &repo {
+                    Some(r) => app.key(c, Some(r)),
+                    _ => app.key(c, None)
+                };
                 e |= app.settings(&mut db);
                 if e & UiFlags::AddedRepository == UiFlags::AddedRepository ||
                    e & UiFlags::OpenRepository == UiFlags::OpenRepository {
                     repo = git_repo_opt(&db);
-                    app.repository(repo);
+                    match &repo {
+                        Some(r) => app.repository(r),
+                        _ => app.no_repository()
+                    };
                 }
             },
             recv(size_r, size) => {

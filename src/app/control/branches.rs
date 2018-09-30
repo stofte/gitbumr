@@ -100,6 +100,7 @@ impl RepositoryControl for Branches {
     fn none(&mut self) {
         self.layout.visible = false;
     }
+    fn read(&mut self, repo: &Repository) { }
 }
 
 pub fn build_branches() -> Branches {
