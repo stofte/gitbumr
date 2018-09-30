@@ -37,12 +37,11 @@ impl Control for Log {
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         let title = "Log".to_string();
         let title_b_h = console::BOX_H.to_string()
-            .repeat(self.layout.width as usize - title.len() - 2);
-        print!("{b_h}{title}{repeat}{b_dl}",
+            .repeat(self.layout.width as usize - self.layout.left as usize - title.len());
+        print!("{b_h}{title}{repeat}",
             title=title,
             repeat=title_b_h,
-            b_h=console::BOX_H,
-            b_dl=console::BOX_DL,
+            b_h=console::BOX_H
         );
         let mut t_off = 1;
         console::move_cursor(self.layout.left, self.layout.top + t_off);
