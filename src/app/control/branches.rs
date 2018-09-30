@@ -59,5 +59,9 @@ impl RepositoryControl for Branches {
             }
         }
         self.local = vec;
+        self.layout.visible = true;
+    }
+    fn none(&mut self) {
+        self.layout.visible = false;
     }
 }

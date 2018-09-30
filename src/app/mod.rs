@@ -15,7 +15,6 @@ use app::{
         RepositoryControl,
         SettingsControl,
         InputControl,
-        UiOption,
         header::Header,
         branches::Branches,
         repomanager::{RepoManager, build_repomanager}
@@ -42,24 +41,48 @@ pub struct LayoutUpdate {
     pub cols: Option<u16>,
 }
 
+pub enum UiOption {
+    None,
+    HideCursor
+}
+
 impl Application {
     pub fn add_control(&mut self, ctrl: Box<Control>) {
         self.controls.push(ctrl);
     }
-    pub fn repository(&mut self, repo: &Repository) {
-        for cp in &mut self.controls {
-            let mut matched = false;
-            let c = &mut *cp;
-            match c.as_any_mut().downcast_mut::<Header>() {
-                Some(ref mut o) => { matched = true; o.update(repo); },
-                None => ()
+    pub fn repository(&mut self, r: Option<Repository>) {
+        match r {
+            Some(repo) => {
+                for cp in &mut self.controls {
+                    let mut matched = false;
+                    let c = &mut *cp;
+                    match c.as_any_mut().downcast_mut::<Header>() {
+                        Some(ref mut o) => { matched = true; o.update(&repo); },
+                        None => ()
+                    }
+                    if matched { continue; }
+                    match c.as_any_mut().downcast_mut::<Branches>() {
+                        Some(ref mut o) => { matched = true; o.update(&repo); },
+                        None => ()
+                    };
+                };
+            },
+            None => {
+                for cp in &mut self.controls {
+                    let mut matched = false;
+                    let c = &mut *cp;
+                    match c.as_any_mut().downcast_mut::<Header>() {
+                        Some(ref mut o) => { matched = true; o.none(); },
+                        None => ()
+                    }
+                    if matched { continue; }
+                    match c.as_any_mut().downcast_mut::<Branches>() {
+                        Some(ref mut o) => { matched = true; o.none(); },
+                        None => ()
+                    };
+                };
             }
-            if matched { continue; }
-            match c.as_any_mut().downcast_mut::<Branches>() {
-                Some(ref mut o) => { matched = true; o.update(repo); },
-                None => ()
-            };
-        };
+        }
     }
     pub fn settings(&mut self, settings: &mut Settings) {
         for cp in &mut self.controls {

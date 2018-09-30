@@ -56,4 +56,7 @@ impl RepositoryControl for Header {
         let zz = format!("{:?}", repo.state());
         self.state = zz;
     }
+    fn none(&mut self) {
+        self.repo_path = "None".to_string();
+    }
 }

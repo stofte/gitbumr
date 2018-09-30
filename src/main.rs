@@ -26,14 +26,21 @@ use app::{
 };
 
 fn main() {
-    let repo_path = "/mnt/c/src/CLEVER";
-    let repo = match Repository::open(repo_path) {
-        Ok(repo) => repo,
-        Err(e) => panic!("failed to open: {}", e),
-    };
-    
+
     let mut db = build_settings();
+    let mut repo: Option<Repository> = None;
     db.init();
+    match db.default_repository() {
+        Some(sr) => {
+            match Repository::open(sr.path) {
+                Ok(gr) => {
+                    repo = Some(gr);
+                },
+                _ => (),
+            };
+        },
+        _ => ()
+    };
 
     let (keys_s, keys_r) = channel::bounded(0);
     let (size_s, size_r) = channel::bounded(0);
@@ -70,9 +77,8 @@ fn main() {
     });
 
     let mut app = new_application();
-    
     app.console_size();
-    app.repository(&repo);
+    app.repository(repo);
     app.settings(&mut db);
     
     console::reset();

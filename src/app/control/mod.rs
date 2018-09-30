@@ -6,12 +6,7 @@ use std::any::Any;
 use std::io::{Stdout};
 use git2::{Repository};
 use termion::{event::Key};
-use app::{settings::Settings, LayoutUpdate};
-
-pub enum UiOption {
-    None,
-    HideCursor,
-}
+use app::{settings::Settings, LayoutUpdate, UiOption};
 
 pub trait Control {
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -20,6 +15,7 @@ pub trait Control {
 }
 
 pub trait RepositoryControl {
+    fn none(&mut self);
     fn update(&mut self, &Repository);
 }
 

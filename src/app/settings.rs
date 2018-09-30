@@ -81,6 +81,18 @@ impl Settings {
             }
         }
     }
+    pub fn default_repository(&self) -> Option<StoredRepository> {
+        let repos = self.get_repositories();
+        for repo in repos {
+            if repo.open {
+                return Some(StoredRepository {
+                    path: repo.path.clone(),
+                    open: repo.open,
+                })
+            }
+        }
+        None
+    }
 }
 
 pub fn build_settings() -> Settings {
