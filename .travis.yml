@@ -2,7 +2,7 @@ dist: trusty
 sudo: required
 language: rust
 rust:
-  - 1.26.0
+  - 1.29.0
 branches:
   only:
   - master
