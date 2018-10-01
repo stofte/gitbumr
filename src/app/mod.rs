@@ -25,7 +25,6 @@ use app::{
 
 pub struct Application {
     pub controls: Vec<Box<Control>>,
-    pub cursor: bool,
 }
 
 pub struct Layout {
@@ -175,8 +174,7 @@ pub fn empty_layout() -> Layout {
 
 pub fn new_application() -> Application {
     let mut app = Application {
-        cursor: false,
-        controls: vec![]
+        controls: vec![],
     };
     // order of insertion is z-index, latter being higher
     app.add_control(Box::new(build_repomanager()));
