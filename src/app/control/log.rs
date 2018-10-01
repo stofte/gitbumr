@@ -24,7 +24,7 @@ pub struct Log {
     rw_read_fw: bool,
     layout: Layout,
     commits: Vec<Commit>,
-    tz_offset_secs: i32,
+    tz_offset_secs: i32
 }
 
 impl Control for Log {
@@ -39,6 +39,7 @@ impl Control for Log {
     }
     fn render(&self, stdout: &mut Stdout) {
         if !self.layout.visible { return }
+        let mut auth_vec = vec![];
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         let title = "History".to_string();
         let title_b_h = console::BOX_H.to_string()
@@ -60,7 +61,11 @@ impl Control for Log {
             }
             let commit = &self.commits[c_idx];
             let c_ts = commit.time.format("%Y/%m/%d %H:%M").to_string();
-            let c_auth = &commit.author;
+            let mut c_auth = &commit.author_abbrev;
+            if !auth_vec.contains(&commit.author) {
+                c_auth = &commit.author;
+                auth_vec.push(commit.author.to_string());
+            }
             let c_size = c_ts.len() + c_auth.len() + 3;
             let msg_cols = self.layout.width as usize - c_size;
             let msg_len = cmp::min(msg_cols, commit.message_line.len());

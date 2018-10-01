@@ -11,6 +11,7 @@ pub struct Commit {
     pub id: String,
     pub time: DateTime<FixedOffset>,
     pub author: String,
+    pub author_abbrev: String,
     pub message: String,
     pub message_line: String,
 }
@@ -48,11 +49,13 @@ pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> Commit {
     let a = c.author();
     let n = a.name().unwrap();
     let idstr = format!("{:?}", oid).to_string();
+    let author_abbrev: String = n.split(" ").filter(|s| s.len() > 0).map(|s| s.chars().next().unwrap()).collect();
     Commit {
         id: idstr.chars().take(8).collect(),
         id_long: idstr,
         time: dt,
         author: n.to_string(),
+        author_abbrev: author_abbrev.to_string(),
         message: m.to_string(),
         message_line: zz,
     }
