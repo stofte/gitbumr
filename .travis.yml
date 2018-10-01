@@ -6,4 +6,5 @@ branches:
   - master
   - develop
 script:
+  - sudo apt-get install libsqlite3-dev
   - cargo build --verbose --all
