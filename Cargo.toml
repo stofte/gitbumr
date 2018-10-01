@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["Svend Tofte <stofte@gmail.com>"]
 
 [dependencies]
-git2 = "*"
-termion = "*"
-rusqlite = "*"
-crossbeam-channel = "*"
-bitflags = "*"
-chrono = "*"
+git2 = "0.7.5"
+termion = "1.5.1"
+rusqlite = "0.14.0"
+crossbeam-channel = "0.2"
+bitflags = "1.0.4"
+chrono = "0.4.6"
