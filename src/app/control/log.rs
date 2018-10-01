@@ -51,7 +51,8 @@ impl Control for Log {
         );
         let mut t_off = 1;
         let mut c_idx = 0;
-        for i in self.rw_idx..(self.rw_idx + self.layout.height as usize) {
+        let max_rw_c = cmp::min(self.rw_idx + self.layout.height as usize, self.revwalk.len());
+        for i in self.rw_idx..max_rw_c {
             console::move_cursor(self.layout.left, self.layout.top + t_off);
             let mut c_fg = console::FG_PRIMARY;
             let mut c_bg = console::BG_PRIMARY;
@@ -105,8 +106,9 @@ impl RepositoryControl for Log {
             self.revwalk.push(r.unwrap());
         }
         let vis_c = self.layout.height as usize;
+        let max_rw_c = cmp::min(self.rw_idx + vis_c, self.revwalk.len());
         self.commits.clear();
-        for i in self.rw_idx..(self.rw_idx + vis_c) {
+        for i in self.rw_idx..(max_rw_c) {
             let oid = self.revwalk[i];
             let commit = get_commit(oid, self.tz_offset_secs, &repo);
             self.commits.push(commit);
