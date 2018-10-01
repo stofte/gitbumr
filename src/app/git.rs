@@ -45,7 +45,8 @@ pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> Commit {
     let c = repo.find_commit(oid).unwrap();
     let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), FixedOffset::east(tz_offset_sec));
     let m = c.message().unwrap();
-    let zz = m.chars().into_iter().filter(|c| *c != '\n' && *c != '\r' && *c != '\t').collect();
+    // todo filters on ascii values, probably very brittle
+    let zz = m.chars().into_iter().filter(|c| *c > 0x1F as char && *c < 0x7F as char).collect();
     let a = c.author();
     let n = a.name().unwrap();
     let idstr = format!("{:?}", oid).to_string();
