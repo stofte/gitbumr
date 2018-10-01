@@ -246,15 +246,19 @@ impl InputControl for RepoManager {
                 pass
             }
             Key::Up => {
-                if self.layout.visible && !self.adding && self.repos.len() > 0 && self.repo_cursor > 0 {
-                    self.repo_cursor -= 1;
-                    return handled
+                if self.layout.visible {
+                    if !self.adding && self.repos.len() > 0 && self.repo_cursor > 0 {
+                        self.repo_cursor -= 1;
+                    }
+                    return handled // always eat
                 }
                 pass
             }
             Key::Down => {
-                if self.layout.visible && !self.adding && self.repos.len() > 0 {
-                    self.repo_cursor = cmp::min(self.repos.len() as u16 - 1, self.repo_cursor + 1);
+                if self.layout.visible {
+                    if !self.adding && self.repos.len() > 0 {
+                        self.repo_cursor = cmp::min(self.repos.len() as u16 - 1, self.repo_cursor + 1);
+                    }
                     return handled
                 }
                 pass
