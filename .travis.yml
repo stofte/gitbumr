@@ -1,5 +1,9 @@
 language: rust
 rust:
   - 1.26.0
+branches:
+  only:
+  - master
+  - develop
 script:
   - cargo build --verbose --all
