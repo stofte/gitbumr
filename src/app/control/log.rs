@@ -55,9 +55,12 @@ impl Control for Log {
             console::move_cursor(self.layout.left, self.layout.top + t_off);
             let mut c_fg = console::FG_PRIMARY;
             let mut c_bg = console::BG_PRIMARY;
+            let mut txt_fg = console::FG_PRIMARY;
             if i == self.cursor_idx {
                 c_bg = console::BG_PRIMARY_CURSOR;
                 c_fg = console::FG_PRIMARY_CURSOR;
+            } else {
+                txt_fg = console::FG_LIGHT_PRIMARY;
             }
             let commit = &self.commits[c_idx];
             let c_ts = commit.time.format("%Y/%m/%d %H:%M").to_string();
@@ -71,8 +74,9 @@ impl Control for Log {
             let msg_len = cmp::min(msg_cols, commit.message_line.len());
             let c_msg: String = commit.message_line.chars().take(msg_len).collect();
             let c_msg_blank = self.layout.width as usize - c_msg.len() - c_size;
-            print!("{c_fg}{c_bg} {time} {msg}{blank} {auth} {fg}{bg}",
+            print!("{c_fg}{c_bg} {txt_fg}{time}{fg} {msg}{blank} {txt_fg}{auth}{fg} {fg}{bg}",
                 blank=" ".repeat(c_msg_blank),
+                txt_fg=txt_fg,
                 msg=c_msg,
                 time=c_ts,
                 auth=c_auth,

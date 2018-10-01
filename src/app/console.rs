@@ -3,6 +3,7 @@ use termion::{cursor, clear};
 use termion::color::{Bg, Fg, Reset, Rgb, Black};
 
 pub static FG_PRIMARY: Fg<Rgb> = Fg(Rgb(20, 20, 20));
+pub static FG_LIGHT_PRIMARY: Fg<Rgb> = Fg(Rgb(170, 170, 170));
 pub static BG_PRIMARY: Bg<Rgb> = Bg(Rgb(245, 245, 245));
 // selection/navigation indicator
 pub static FG_PRIMARY_CURSOR: Fg<Rgb> = Fg(Rgb(0, 0, 0));
