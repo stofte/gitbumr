@@ -74,6 +74,15 @@ impl Control for Branches {
             );
             c_off += 1;
         }
+        let spacing_rows = self.layout.height as usize - self.local.len();
+        for i in 0..spacing_rows {
+            console::move_cursor(self.layout.left, self.layout.top + c_off);
+            print!("{blank}{b_v}",
+                b_v=console::BOX_V,
+                blank=" ".repeat(self.layout.width as usize - 1),
+            );
+            c_off += 1;
+        }
         console::stop_drawing();
     }
 }
