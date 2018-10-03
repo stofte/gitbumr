@@ -71,3 +71,12 @@ impl RepositoryControl for Header {
     }
     fn read(&mut self, repo: &Repository) { }
 }
+
+pub fn build_header() -> Header {
+    Header {
+        repo_path: "".to_string(),
+        state: "".to_string(),
+        layout: empty_layout(),
+        render: true
+    }
+}

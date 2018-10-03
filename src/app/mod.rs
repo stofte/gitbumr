@@ -16,7 +16,7 @@ use app::{
         RepositoryControl,
         SettingsControl,
         InputControl,
-        header::Header,
+        header::{Header, build_header},
         branches::{Branches, build_branches},
         repomanager::{RepoManager, build_repomanager},
         log::{Log, build_log},
@@ -189,7 +189,7 @@ pub fn new_application() -> Application {
     };
     // order of insertion is z-index, latter being higher
     app.add_control(Box::new(build_repomanager()));
-    app.add_control(Box::new(Header { repo_path: "".to_string(), state: "".to_string(), layout: empty_layout(), render: true }));
+    app.add_control(Box::new(build_header()));
     app.add_control(Box::new(build_log()));
     app.add_control(Box::new(build_branches()));
     app
