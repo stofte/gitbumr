@@ -11,7 +11,9 @@ use app::{
 pub struct Header {
     pub repo_path: String,
     pub state: String,
-    pub layout: Layout
+    pub layout: Layout,
+    pub render: bool,
+
 }
 
 static APP_NAME: &'static str = "Gitbumr";
@@ -21,8 +23,18 @@ impl Control for Header {
         self
     }
     fn layout(&mut self, layout: &LayoutUpdate) {
-        self.layout.width = layout.cols.unwrap();
-        self.layout.height = layout.rows.unwrap();
+        match layout.cols {
+            Some(c) => self.layout.width = c,
+            _ => ()
+        };
+        match layout.rows {
+            Some(r) => self.layout.height = r,
+            _ => ()
+        };
+        match layout.invalidated {
+            Some(true) => self.render = true,
+            _ => ()
+        };
     }
     fn render(&mut self, stdout: &mut Stdout) {
         let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();

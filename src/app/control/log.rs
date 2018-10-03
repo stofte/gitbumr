@@ -34,8 +34,14 @@ impl Control for Log {
     fn layout(&mut self, layout: &LayoutUpdate) {
         self.layout.top = 2;
         self.layout.left = 36;
-        self.layout.width = layout.cols.unwrap() - self.layout.left;
-        self.layout.height = layout.rows.unwrap() - self.layout.top;
+        match layout.cols {
+            Some(c) => self.layout.width = c - self.layout.left,
+            _ => ()
+        };
+        match layout.rows {
+            Some(r) => self.layout.height = r - self.layout.top,
+            _ => ()
+        };
     }
     fn render(&mut self, stdout: &mut Stdout) {
         if !self.layout.visible { return }

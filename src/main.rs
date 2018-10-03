@@ -79,8 +79,10 @@ fn main() {
 
     // todo move into application
     console::reset();
+    let mut invalidated = true;
     loop  {
         app.render(&mut stdout);
+        invalidated = false;
         select! {
             recv(keys_r, key) => {
                 let c = key.unwrap();
@@ -101,6 +103,9 @@ fn main() {
                         Some(r) => app.repository(r),
                         _ => app.no_repository()
                     };
+                }
+                if e & UiFlags::WindowClosed == UiFlags::WindowClosed {
+                    app.invalidate();
                 }
             },
             recv(size_r, size) => {

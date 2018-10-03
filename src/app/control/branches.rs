@@ -27,10 +27,21 @@ impl Control for Branches {
         self
     }
     fn layout(&mut self, layout: &LayoutUpdate) {
-        self.layout.top = 2;
-        self.layout.left = 1;
-        self.layout.width = 35;
-        self.layout.height = layout.rows.unwrap() - self.layout.top;
+        match layout.rows {
+            Some(r) => {
+                self.layout.top = 2;
+                self.layout.left = 1;
+                self.layout.width = 35;
+                self.layout.height = r - self.layout.top;
+            },
+            _ => ()
+        };
+        match layout.invalidated {
+            Some(true) => {
+                self.render = true;
+            },
+            _ => ()
+        };
         self.render = true;
     }
     fn render(&mut self, stdout: &mut Stdout) {

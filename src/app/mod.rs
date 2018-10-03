@@ -40,6 +40,7 @@ pub struct Layout {
 pub struct LayoutUpdate {
     pub rows: Option<u16>,
     pub cols: Option<u16>,
+    pub invalidated: Option<bool>,
 }
 
 bitflags! {
@@ -49,6 +50,7 @@ bitflags! {
         const AddedRepository   = 0b00000010;
         const OpenRepository    = 0b00000100;
         const RequestRepository = 0b00001000;
+        const WindowClosed      = 0b00010000;
     }
 }
 
@@ -113,7 +115,13 @@ impl Application {
     }
     pub fn console_size(&mut self) {
         let (size_col, size_row) = terminal_size().unwrap();
-        let l = LayoutUpdate { cols: Some(size_col), rows: Some(size_row) };
+        let l = LayoutUpdate { cols: Some(size_col), rows: Some(size_row), invalidated: None };
+        for c in &mut self.controls {
+            c.layout(&l);
+        }
+    }
+    pub fn invalidate(&mut self) {
+        let l = LayoutUpdate { cols: None, rows: None, invalidated: Some(true) };
         for c in &mut self.controls {
             c.layout(&l);
         }
@@ -135,7 +143,10 @@ impl Application {
                         print!("{}", cursor::Hide);
                     }
                     if fs & UiFlags::OpenRepository == UiFlags::OpenRepository {
-                        res = UiFlags::OpenRepository;
+                        res |= UiFlags::OpenRepository;
+                    }
+                    if fs & UiFlags::WindowClosed == UiFlags::WindowClosed {
+                        res |= UiFlags::WindowClosed;
                     }
                     if (handled) {
                         break
@@ -178,7 +189,7 @@ pub fn new_application() -> Application {
     };
     // order of insertion is z-index, latter being higher
     app.add_control(Box::new(build_repomanager()));
-    app.add_control(Box::new(Header { repo_path: "".to_string(), state: "".to_string(), layout: empty_layout() }));
+    app.add_control(Box::new(Header { repo_path: "".to_string(), state: "".to_string(), layout: empty_layout(), render: true }));
     app.add_control(Box::new(build_log()));
     app.add_control(Box::new(build_branches()));
     app

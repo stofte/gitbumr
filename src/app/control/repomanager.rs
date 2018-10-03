@@ -42,10 +42,20 @@ impl Control for RepoManager {
     fn layout(&mut self, layout: &LayoutUpdate) {
         self.layout.top = 3;
         self.layout.left = 5;
-        self.layout.console_cols = layout.cols.unwrap();
-        self.layout.console_rows = layout.rows.unwrap();
-        self.layout.width = self.layout.console_cols - 2 * (self.layout.left - 1);
-        self.layout.height = self.layout.console_rows - 2 * (self.layout.top - 1);
+        match layout.cols {
+            Some(c) => {
+                self.layout.console_cols = c;
+                self.layout.width = c - 2 * (self.layout.left - 1);
+            },
+            _ => ()
+        };
+        match layout.rows {
+            Some(r) => {
+                self.layout.console_rows = r;
+                self.layout.height = r - 2 * (self.layout.top - 1);
+            },
+            _ => ()
+        };
     }
     fn render(&mut self, stdout: &mut Stdout) {
         if !self.layout.visible { return }
@@ -199,6 +209,7 @@ impl SettingsControl for RepoManager {
 impl InputControl for RepoManager {
     fn handle(&mut self, key: Key) -> (bool, UiFlags) {
         let handled = (true, UiFlags::None);
+        let handled_closed = (true, UiFlags::WindowClosed);
         let handled_cursor = (true, UiFlags::HideCursor);
         let handled_repo = (true, UiFlags::OpenRepository);
         let pass = (false, UiFlags::None);
@@ -241,7 +252,7 @@ impl InputControl for RepoManager {
                     return handled_cursor
                 } else if self.layout.visible {
                     self.layout.visible = false;
-                    return handled
+                    return handled_closed
                 }
                 pass
             }
