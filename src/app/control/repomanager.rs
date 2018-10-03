@@ -47,7 +47,7 @@ impl Control for RepoManager {
         self.layout.width = self.layout.console_cols - 2 * (self.layout.left - 1);
         self.layout.height = self.layout.console_rows - 2 * (self.layout.top - 1);
     }
-    fn render(&self, stdout: &mut Stdout) {
+    fn render(&mut self, stdout: &mut Stdout) {
         if !self.layout.visible { return }
         let title = "Repositories".to_string();
         let title_b_h = console::BOX_H.to_string()

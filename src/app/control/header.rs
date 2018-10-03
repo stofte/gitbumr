@@ -24,7 +24,7 @@ impl Control for Header {
         self.layout.width = layout.cols.unwrap();
         self.layout.height = layout.rows.unwrap();
     }
-    fn render(&self, stdout: &mut Stdout) {
+    fn render(&mut self, stdout: &mut Stdout) {
         let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
         print!("{move}{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
             move=cursor::Goto(1, 1),

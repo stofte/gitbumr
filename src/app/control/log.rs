@@ -37,7 +37,7 @@ impl Control for Log {
         self.layout.width = layout.cols.unwrap() - self.layout.left;
         self.layout.height = layout.rows.unwrap() - self.layout.top;
     }
-    fn render(&self, stdout: &mut Stdout) {
+    fn render(&mut self, stdout: &mut Stdout) {
         if !self.layout.visible { return }
         let mut auth_vec = vec![];
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);

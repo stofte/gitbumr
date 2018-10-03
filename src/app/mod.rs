@@ -118,7 +118,7 @@ impl Application {
             c.layout(&l);
         }
     }
-    pub fn render(&self, stdout: &mut Stdout) {
+    pub fn render(&mut self, stdout: &mut Stdout) {
         for i in (0..self.controls.len()).rev() {
             self.controls[i].render(stdout);
         }

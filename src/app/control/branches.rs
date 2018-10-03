@@ -19,6 +19,7 @@ pub struct Branches {
     pub remote: Vec<String>,
     pub checkedout_idx: Option<u16>,
     pub layout: Layout,
+    pub render: bool,
 }
 
 impl Control for Branches {
@@ -30,9 +31,10 @@ impl Control for Branches {
         self.layout.left = 1;
         self.layout.width = 35;
         self.layout.height = layout.rows.unwrap() - self.layout.top;
+        self.render = true;
     }
-    fn render(&self, stdout: &mut Stdout) {
-        if !self.layout.visible { return }
+    fn render(&mut self, stdout: &mut Stdout) {
+        if !self.render || !self.layout.visible { return }
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         let title = "Branches".to_string();
         let title_b_h = console::BOX_H.to_string()
@@ -84,6 +86,7 @@ impl Control for Branches {
             c_off += 1;
         }
         console::stop_drawing();
+        self.render = false;
     }
 }
 
@@ -104,6 +107,7 @@ impl RepositoryControl for Branches {
             }
         }
         self.local = vec;
+        self.render = true;
         self.layout.visible = true;
     }
     fn none(&mut self) {
@@ -117,7 +121,8 @@ pub fn build_branches() -> Branches {
         local: vec![],
         remote: vec![],
         checkedout_idx: None,
-        layout: empty_layout()
+        layout: empty_layout(),
+        render: true,
     };
     b.layout.visible = true;
     b
