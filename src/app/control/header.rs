@@ -3,7 +3,7 @@ use std::any::Any;
 use git2::{Repository};
 use termion::{cursor, clear};
 use app::{
-    Layout, LayoutUpdate,
+    Layout, LayoutUpdate, empty_layout,
     console,
     control::{Control, RepositoryControl},
 };
