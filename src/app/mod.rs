@@ -7,10 +7,17 @@ use std::{
     io::{Write, Stdout}
 };
 use git2::Repository;
-use termion::{terminal_size, event::Key, cursor};
+use termion::{
+    cursor,
+    terminal_size,
+    raw::RawTerminal,
+    event::Key,
+};
 use bitflags;
+use channel;
+
 use app::{
-    settings::{Settings},
+    settings::{Settings, build_settings},
     control::{
         Control,
         RepositoryControl,
@@ -25,6 +32,10 @@ use app::{
 
 pub struct Application {
     pub controls: Vec<Box<Control>>,
+    header: Header,
+    branches: Branches,
+    repomanager: RepoManager,
+    log: Log,
 }
 
 pub struct Layout {
@@ -177,6 +188,55 @@ impl Application {
         };
         res
     }
+    pub fn run(&mut self, mut stdout: RawTerminal<Stdout>, keys_r: channel::Receiver<Key>, size_r: channel::Receiver<(u16, u16)>) {
+        let mut db = build_settings();
+        db.init();
+        let mut repo = git_repo_opt(&db);
+        self.console_size();
+        match &repo {
+            Some(r) => self.repository(r),
+            _ => self.no_repository()
+        };
+        self.settings(&mut db);
+        console::reset();
+        let mut invalidated = true;
+        loop  {
+            self.render(&mut stdout);
+            invalidated = false;
+            select! {
+                recv(keys_r, key) => {
+                    let c = key.unwrap();
+                    match c {
+                        Key::Ctrl('c') => break,
+                        _ => ()
+                    };
+                    // if we didn't break, pass the input to the controls
+                    let mut e = match &repo {
+                        Some(r) => self.key(c, Some(r)),
+                        _ => self.key(c, None)
+                    };
+                    e |= self.settings(&mut db);
+                    if e & UiFlags::AddedRepository == UiFlags::AddedRepository ||
+                    e & UiFlags::OpenRepository == UiFlags::OpenRepository {
+                        repo = git_repo_opt(&db);
+                        match &repo {
+                            Some(r) => self.repository(r),
+                            _ => self.no_repository()
+                        };
+                    }
+                    if e & UiFlags::WindowClosed == UiFlags::WindowClosed {
+                        self.invalidate();
+                    }
+                },
+                recv(size_r, size) => {
+                    console::reset();
+                    self.console_size();
+                }
+            }
+        }
+        console::reset();
+        write!(stdout, "{}", cursor::Show).unwrap();
+    }
 }
 
 pub fn empty_layout() -> Layout {
@@ -186,6 +246,10 @@ pub fn empty_layout() -> Layout {
 pub fn new_application() -> Application {
     let mut app = Application {
         controls: vec![],
+        header: build_header(),
+        branches: build_branches(),
+        repomanager: build_repomanager(),
+        log: build_log(),
     };
     // order of insertion is z-index, latter being higher
     app.add_control(Box::new(build_repomanager()));
@@ -193,4 +257,20 @@ pub fn new_application() -> Application {
     app.add_control(Box::new(build_log()));
     app.add_control(Box::new(build_branches()));
     app
+}
+
+fn git_repo_opt(db: &Settings) -> Option<Repository> {
+    let mut repo: Option<Repository> = None;
+    match db.get_open_repository() {
+        Some(sr) => {
+            match Repository::open(sr.path) {
+                Ok(gr) => {
+                    repo = Some(gr);
+                },
+                _ => (),
+            };
+        },
+        _ => ()
+    };
+    repo
 }

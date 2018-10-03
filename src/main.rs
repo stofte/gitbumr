@@ -30,10 +30,6 @@ use app::{
 
 fn main() {
 
-    let mut db = build_settings();
-    db.init();
-    let mut repo = git_repo_opt(&db);
-
     let (keys_s, keys_r) = channel::bounded(0);
     let (size_s, size_r) = channel::bounded(0);
     let poll_interval = time::Duration::from_millis(50);
@@ -69,68 +65,5 @@ fn main() {
     });
 
     let mut app = new_application();
-    app.console_size();
-    match &repo {
-        Some(r) => app.repository(r),
-        _ => app.no_repository()
-    };
-    app.settings(&mut db);
-    
-
-    // todo move into application
-    console::reset();
-    let mut invalidated = true;
-    loop  {
-        app.render(&mut stdout);
-        invalidated = false;
-        select! {
-            recv(keys_r, key) => {
-                let c = key.unwrap();
-                match c {
-                    Key::Ctrl('c') => break,
-                    _ => ()
-                };
-                // if we didn't break, pass the input to the controls
-                let mut e = match &repo {
-                    Some(r) => app.key(c, Some(r)),
-                    _ => app.key(c, None)
-                };
-                e |= app.settings(&mut db);
-                if e & UiFlags::AddedRepository == UiFlags::AddedRepository ||
-                   e & UiFlags::OpenRepository == UiFlags::OpenRepository {
-                    repo = git_repo_opt(&db);
-                    match &repo {
-                        Some(r) => app.repository(r),
-                        _ => app.no_repository()
-                    };
-                }
-                if e & UiFlags::WindowClosed == UiFlags::WindowClosed {
-                    app.invalidate();
-                }
-            },
-            recv(size_r, size) => {
-                console::reset();
-                app.console_size();
-            }
-        }
-    }
-
-    console::reset();
-    write!(stdout, "{}", termion::cursor::Show).unwrap();
-}
-
-fn git_repo_opt(db: &Settings) -> Option<Repository> {
-    let mut repo: Option<Repository> = None;
-    match db.get_open_repository() {
-        Some(sr) => {
-            match Repository::open(sr.path) {
-                Ok(gr) => {
-                    repo = Some(gr);
-                },
-                _ => (),
-            };
-        },
-        _ => ()
-    };
-    repo
+    app.run(stdout, keys_r, size_r);
 }
