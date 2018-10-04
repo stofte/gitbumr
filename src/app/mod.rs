@@ -31,7 +31,6 @@ use app::{
 };
 
 pub struct Application {
-    pub controls: Vec<Box<Control>>,
     header: Header,
     branches: Branches,
     repomanager: RepoManager,
@@ -62,130 +61,58 @@ bitflags! {
         const OpenRepository    = 0b00000100;
         const RequestRepository = 0b00001000;
         const WindowClosed      = 0b00010000;
+        const InputConsumed     = 0b00100000;
     }
 }
 
 impl Application {
-    pub fn add_control(&mut self, ctrl: Box<Control>) {
-        self.controls.push(ctrl);
-    }
     pub fn repository(&mut self, repo: &Repository) {
-        for cp in &mut self.controls {
-            let c = &mut *cp;
-            match c.as_any_mut().downcast_mut::<Header>() {
-                Some(ref mut o) => { o.update(repo); continue },
-                None => ()
-            }
-            match c.as_any_mut().downcast_mut::<Branches>() {
-                Some(ref mut o) => { o.update(repo); continue },
-                None => ()
-            };
-            match c.as_any_mut().downcast_mut::<Log>() {
-                Some(ref mut o) => { o.update(repo); continue },
-                None => ()
-            };
-        };
+        self.header.update(repo);
+        self.branches.update(repo);
+        self.log.update(repo);
     }
     pub fn no_repository(&mut self) {
-        for cp in &mut self.controls {
-            let c = &mut *cp;
-            match c.as_any_mut().downcast_mut::<Header>() {
-                Some(ref mut o) => { o.none(); continue },
-                None => ()
-            }
-            match c.as_any_mut().downcast_mut::<Branches>() {
-                Some(ref mut o) => { o.none(); continue },
-                None => ()
-            };
-            match c.as_any_mut().downcast_mut::<Log>() {
-                Some(ref mut o) => { o.none(); continue },
-                None => ()
-            };
-        };
+        self.header.none();
+        self.branches.none();
+        self.log.none();
     }
     pub fn settings(&mut self, settings: &mut Settings) -> UiFlags {
         let mut res = UiFlags::None;
-        for cp in &mut self.controls {
-            let mut matched = false;
-            let c = &mut *cp;
-            match c.as_any_mut().downcast_mut::<RepoManager>() {
-                Some(ref mut o) => {
-                    matched = true;
-                    let f = o.update(settings);
-                    if f & UiFlags::HideCursor == UiFlags::HideCursor {
-                        print!("{}", cursor::Hide);
-                    }
-                    if f & UiFlags::AddedRepository == UiFlags::AddedRepository {
-                        res = UiFlags::AddedRepository;
-                    }
-                },
-                None => ()
-            };
-        };
+        res |= self.repomanager.update(settings);
         res
     }
     pub fn console_size(&mut self) {
         let (size_col, size_row) = terminal_size().unwrap();
         let l = LayoutUpdate { cols: Some(size_col), rows: Some(size_row), invalidated: None };
-        for c in &mut self.controls {
-            c.layout(&l);
-        }
+        self.header.layout(&l);
+        self.branches.layout(&l);
+        self.repomanager.layout(&l);
+        self.log.layout(&l);
     }
     pub fn invalidate(&mut self) {
         let l = LayoutUpdate { cols: None, rows: None, invalidated: Some(true) };
-        for c in &mut self.controls {
-            c.layout(&l);
-        }
+        self.header.layout(&l);
+        self.branches.layout(&l);
+        self.repomanager.layout(&l);
+        self.log.layout(&l);
     }
     pub fn render(&mut self, stdout: &mut Stdout) {
-        for i in (0..self.controls.len()).rev() {
-            self.controls[i].render(stdout);
-        }
+        self.log.render(stdout);
+        self.branches.render(stdout);
+        self.repomanager.render(stdout);
+        self.header.render(stdout);
         stdout.flush().unwrap();
     }
     pub fn key(&mut self, key: Key, repo: Option<&Repository>) -> UiFlags {
         let mut res = UiFlags::None;
-        for cp in &mut self.controls {
-            let c = &mut *cp;
-            match c.as_any_mut().downcast_mut::<RepoManager>() {
-                Some(ref mut o) => {
-                    let (handled, fs) = o.handle(key);
-                    if fs & UiFlags::HideCursor == UiFlags::HideCursor {
-                        print!("{}", cursor::Hide);
-                    }
-                    if fs & UiFlags::OpenRepository == UiFlags::OpenRepository {
-                        res |= UiFlags::OpenRepository;
-                    }
-                    if fs & UiFlags::WindowClosed == UiFlags::WindowClosed {
-                        res |= UiFlags::WindowClosed;
-                    }
-                    if (handled) {
-                        break
-                    } else {
-                        continue
-                    }
-                },
-                None => ()
+        res |= self.repomanager.key(key, res);
+        res |= self.log.key(key, res);
+        if res & UiFlags::RequestRepository == UiFlags::RequestRepository {
+            match repo {
+                Some(r) => self.log.read(&r),
+                _ => ()
             }
-            match c.as_any_mut().downcast_mut::<Log>() {
-                Some(ref mut o) => {
-                    let (handled, fs) = o.handle(key);
-                    if fs & UiFlags::RequestRepository == UiFlags::RequestRepository {
-                        match repo {
-                            Some(r) => o.read(&r),
-                            _ => ()
-                        }
-                        // o.read(&repo.unwrap());
-                    }
-                    if (handled) {
-                        break
-                    } else {
-                        continue
-                    }
-                },
-                None => ()
-            }
-        };
+        }
         res
     }
     pub fn run(&mut self, mut stdout: RawTerminal<Stdout>, keys_r: channel::Receiver<Key>, size_r: channel::Receiver<(u16, u16)>) {
@@ -216,6 +143,9 @@ impl Application {
                         _ => self.key(c, None)
                     };
                     e |= self.settings(&mut db);
+                    if e & UiFlags::HideCursor == UiFlags::HideCursor {
+                        print!("{}", cursor::Hide);
+                    }
                     if e & UiFlags::AddedRepository == UiFlags::AddedRepository ||
                     e & UiFlags::OpenRepository == UiFlags::OpenRepository {
                         repo = git_repo_opt(&db);
@@ -245,17 +175,11 @@ pub fn empty_layout() -> Layout {
 
 pub fn new_application() -> Application {
     let mut app = Application {
-        controls: vec![],
         header: build_header(),
         branches: build_branches(),
         repomanager: build_repomanager(),
         log: build_log(),
     };
-    // order of insertion is z-index, latter being higher
-    app.add_control(Box::new(build_repomanager()));
-    app.add_control(Box::new(build_header()));
-    app.add_control(Box::new(build_log()));
-    app.add_control(Box::new(build_branches()));
     app
 }
 

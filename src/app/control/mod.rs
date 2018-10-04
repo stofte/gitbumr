@@ -29,5 +29,6 @@ pub trait SettingsControl {
 }
 
 pub trait InputControl {
-    fn handle(&mut self, Key) -> (bool, UiFlags);
+    fn key(&mut self, Key, UiFlags) -> UiFlags;
+    fn render_input(&mut self, &mut Stdout);
 }

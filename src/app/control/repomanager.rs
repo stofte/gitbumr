@@ -164,7 +164,8 @@ impl Control for RepoManager {
         );
         if self.adding {
             let inp_txt: String = self.input_txt.clone().into_iter().collect();
-            console::move_cursor(self.layout.left + 9, self.layout.top + 4);
+            // panic!(format!("CURSOR => {},{}", self.layout.left + 9, self.layout.top + 4));
+            console::move_cursor(2, 2);
             print!("{c_fg}{c_bg}{inp}{show}",
                 inp=inp_txt,
                 show=cursor::Show,
@@ -207,12 +208,12 @@ impl SettingsControl for RepoManager {
 }
 
 impl InputControl for RepoManager {
-    fn handle(&mut self, key: Key) -> (bool, UiFlags) {
-        let handled = (true, UiFlags::None);
-        let handled_closed = (true, UiFlags::WindowClosed);
-        let handled_cursor = (true, UiFlags::HideCursor);
-        let handled_repo = (true, UiFlags::OpenRepository);
-        let pass = (false, UiFlags::None);
+    fn key(&mut self, key: Key, flags: UiFlags) -> UiFlags {
+        let handled = UiFlags::InputConsumed;
+        let handled_closed = handled | UiFlags::WindowClosed;
+        let handled_cursor = handled | UiFlags::HideCursor;
+        let handled_repo = handled | UiFlags::OpenRepository;
+        let pass = UiFlags::None;
         match key {
             Key::Char(c) => {
                 if c == 'r' && !self.layout.visible {

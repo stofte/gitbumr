@@ -141,10 +141,10 @@ impl RepositoryControl for Log {
 }
 
 impl InputControl for Log {
-    fn handle(&mut self, key: Key) -> (bool, UiFlags) {
-        let pass = (false, UiFlags::None);
-        let handled = (true, UiFlags::None);
-        let handled_read = (true, UiFlags::RequestRepository);
+    fn key(&mut self, key: Key, flags: UiFlags) -> UiFlags {
+        let pass = UiFlags::None;
+        let handled = UiFlags::InputConsumed;
+        let handled_read = handled | UiFlags::RequestRepository;
         match key {
             Key::Down => {
                 let mut r = pass;
