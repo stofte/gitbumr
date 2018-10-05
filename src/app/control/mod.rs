@@ -30,5 +30,4 @@ pub trait SettingsControl {
 
 pub trait InputControl {
     fn key(&mut self, Key, UiFlags) -> UiFlags;
-    fn render_input(&mut self, &mut Stdout);
 }
