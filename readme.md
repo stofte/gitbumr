@@ -1,4 +1,4 @@
-# Gitbumr [![build status](https://travis-ci.org/stofte/gitbumr.svg?branch=develop)](https://travis-ci.org/stofte/gitbumr)
+# Gitbumr [![build status](https://travis-ci.org/stofte/gitbumr.svg?branch=master)](https://travis-ci.org/stofte/gitbumr)
 
 Terminal based git client written in Rust.
 
