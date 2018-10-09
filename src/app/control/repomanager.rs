@@ -1,25 +1,26 @@
 use std::{
     cmp,
-    io::{Write, Stdout},
-    any::Any,
+    io::{Stdout},
 };
 use termion::{
     cursor,
-    style,
-    event::Key
+    event::Key,
 };
 use app::{
-    console, empty_layout,
-    Layout, LayoutUpdate, UiFlags,
-    settings::{Settings, StoredRepository},
-    control::{Control, SettingsControl, InputControl},
+    console,
+    settings::StoredRepository,
+    layout::{Layout, build_empty_layout},
+    event::{Event, KeyArg, EventArg},
+    control::Control,
+    logger::Logger,
 };
 
 pub struct RepoManager {
+    pub id: u16,
     pub repos: Vec<StoredRepository>,
     pub layout: Layout,
     pub adding: bool,
-    pub pending_add: bool,
+    pub repo_path: Option<String>,
     pub input_txt: Vec<char>,
     pub input_cursor: u16,
     pub repo_cursor: u16,
@@ -27,38 +28,11 @@ pub struct RepoManager {
     pub open_repo: Option<i64>,
 }
 
-fn print_blank(l: &Layout, top: u16) {
-    print!("{move}{b_v}{blank}{b_v}", 
-        move=cursor::Goto(l.left, l.top + top),
-        blank=" ".repeat(l.width as usize - 2),
-        b_v=console::BOX_V,
-    );
-}
-
 impl Control for RepoManager {
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-    fn layout(&mut self, layout: &LayoutUpdate) {
-        self.layout.top = 3;
-        self.layout.left = 5;
-        match layout.cols {
-            Some(c) => {
-                self.layout.console_cols = c;
-                self.layout.width = c - 2 * (self.layout.left - 1);
-            },
-            _ => ()
-        };
-        match layout.rows {
-            Some(r) => {
-                self.layout.console_rows = r;
-                self.layout.height = r - 2 * (self.layout.top - 1);
-            },
-            _ => ()
-        };
-    }
-    fn render(&mut self, stdout: &mut Stdout) {
+    fn id(&self) -> u16 { self.id }
+    fn render(&mut self, stdout: &mut Stdout, log: &mut Logger) {
         if !self.layout.visible { return }
+        log.log(&format!("repomgr.render"));
         let title = "Repositories".to_string();
         let title_b_h = console::BOX_H.to_string()
             .repeat(self.layout.width as usize - title.len() - 5);
@@ -164,7 +138,6 @@ impl Control for RepoManager {
         );
         if self.adding {
             let inp_txt: String = self.input_txt.clone().into_iter().collect();
-            // panic!(format!("CURSOR => {},{}", self.layout.left + 9, self.layout.top + 4));
             console::move_cursor(2, 2);
             print!("{c_fg}{c_bg}{inp}{show}",
                 inp=inp_txt,
@@ -175,121 +148,111 @@ impl Control for RepoManager {
         }
         console::stop_drawing();
     }
-}
-
-impl SettingsControl for RepoManager {
-    fn update(&mut self, settings: &mut Settings) -> UiFlags {
-        let mut res = UiFlags::None;
-        if self.pending_add {
-            self.pending_add = false;
-            let path: String = self.input_txt.clone().into_iter().collect();
-            match settings.add_repository(&path) {
-                Ok(()) => {
-                    self.input_txt.clear();
-                    self.adding = false;
-                    self.add_err = None;
-                    res = UiFlags::HideCursor | UiFlags::AddedRepository;
-                },
-                Err(err) => {
-                    self.add_err = Some(err.to_string());
-                }
-            };
-        }
-        match self.open_repo {
-            Some(id) => {
-                settings.open_repository(id);
-                res = UiFlags::OpenRepository;
-            }
-            _ => ()
-        }
-        self.repos = settings.get_repositories();
-        res
-    }
-}
-
-impl InputControl for RepoManager {
-    fn key(&mut self, key: Key, flags: UiFlags) -> UiFlags {
-        let handled = UiFlags::InputConsumed;
-        let handled_closed = handled | UiFlags::WindowClosed;
-        let handled_cursor = handled | UiFlags::HideCursor;
-        let handled_repo = handled | UiFlags::OpenRepository;
-        let pass = UiFlags::None;
-        match key {
+    fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
+        log.log(&format!("repomgr.key"));
+        match k {
             Key::Char(c) => {
-                if c == 'r' && !self.layout.visible {
-                    self.layout.visible = true;
-                    return handled
+                if c == 'r' {
+                    self.layout.visible = !self.layout.visible;
+                    log.log2(format!("repomgr visibility toggled to {}", self.layout.visible));
+                    return KeyArg::Consumed
                 } else if c == 'a' && self.layout.visible && !self.adding {
                     self.adding = true;
-                    return handled
+                    return KeyArg::InputEdit(self.id, 1, 1, 1)
                 } else if c == '\n' {
-                    if self.adding {
-                        self.pending_add = self.input_txt.len() > 0;
-                        return handled
-                    } else if self.layout.visible && !self.adding && self.repos.len() > 0 {
+                    if self.layout.visible && !self.adding && self.repos.len() > 0 {
                         self.open_repo = Some(self.repos[self.repo_cursor as usize].id);
                         self.layout.visible = false;
-                        return handled_repo                        
+                        let id = self.open_repo.unwrap();
+                        log.log2(format!("repomgr opening repo toggled to {}", &id));
+                        return KeyArg::OpenRepository(id)
                     }
-                    return pass
-                } else if c == '\t' && self.adding {
-                    return pass
-                } else if self.adding {
-                    self.input_txt.push(c);
-                    return handled
                 }
-                pass
-            }
-            Key::Backspace => {
-                if self.adding && self.input_txt.len() > 0 {
-                    self.input_txt.pop();
-                    return handled
-                }
-                pass
+                KeyArg::Pass
             }
             Key::Esc => {
                 if self.adding {
                     self.adding = false;
-                    return handled_cursor
+                    return KeyArg::Consumed
                 } else if self.layout.visible {
                     self.layout.visible = false;
-                    return handled_closed
+                    return KeyArg::Consumed
                 }
-                pass
+                KeyArg::Pass
             }
             Key::Up => {
                 if self.layout.visible {
                     if !self.adding && self.repos.len() > 0 && self.repo_cursor > 0 {
                         self.repo_cursor -= 1;
                     }
-                    return handled // always eat
+                    return KeyArg::Consumed
                 }
-                pass
+                KeyArg::Pass
             }
             Key::Down => {
                 if self.layout.visible {
                     if !self.adding && self.repos.len() > 0 {
                         self.repo_cursor = cmp::min(self.repos.len() as u16 - 1, self.repo_cursor + 1);
                     }
-                    return handled
+                    return KeyArg::Consumed
                 }
-                pass
+                KeyArg::Pass
             }
-            _ => pass
+            _ => KeyArg::Pass
         }
+        
+    }
+    fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
+        log.log(&format!("repomgr.ctx"));
+        match e {
+            Event::Start(s, _, cols, rows) => {
+                self.layout.top = 3;
+                self.layout.left = 5;
+                self.layout.width = *cols - 2 * (self.layout.left - 1);
+                self.layout.height = *rows - 2 * (self.layout.top - 1);
+                match s {
+                    Some(settings) => {
+                        self.repos = settings.get_repositories();
+                    },
+                    _ => ()
+                };
+            }
+            Event::ConsoleResize(cols, rows) => {
+                self.layout.width = *cols - 2 * (self.layout.left - 1);
+                self.layout.height = *rows - 2 * (self.layout.top - 1);
+            }
+            Event::EditorInput(ref s) => {
+                log.log(&format!("repomgr.ctx input => {}", s));
+                self.repo_path = Some(s.to_string());
+            }
+            Event::Repository(_, ref s) => {
+                self.repos = s.get_repositories();
+            }
+            _ => ()
+        }
+        EventArg::None
     }
 }
 
-pub fn build_repomanager() -> RepoManager {
+fn print_blank(l: &Layout, top: u16) {
+    print!("{move}{b_v}{blank}{b_v}", 
+        move=cursor::Goto(l.left, l.top + top),
+        blank=" ".repeat(l.width as usize - 2),
+        b_v=console::BOX_V,
+    );
+}
+
+pub fn build_repomanager(id: u16) -> RepoManager {
     RepoManager {
+        id: id,
         repos: vec![],
-        layout: empty_layout(),
-        adding: false,
-        pending_add: false,
+        layout: build_empty_layout(),
+        repo_path: None,
         input_txt: vec![],
         input_cursor: 0,
         repo_cursor: 0,
         add_err: None,
-        open_repo: None
+        open_repo: None,
+        adding: false,
     }
 }

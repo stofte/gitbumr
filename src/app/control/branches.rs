@@ -1,51 +1,26 @@
-use termion::{style, cursor};
-use std::{
-    cmp,
-    io::Stdout,
-    any::Any,
-};
-use git2::{Repository, BranchType};
+use std::io::{Stdout};
+use termion::event;
 use app::{
-    console,
-    Layout,
-    LayoutUpdate,
-    empty_layout,
-    git::{get_head},
-    control::{Control, RepositoryControl},
+    console, git,
+    layout::{Layout, build_empty_layout},
+    control::{Control},
+    event::{KeyArg, Event, EventArg},
+    logger::Logger,
 };
 
 pub struct Branches {
-    pub local: Vec<String>,
-    pub remote: Vec<String>,
-    pub checkedout_idx: Option<u16>,
-    pub layout: Layout,
-    pub render: bool,
+    id: u16,
+    local: Vec<git::Branch>,
+    remote: Vec<String>,
+    checkedout_idx: Option<u16>,
+    layout: Layout,
 }
 
 impl Control for Branches {
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-    fn layout(&mut self, layout: &LayoutUpdate) {
-        match layout.rows {
-            Some(r) => {
-                self.layout.top = 2;
-                self.layout.left = 1;
-                self.layout.width = 35;
-                self.layout.height = r - self.layout.top;
-            },
-            _ => ()
-        };
-        match layout.invalidated {
-            Some(true) => {
-                self.render = true;
-            },
-            _ => ()
-        };
-        self.render = true;
-    }
-    fn render(&mut self, stdout: &mut Stdout) {
-        if !self.render || !self.layout.visible { return }
+    fn id(&self) -> u16 { self.id }
+    fn render(&mut self, stdout: &mut Stdout, log: &mut Logger) {
+        log.log(&format!("branches.render"));
+        // console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         let title = "Branches".to_string();
         let title_b_h = console::BOX_H.to_string()
@@ -73,11 +48,11 @@ impl Control for Branches {
                 open_mark = console::PNT_R;
             }
             let mut trunc_c = 0;
-            if s.len() > self.layout.width as usize - 2 {
-                trunc_c = s.len() - (self.layout.width as usize - 3);
+            if s.name.len() > self.layout.width as usize - 2 {
+                trunc_c = s.name.len() - (self.layout.width as usize - 3);
                 trunc_mark = format!("{}", console::ELLIP_H).to_string();
             }
-            let trunc_name: String = s.chars().skip(trunc_c).collect();
+            let trunc_name: String = s.name.chars().skip(trunc_c).collect();
             print!("{c_m}{t_m}{name}{blank}{b_v}",
                 c_m=open_mark,
                 name=trunc_name,
@@ -97,44 +72,41 @@ impl Control for Branches {
             c_off += 1;
         }
         console::stop_drawing();
-        self.render = false;
     }
-}
-
-impl RepositoryControl for Branches {
-    fn update(&mut self, repo: &Repository) {
-        let mut vec = Vec::new();
-        let bs = repo.branches(Some(BranchType::Local)).unwrap();
-        for b in bs {
-            let bb = b.unwrap().0;
-            let name = bb.name().unwrap().unwrap().to_owned();
-            vec.push(name);
-        }
-        vec.sort();
-        let head_name = get_head(&repo);
-        for i in 0..vec.len() {
-            if head_name == vec[i] {
-                self.checkedout_idx = Some(i as u16);
+    fn key(&mut self, k: event::Key, log: &mut Logger) -> KeyArg {
+        log.log(&format!("branches.key"));
+        KeyArg::Pass
+    }
+    fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
+        log.log(&format!("branches.ctx"));
+        match e {
+            Event::Start(_, r, _, rows) => {
+                self.layout.top = 2;
+                self.layout.left = 1;
+                self.layout.width = 35;
+                self.layout.height = *rows - self.layout.top;
+                match r {
+                    Some(ref r) => self.local = git::local_branches(r),
+                    _ => ()
+                };
+            },
+            Event::ConsoleResize(_, rows) => {
+                self.layout.height = *rows - self.layout.top;
             }
-        }
-        self.local = vec;
-        self.render = true;
-        self.layout.visible = true;
+            Event::Repository(ref r, _) => self.local = git::local_branches(r),
+            _ => ()
+        };
+        EventArg::None
     }
-    fn none(&mut self) {
-        self.layout.visible = false;
-    }
-    fn read(&mut self, repo: &Repository) { }
 }
 
-pub fn build_branches() -> Branches {
+pub fn build_branches(id: u16) -> Branches {
     let mut b = Branches {
+        id: id,
         local: vec![],
         remote: vec![],
         checkedout_idx: None,
-        layout: empty_layout(),
-        render: true,
+        layout: build_empty_layout()
     };
-    b.layout.visible = true;
     b
 }

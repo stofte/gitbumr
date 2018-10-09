@@ -1,200 +1,189 @@
-pub mod git;
-pub mod console;
-pub mod settings;
 pub mod control;
+pub mod editor;
+pub mod event;
+pub mod settings;
+pub mod app;
+pub mod git;
+pub mod layout;
+pub mod console;
+pub mod logger;
 
 use std::{
-    io::{Write, Stdout}
+    time,
+    thread,
+    io::{Write, stdout, stdin, Stdout},
 };
-use git2::Repository;
 use termion::{
-    cursor,
     terminal_size,
-    raw::RawTerminal,
-    event::Key,
+    event::Key, 
+    input::TermRead,
+    raw::{IntoRawMode, RawTerminal},
+    screen::AlternateScreen,
 };
-use bitflags;
 use channel;
-
+use git2::Repository;
 use app::{
+    event::{KeyArg, Event},
     settings::{Settings, build_settings},
+    editor::{EditorArg, handle_editor_input},
+    logger::{Logger, build_logger},
     control::{
         Control,
-        RepositoryControl,
-        SettingsControl,
-        InputControl,
-        header::{Header, build_header},
-        branches::{Branches, build_branches},
-        repomanager::{RepoManager, build_repomanager},
-        log::{Log, build_log},
+        branches::{build_branches},
+        header::{build_header},
+        repomanager::{build_repomanager},
+        history::{build_history},
     },
 };
 
-pub struct Application {
-    header: Header,
-    branches: Branches,
-    repomanager: RepoManager,
-    log: Log,
+pub struct App {
+    controls: Vec<Box<Control>>,
+    repo: Option<Repository>,
+    settings: Settings,
+    logger: Logger,
+    input_buffer: Vec<char>,
+    input_control: Option<u16>,
 }
 
-pub struct Layout {
-    pub top: u16,
-    pub left: u16,
-    pub width: u16,
-    pub height: u16,
-    pub visible: bool,
-    pub console_rows: u16,
-    pub console_cols: u16,
-}
+impl App {
+    fn startup(&mut self) {
+        self.logger.log(&format!("app.startup => repo counts: {}", self.settings.get_repositories().len()));
+        self.repo = self.settings.get_open_repo();
+        let (cols, rows) = terminal_size().unwrap();
+        let mut settings = match self.repo {
+            Some(ref mut r) => {
+                Event::Start(Some(&mut self.settings), Some(r), cols, rows)
+            },
+            None => Event::Start(Some(&mut self.settings), None, cols, rows)
+        };
+        
+        for i in 0..self.controls.len() {
+            let ctrl = &mut self.controls[i];
+            ctrl.ctx(&mut settings, &mut self.logger);
+        }
+    }
+    fn context(&mut self, e: &mut Event) {
 
-pub struct LayoutUpdate {
-    pub rows: Option<u16>,
-    pub cols: Option<u16>,
-    pub invalidated: Option<bool>,
-}
-
-bitflags! {
-    pub struct UiFlags: u32 {
-        const None              = 0;
-        const HideCursor        = 0b00000001;
-        const AddedRepository   = 0b00000010;
-        const OpenRepository    = 0b00000100;
-        const RequestRepository = 0b00001000;
-        const WindowClosed      = 0b00010000;
-        const InputConsumed     = 0b00100000;
+        for i in 0..self.controls.len() {
+            let ctrl = &mut self.controls[i];
+            ctrl.ctx(e, &mut self.logger);
+        }
     }
-}
-
-impl Application {
-    pub fn repository(&mut self, repo: &Repository) {
-        self.header.update(repo);
-        self.branches.update(repo);
-        self.log.update(repo);
-    }
-    pub fn no_repository(&mut self) {
-        self.header.none();
-        self.branches.none();
-        self.log.none();
-    }
-    pub fn settings(&mut self, settings: &mut Settings) -> UiFlags {
-        let mut res = UiFlags::None;
-        res |= self.repomanager.update(settings);
-        res
-    }
-    pub fn console_size(&mut self) {
-        let (size_col, size_row) = terminal_size().unwrap();
-        let l = LayoutUpdate { cols: Some(size_col), rows: Some(size_row), invalidated: None };
-        self.header.layout(&l);
-        self.branches.layout(&l);
-        self.repomanager.layout(&l);
-        self.log.layout(&l);
-    }
-    pub fn invalidate(&mut self) {
-        let l = LayoutUpdate { cols: None, rows: None, invalidated: Some(true) };
-        self.header.layout(&l);
-        self.branches.layout(&l);
-        self.repomanager.layout(&l);
-        self.log.layout(&l);
-    }
-    pub fn render(&mut self, stdout: &mut Stdout) {
-        self.log.render(stdout);
-        self.branches.render(stdout);
-        self.repomanager.render(stdout);
-        self.header.render(stdout);
-        stdout.flush().unwrap();
-    }
-    pub fn key(&mut self, key: Key, repo: Option<&Repository>) -> UiFlags {
-        let mut res = UiFlags::None;
-        res |= self.repomanager.key(key, res);
-        res |= self.log.key(key, res);
-        if res & UiFlags::RequestRepository == UiFlags::RequestRepository {
-            match repo {
-                Some(r) => self.log.read(&r),
-                _ => ()
+    fn repo_changed(&mut self, id: i64) {
+        self.settings.open_repository(id);
+        self.repo = self.settings.get_open_repo();
+        match self.repo {
+            Some(ref mut r) => {
+                let mut ctx = Event::Repository(r, &mut self.settings);
+                for i in 0..self.controls.len() {
+                    let ctrl = &mut self.controls[i];
+                    ctrl.ctx(&mut ctx, &mut self.logger);
+                }
+            },
+            None => {
+                panic!("repo_changed failed to open repo {}", id);
             }
         }
-        res
     }
-    pub fn run(&mut self, mut stdout: RawTerminal<Stdout>, keys_r: channel::Receiver<Key>, size_r: channel::Receiver<(u16, u16)>) {
-        let mut db = build_settings();
-        db.init();
-        let mut repo = git_repo_opt(&db);
-        self.console_size();
-        match &repo {
-            Some(r) => self.repository(r),
-            _ => self.no_repository()
+    fn input_completed(&mut self) {
+        let ctrl_id = self.input_control.unwrap();
+        let mut inp = self.input_buffer.clone();
+        for i in 0..self.controls.len() {
+            let ctrl = &mut self.controls[i];
+            if ctrl.id() == ctrl_id {
+                let mut ctx = Event::EditorInput(inp.into_iter().collect::<String>());
+                ctrl.ctx(&mut ctx, &mut self.logger);
+                break;
+            }
+        }
+        self.input_control = None;
+        self.input_buffer = vec![];
+    }
+    fn render(&mut self, stdout: &mut Stdout) {
+        for i in (0..self.controls.len()).rev() {
+            let ctrl = &mut self.controls[i];
+            ctrl.render(stdout, &mut self.logger);
+        }
+    }
+    fn key(&mut self, k: Key) {
+        let mut res = KeyArg::Pass;
+        for i in 0..self.controls.len() {
+            let ctrl = &mut self.controls[i];
+            res = ctrl.key(k, &mut self.logger);
+            self.logger.log(&format!(" => {:?}", res));
+            match res {
+                KeyArg::Pass => continue,
+                _ => break,
+            };
+        }
+        match res {
+            KeyArg::OpenRepository(id) => {
+                self.repo_changed(id);
+            },
+            KeyArg::InputEdit(id, top, left, size) => {
+                if self.input_control != None {
+                    panic!("input_control was Some()");
+                }
+                self.input_control = Some(id);
+            },
+            _ => ()
         };
-        self.settings(&mut db);
+    }
+    pub fn run(&mut self, mut stdout: AlternateScreen<RawTerminal<Stdout>>, keys_r: channel::Receiver<Key>, size_r: channel::Receiver<(u16, u16)>) {
+        let mut idx = 0;
         console::reset();
-        let mut invalidated = true;
-        loop  {
-            self.render(&mut stdout);
-            invalidated = false;
+        self.startup();
+        loop {
+            let input_edit = self.input_control != None;
+            if !input_edit {
+                self.logger.log(&format!("{}\t============================================================================", idx));
+                self.render(&mut stdout);
+                stdout.flush().unwrap();
+            }
             select! {
                 recv(keys_r, key) => {
-                    let c = key.unwrap();
-                    match c {
+                    let k = key.unwrap();
+                    match k {
                         Key::Ctrl('c') => break,
-                        _ => ()
+                        _ => (),
                     };
-                    // if we didn't break, pass the input to the controls
-                    let mut e = match &repo {
-                        Some(r) => self.key(c, Some(r)),
-                        _ => self.key(c, None)
-                    };
-                    e |= self.settings(&mut db);
-                    if e & UiFlags::HideCursor == UiFlags::HideCursor {
-                        print!("{}", cursor::Hide);
-                    }
-                    if e & UiFlags::AddedRepository == UiFlags::AddedRepository ||
-                    e & UiFlags::OpenRepository == UiFlags::OpenRepository {
-                        repo = git_repo_opt(&db);
-                        match &repo {
-                            Some(r) => self.repository(r),
-                            _ => self.no_repository()
-                        };
-                    }
-                    if e & UiFlags::WindowClosed == UiFlags::WindowClosed {
-                        self.invalidate();
+                    if input_edit {
+                        match handle_editor_input(&mut self.input_buffer, k) {
+                            EditorArg::Consumed(c) => {
+                                self.logger.log(&format!("EditorArg::Consumed => {}", c));
+                            },
+                            EditorArg::Completed => {
+                                self.input_completed();
+                            },
+                            _ => ()
+                        }
+                    } else {
+                        self.key(k);
                     }
                 },
                 recv(size_r, size) => {
                     console::reset();
-                    self.console_size();
+                    let (cols,rows) = size.unwrap();
+                    self.context(&mut Event::ConsoleResize(cols, rows));
                 }
             }
+            idx = idx + 1;
         }
-        console::reset();
-        write!(stdout, "{}", cursor::Show).unwrap();
     }
 }
 
-pub fn empty_layout() -> Layout {
-    Layout { top: 0, left: 0, width: 0, height: 0, visible: false, console_rows: 0, console_cols: 0 }
-}
-
-pub fn new_application() -> Application {
-    let mut app = Application {
-        header: build_header(),
-        branches: build_branches(),
-        repomanager: build_repomanager(),
-        log: build_log(),
+pub fn build_app() -> App {
+    let mut app = App {
+        controls: vec![],
+        settings: build_settings(),
+        repo: None,
+        logger: build_logger(),
+        input_buffer: vec![],
+        input_control: None,
     };
+    app.controls.push(Box::new(build_header(1)));
+    app.controls.push(Box::new(build_repomanager(2)));
+    app.controls.push(Box::new(build_branches(3)));
+    app.controls.push(Box::new(build_history(4)));
     app
-}
-
-fn git_repo_opt(db: &Settings) -> Option<Repository> {
-    let mut repo: Option<Repository> = None;
-    match db.get_open_repository() {
-        Some(sr) => {
-            match Repository::open(sr.path) {
-                Ok(gr) => {
-                    repo = Some(gr);
-                },
-                _ => (),
-            };
-        },
-        _ => ()
-    };
-    repo
 }

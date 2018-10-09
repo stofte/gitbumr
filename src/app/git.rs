@@ -16,10 +16,18 @@ pub struct Commit {
     pub message_line: String,
 }
 
-pub fn local_branches(git_repo: &Repository) -> Vec<Branch> {
+pub fn get_head(git_repo: &Repository) -> String {
+    let hr = git_repo.head().unwrap();
+    let n = hr.name().unwrap();
+    let prefix = "refs/head/";
+    let n_str = &n[prefix.len() + 1 .. n.len()];
+    return n_str.to_string()
+}
+
+pub fn local_branches(repo: &Repository) -> Vec<Branch> {
     let mut vec = Vec::new();
-    let bs = git_repo.branches(Some(BranchType::Local)).unwrap();
-    let head_name = get_head(&git_repo);
+    let bs = repo.branches(Some(BranchType::Local)).unwrap();
+    let head_name = get_head(&repo);
     for b in bs {
         let bb = b.unwrap().0;
         let name = bb.name().unwrap().unwrap().to_owned();
@@ -33,12 +41,12 @@ pub fn local_branches(git_repo: &Repository) -> Vec<Branch> {
     vec
 }
 
-pub fn get_head(git_repo: &Repository) -> String {
-    let hr = git_repo.head().unwrap();
-    let n = hr.name().unwrap();
-    let prefix = "refs/head/";
-    let n_str = &n[prefix.len() + 1 .. n.len()];
-    return n_str.to_string()
+pub fn get_repository_path(repo: &Repository) -> String {
+    let mut path = repo.path().to_str().unwrap().to_string();
+    if path.ends_with("/.git/") {
+        path = path.chars().take(path.len() - 6).collect();
+    }
+    path
 }
 
 pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> Commit {

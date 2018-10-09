@@ -1,11 +1,7 @@
-use std::{error::Error, env, path::{Path, PathBuf}, fs::{File, canonicalize}};
-use rusqlite::{Connection, Transaction};
+use std::{env, path::{Path}, fs::{File, canonicalize}};
+use rusqlite::{Connection};
 use git2::Repository;
 use chrono::prelude::*;
-
-pub struct Settings {
-    conn: Connection
-}
 
 pub struct StoredRepository {
     pub id: i64,
@@ -15,6 +11,10 @@ pub struct StoredRepository {
 
 struct Table {
     name: String
+}
+
+pub struct Settings {
+    conn: Connection,
 }
 
 impl Settings {
@@ -78,7 +78,7 @@ impl Settings {
                 Err("already in list")
             }
             _ => {
-                tx.commit();
+                tx.commit().unwrap();
                 Ok(())
             }
         }
@@ -105,14 +105,20 @@ impl Settings {
                 panic!("open_repository received unknown id")
             }
             _ => {
-                tx.commit();
+                tx.commit().unwrap();
             }
-        }
+        };
     }
-    pub fn get_timesize_offset_secs(&mut self) -> i32 {
-        let ldt = Local::now();
-        let z = ldt.offset().local_minus_utc();
-        z
+    pub fn get_open_repo(&mut self) -> Option<Repository> {
+        match self.get_open_repository() {
+            Some(repo) => {
+                match Repository::open(repo.path) {
+                    Ok(r) => Some(r),
+                    _ => None
+                }
+            }
+            None => None
+        }
     }
 }
 
@@ -120,8 +126,14 @@ pub fn build_settings() -> Settings {
     let db_path = format!("{}/.gitbumrdb", env::var("HOME").unwrap());
     let p = Path::new(&db_path);
     if !p.exists() {
-        File::create(&db_path);
+        File::create(&db_path).unwrap();
     }
     let sqlite_conn = Connection::open(p).unwrap();
     Settings { conn: sqlite_conn }
+}
+
+pub fn get_timesize_offset_secs() -> i32 {
+    let ldt = Local::now();
+    let z = ldt.offset().local_minus_utc();
+    z
 }

@@ -1,42 +1,29 @@
 use std::io::{Stdout};
-use std::any::Any;
-use git2::{Repository};
-use termion::{cursor, clear};
-use app::{
-    Layout, LayoutUpdate, empty_layout,
-    console,
-    control::{Control, RepositoryControl},
+use termion::{
+    cursor,
+    event::{Key},
 };
-
-pub struct Header {
-    pub repo_path: String,
-    pub state: String,
-    pub layout: Layout,
-    pub render: bool,
-
-}
+use app::{
+    git, console,
+    layout::{Layout, build_empty_layout},
+    control::{Control},
+    event::{KeyArg, Event, EventArg, event_arg_to_string},
+    logger::Logger,
+};
 
 static APP_NAME: &'static str = "Gitbumr";
 
+pub struct Header {
+    id: u16,
+    repo_path: String,
+    state: String,
+    layout: Layout,
+}
+
 impl Control for Header {
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-    fn layout(&mut self, layout: &LayoutUpdate) {
-        match layout.cols {
-            Some(c) => self.layout.width = c,
-            _ => ()
-        };
-        match layout.rows {
-            Some(r) => self.layout.height = r,
-            _ => ()
-        };
-        match layout.invalidated {
-            Some(true) => self.render = true,
-            _ => ()
-        };
-    }
-    fn render(&mut self, stdout: &mut Stdout) {
+    fn id(&self) -> u16 { self.id }
+    fn render(&mut self, stdout: &mut Stdout, log: &mut Logger) {
+        log.log(&format!("header.render (w: {})", self.layout.width));
         let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
         print!("{move}{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
             move=cursor::Goto(1, 1),
@@ -52,31 +39,45 @@ impl Control for Header {
             fg_r=console::FG_RESET,
         );
     }
+    fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
+        log.log(&format!("header.key"));
+        KeyArg::Pass
+    }
+    fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
+        log.log(&format!("header.ctx {:?}", event_arg_to_string(e)));
+        match e {
+            Event::Start(_, r, c, _) => {
+                self.layout.width = *c;
+                self.layout.height = 1;
+                match r {
+                    Some(repo) => {
+                        self.repo_path = git::get_repository_path(&repo);
+                        self.state = format!("{:?}", repo.state());
+                        log.log(&format!("\"{}\" repo was passed to start", self.repo_path));
+                    },
+                    None => {
+                        log.log(&format!("no repo was passed to start"));
+                    }
+                }
+            }
+            Event::Repository(ref r, _) => {
+                self.repo_path = git::get_repository_path(r);
+                self.state = format!("{:?}", r.state());
+            }
+            Event::ConsoleResize(c, _) => {
+                self.layout.width = *c;
+            }
+            _ => ()
+        };
+        EventArg::None
+    }
 }
 
-impl RepositoryControl for Header {
-    fn update(&mut self, repo: &Repository) {
-        let path = repo.path().to_str().unwrap().to_string();
-        if path.ends_with("/.git/") {
-            self.repo_path = path.chars().take(path.len() - 6).collect();
-        }
-        else {
-            self.repo_path = path;
-        }
-        let zz = format!("{:?}", repo.state());
-        self.state = zz;
-    }
-    fn none(&mut self) {
-        self.repo_path = "None".to_string();
-    }
-    fn read(&mut self, repo: &Repository) { }
-}
-
-pub fn build_header() -> Header {
+pub fn build_header(id: u16) -> Header {
     Header {
+        id: id,
         repo_path: "".to_string(),
         state: "".to_string(),
-        layout: empty_layout(),
-        render: true
+        layout: build_empty_layout(),
     }
 }

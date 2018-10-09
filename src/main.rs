@@ -3,37 +3,34 @@ extern crate git2;
 extern crate rusqlite;
 #[macro_use]
 extern crate crossbeam_channel as channel;
-#[macro_use]
-extern crate bitflags;
 extern crate chrono;
 mod app;
 
 use std::{
-    thread,
-    time,
-    io::{Write, stdout, stdin, Stdout}
+    thread, time, panic, io::{Write, stdout, stdin}
 };
 use termion::{
-    event::Key,
     terminal_size,
-    input::TermRead,
     raw::IntoRawMode,
-    screen::AlternateScreen,
+    input::TermRead,
+    screen::{AlternateScreen, ToMainScreen},
 };
-use git2::Repository;
 use app::{
-    console, Layout, UiFlags,
-    settings::{Settings, build_settings},
-    control::{Control, RepositoryControl, SettingsControl, branches::Branches, header::Header},
-    new_application, Application,
+    console,
+    build_app,
+    logger::get_log_path,
 };
 
 fn main() {
-
+    println!("Log at {}", get_log_path());
+    
     let (keys_s, keys_r) = channel::bounded(0);
     let (size_s, size_r) = channel::bounded(0);
+    
+    let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
+    write!(screen, "{}", termion::cursor::Hide).unwrap();
     let poll_interval = time::Duration::from_millis(50);
-
+        
     thread::spawn(move || {
         let stdin = stdin();
         for c in stdin.keys() {
@@ -41,17 +38,7 @@ fn main() {
         }
     });
 
-    if false { // fix panic printing on alternate screen
-        // lock the scrollbar https://gitlab.redox-os.org/redox-os/termion/issues/117
-        let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
-        write!(screen, "{}", termion::cursor::Hide).unwrap();
-    }
-
-    // terminal seems to get fubared if this is done after terminal_size?
-    let mut stdout = stdout().into_raw_mode().unwrap();
-
     thread::spawn(move || {
-        // todo use unix signal instead?
         let (mut size_col, mut size_row) = terminal_size().unwrap();
         loop {
             thread::sleep(poll_interval);
@@ -64,6 +51,21 @@ fn main() {
         }
     });
 
-    let mut app = new_application();
-    app.run(stdout, keys_r, size_r);
+    // panics written to the alternate screen will be lost as soon as the process exits
+    // so intercept the panic and switch the mainscreen and print out panic details.
+    panic::set_hook(Box::new(|panic_info| {
+        print!("{}", ToMainScreen);
+        let mut msg: String = "panic!".to_string();
+        if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+            if let Some(l) = panic_info.location() {
+                msg = format!("{} {}. {} @ {}", msg, s, l.file(), l.line()).to_string();
+            } else {
+                msg = format!("{} {}.", msg, s).to_string();
+            }
+        }
+        print!("{}\r\n", msg);
+    }));
+
+    let mut app = build_app();
+    app.run(screen, keys_r, size_r);
 }

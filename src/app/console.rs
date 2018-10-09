@@ -1,6 +1,8 @@
-use std::io::{Write, Stdout};
-use termion::{cursor, clear};
-use termion::color::{Bg, Fg, Reset, Rgb, Black};
+use termion::{
+    cursor,
+    clear,
+    color::{Bg, Fg, Reset, Rgb},
+};
 
 pub static FG_PRIMARY: Fg<Rgb> = Fg(Rgb(20, 20, 20));
 pub static FG_LIGHT_PRIMARY: Fg<Rgb> = Fg(Rgb(170, 170, 170));
@@ -29,14 +31,6 @@ pub static BOX_DH: char = '\u{2533}';
 pub static PNT_R: char = '\u{25ba}';
 pub static ELLIP_H: char = '\u{2026}';
 
-pub fn reset() {
-    print!("{}{}{}",
-        cursor::Goto(1, 1),
-        clear::All,
-        cursor::Hide
-    );
-}
-
 pub fn start_drawing(left: u16, top: u16, fg: Fg<Rgb>, bg: Bg<Rgb>) {
     print!("{}{}{}",
         cursor::Goto(left, top),
@@ -45,12 +39,20 @@ pub fn start_drawing(left: u16, top: u16, fg: Fg<Rgb>, bg: Bg<Rgb>) {
     );
 }
 
+pub fn stop_drawing() {
+    print!("{}{}", FG_RESET, BG_RESET);
+}
+
 pub fn move_cursor(left: u16, top: u16) {
     print!("{}",
         cursor::Goto(left, top),
     );
 }
 
-pub fn stop_drawing() {
-    print!("{}{}", FG_RESET, BG_RESET);
+pub fn reset() {
+    print!("{}{}{}",
+        cursor::Goto(1, 1),
+        clear::All,
+        cursor::Hide
+    );
 }
