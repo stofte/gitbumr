@@ -2,7 +2,6 @@ pub mod control;
 pub mod editor;
 pub mod event;
 pub mod settings;
-pub mod app;
 pub mod git;
 pub mod layout;
 pub mod console;
