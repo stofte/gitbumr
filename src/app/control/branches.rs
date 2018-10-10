@@ -19,6 +19,7 @@ pub struct Branches {
 
 impl Control for Branches {
     fn id(&self) -> u32 { self.id }
+    fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(format!("branches.render"));
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);

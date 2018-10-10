@@ -32,6 +32,7 @@ pub struct RepoManager {
 
 impl Control for RepoManager {
     fn id(&self) -> u32 { self.id }
+    fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         if !self.layout.visible { return }
         log.log(format!("repomgr.render"));
