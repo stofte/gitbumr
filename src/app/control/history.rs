@@ -8,7 +8,7 @@ use app::{
     git, console,
     settings::get_timesize_offset_secs,
     control::Control,
-    event::{KeyArg, Event, EventArg},
+    event::{KeyArg, ConsumeArg, Event, EventArg},
     layout::{Layout, build_empty_layout},
     logger::Logger,
 };
@@ -82,9 +82,40 @@ impl Control for History {
         }
         console::stop_drawing();
     }
-    fn key(&mut self, _k: Key, log: &mut Logger) -> KeyArg {
+    fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
         log.log(&format!("history.key"));
-        KeyArg::Pass
+        let pass = KeyArg::Pass;
+        let handled = KeyArg::Consumed(ConsumeArg::None);
+        let handled_repo = KeyArg::Consumed(ConsumeArg::Repository);
+        match k {
+            Key::Down => {
+                let mut r = pass;
+                if self.cursor_idx < self.revwalk.len() - 1 {
+                    self.cursor_idx += 1;
+                    r = handled;
+                }
+                if self.cursor_idx - self.rw_idx > self.layout.height as usize - 1 {
+                    self.rw_idx += 1;
+                    self.rw_read_fw = true;
+                    r = handled_repo;
+                }
+                r
+            }
+            Key::Up => {
+                let mut r = pass;
+                if self.cursor_idx > 0 {
+                    self.cursor_idx -= 1;
+                    r = handled;
+                }
+                if self.cursor_idx < self.rw_idx {
+                    self.rw_idx -= 1;
+                    self.rw_read_bk = true;
+                    r = handled_repo;
+                }
+                r
+            },
+            _ => pass
+        }
     }
     fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
         log.log(&format!("history.ctx"));

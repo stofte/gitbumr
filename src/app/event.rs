@@ -2,9 +2,15 @@ use git2::Repository;
 use app::settings::Settings;
 
 #[derive(Debug)]
+pub enum ConsumeArg {
+    None,
+    Repository,
+}
+
+#[derive(Debug)]
 pub enum KeyArg {
     Pass,
-    Consumed,
+    Consumed(ConsumeArg),
     OpenRepository(i64),
     InputEdit(u16, u16, u16, u16),
 }

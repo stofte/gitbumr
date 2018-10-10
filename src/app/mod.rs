@@ -19,7 +19,7 @@ use termion::{
 use channel;
 use git2::Repository;
 use app::{
-    event::{KeyArg, Event},
+    event::{KeyArg, ConsumeArg, Event},
     settings::{Settings, build_settings},
     editor::{EditorArg, handle_editor_input},
     logger::{Logger, build_logger},
@@ -108,7 +108,20 @@ impl App {
             res = ctrl.key(k, &mut self.logger);
             self.logger.log(&format!(" => {:?}", res));
             match res {
+                // the control passed the input. no state change should happen in the ctrl.
                 KeyArg::Pass => continue,
+                // the control consumed the key, but requires more repo access, eg history ctrl needs more data.
+                KeyArg::Consumed(ConsumeArg::Repository) => {
+                    match self.repo {
+                        Some(ref mut r) => {
+                            let mut ctx = Event::Repository(r, &mut self.settings);
+                            ctrl.ctx(&mut ctx, &mut self.logger);
+                        },
+                        None => {
+                            panic!("key => KeyArg::Consumed(Repository) => repo property was none");
+                        }
+                    }
+                }
                 _ => break,
             };
         }

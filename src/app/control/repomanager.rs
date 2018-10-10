@@ -10,7 +10,7 @@ use app::{
     console,
     settings::StoredRepository,
     layout::{Layout, build_empty_layout},
-    event::{Event, KeyArg, EventArg},
+    event::{Event, ConsumeArg, KeyArg, EventArg},
     control::Control,
     logger::Logger,
 };
@@ -153,7 +153,7 @@ impl Control for RepoManager {
                 if c == 'r' {
                     self.layout.visible = !self.layout.visible;
                     log.log2(format!("repomgr visibility toggled to {}", self.layout.visible));
-                    return KeyArg::Consumed
+                    return KeyArg::Consumed(ConsumeArg::None)
                 } else if c == 'a' && self.layout.visible && !self.adding {
                     self.adding = true;
                     return KeyArg::InputEdit(self.id, 1, 1, 1)
@@ -171,10 +171,10 @@ impl Control for RepoManager {
             Key::Esc => {
                 if self.adding {
                     self.adding = false;
-                    return KeyArg::Consumed
+                    return KeyArg::Consumed(ConsumeArg::None)
                 } else if self.layout.visible {
                     self.layout.visible = false;
-                    return KeyArg::Consumed
+                    return KeyArg::Consumed(ConsumeArg::None)
                 }
                 KeyArg::Pass
             }
@@ -183,7 +183,7 @@ impl Control for RepoManager {
                     if !self.adding && self.repos.len() > 0 && self.repo_cursor > 0 {
                         self.repo_cursor -= 1;
                     }
-                    return KeyArg::Consumed
+                    return KeyArg::Consumed(ConsumeArg::None)
                 }
                 KeyArg::Pass
             }
@@ -192,7 +192,7 @@ impl Control for RepoManager {
                     if !self.adding && self.repos.len() > 0 {
                         self.repo_cursor = cmp::min(self.repos.len() as u16 - 1, self.repo_cursor + 1);
                     }
-                    return KeyArg::Consumed
+                    return KeyArg::Consumed(ConsumeArg::None)
                 }
                 KeyArg::Pass
             }
