@@ -9,11 +9,7 @@ pub struct Logger {
 }
 
 impl Logger {
-    pub fn log(&mut self, str: &str) {
-        self.file.write(str.as_bytes()).unwrap();
-        self.file.write("\n".as_bytes()).unwrap();
-    }
-    pub fn log2(&mut self, str: String) {
+    pub fn log(&mut self, str: String) {
         self.file.write(str.as_bytes()).unwrap();
         self.file.write("\n".as_bytes()).unwrap();
     }
@@ -23,7 +19,7 @@ pub fn build_logger() -> Logger {
     let mut l = Logger {
         file: File::create(get_log_path()).unwrap()
     };
-    l.log("\n\n\nRESTARTING\n\n\n");
+    l.log("\n\n\nRESTARTING\n\n\n".to_string());
     l
 }
 

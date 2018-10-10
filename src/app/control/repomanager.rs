@@ -32,7 +32,7 @@ impl Control for RepoManager {
     fn id(&self) -> u16 { self.id }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         if !self.layout.visible { return }
-        log.log(&format!("repomgr.render"));
+        log.log(format!("repomgr.render"));
         let title = "Repositories".to_string();
         let title_b_h = console::BOX_H.to_string()
             .repeat(self.layout.width as usize - title.len() - 5);
@@ -147,12 +147,12 @@ impl Control for RepoManager {
         console::stop_drawing();
     }
     fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
-        log.log(&format!("repomgr.key"));
+        log.log(format!("repomgr.key"));
         match k {
             Key::Char(c) => {
                 if c == 'r' {
                     self.layout.visible = !self.layout.visible;
-                    log.log2(format!("repomgr visibility toggled to {}", self.layout.visible));
+                    log.log(format!("repomgr visibility toggled to {}", self.layout.visible));
                     return KeyArg::Consumed(ConsumeArg::None)
                 } else if c == 'a' && self.layout.visible && !self.adding {
                     self.adding = true;
@@ -162,7 +162,7 @@ impl Control for RepoManager {
                         self.open_repo = Some(self.repos[self.repo_cursor as usize].id);
                         self.layout.visible = false;
                         let id = self.open_repo.unwrap();
-                        log.log2(format!("repomgr opening repo toggled to {}", &id));
+                        log.log(format!("repomgr opening repo toggled to {}", &id));
                         return KeyArg::OpenRepository(id)
                     }
                 }
@@ -201,7 +201,7 @@ impl Control for RepoManager {
         
     }
     fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
-        log.log(&format!("repomgr.ctx"));
+        log.log(format!("repomgr.ctx"));
         match e {
             Event::Start(s, _, cols, rows) => {
                 self.layout.top = 3;
@@ -220,7 +220,7 @@ impl Control for RepoManager {
                 self.layout.height = *rows - 2 * (self.layout.top - 1);
             }
             Event::EditorInput(ref s) => {
-                log.log(&format!("repomgr.ctx input => {}", s));
+                log.log(format!("repomgr.ctx input => {}", s));
                 self.repo_path = Some(s.to_string());
             }
             Event::Repository(_, ref s) => {

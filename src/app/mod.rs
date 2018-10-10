@@ -43,7 +43,7 @@ pub struct App {
 
 impl App {
     fn startup(&mut self) {
-        self.logger.log(&format!("app.startup => repo counts: {}", self.settings.get_repositories().len()));
+        self.logger.log(format!("app.startup => repo counts: {}", self.settings.get_repositories().len()));
         self.repo = self.settings.get_open_repo();
         let (cols, rows) = terminal_size().unwrap();
         let mut settings = match self.repo {
@@ -106,7 +106,7 @@ impl App {
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
             res = ctrl.key(k, &mut self.logger);
-            self.logger.log(&format!(" => {:?}", res));
+            self.logger.log(format!(" => {:?}", res));
             match res {
                 // the control passed the input. no state change should happen in the ctrl.
                 KeyArg::Pass => continue,
@@ -145,7 +145,7 @@ impl App {
         loop {
             let input_edit = self.input_control != None;
             if !input_edit {
-                self.logger.log(&format!("{}\t============================================================================", idx));
+                self.logger.log(format!("{}\t============================================================================", idx));
                 self.render(&mut stdout);
                 stdout.flush().unwrap();
             }
@@ -159,7 +159,7 @@ impl App {
                     if input_edit {
                         match handle_editor_input(&mut self.input_buffer, k) {
                             EditorArg::Consumed(c) => {
-                                self.logger.log(&format!("EditorArg::Consumed => {}", c));
+                                self.logger.log(format!("EditorArg::Consumed => {}", c));
                             },
                             EditorArg::Completed => {
                                 self.input_completed();

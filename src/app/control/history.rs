@@ -28,7 +28,7 @@ pub struct History {
 impl Control for History {
     fn id(&self) -> u16 { self.id }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
-        log.log(&format!("history.render"));
+        log.log(format!("history.render"));
         let mut auth_vec = vec![];
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         let title = "History".to_string();
@@ -83,7 +83,7 @@ impl Control for History {
         console::stop_drawing();
     }
     fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
-        log.log(&format!("history.key"));
+        log.log(format!("history.key"));
         let pass = KeyArg::Pass;
         let handled = KeyArg::Consumed(ConsumeArg::None);
         let handled_repo = KeyArg::Consumed(ConsumeArg::Repository);
@@ -99,6 +99,7 @@ impl Control for History {
                     self.rw_read_fw = true;
                     r = handled_repo;
                 }
+                log.log(format!("history.key => key::down"));
                 r
             }
             Key::Up => {
@@ -118,7 +119,7 @@ impl Control for History {
         }
     }
     fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
-        log.log(&format!("history.ctx"));
+        log.log(format!("history.ctx"));
         match e {
             Event::Start(_, r, cols, rows) => {
                 self.layout.top = 2;

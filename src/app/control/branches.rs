@@ -18,7 +18,7 @@ pub struct Branches {
 impl Control for Branches {
     fn id(&self) -> u16 { self.id }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
-        log.log(&format!("branches.render"));
+        log.log(format!("branches.render"));
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         let title = "Branches".to_string();
         let title_b_h = console::BOX_H.to_string()
@@ -72,11 +72,11 @@ impl Control for Branches {
         console::stop_drawing();
     }
     fn key(&mut self, _k: event::Key, log: &mut Logger) -> KeyArg {
-        log.log(&format!("branches.key"));
+        log.log(format!("branches.key"));
         KeyArg::Pass
     }
     fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
-        log.log(&format!("branches.ctx"));
+        log.log(format!("branches.ctx"));
         match e {
             Event::Start(_, r, _, rows) => {
                 self.layout.top = 2;
