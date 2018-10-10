@@ -16,7 +16,7 @@ use app::{
 };
 
 pub struct RepoManager {
-    pub id: u16,
+    pub id: u32,
     pub repos: Vec<StoredRepository>,
     pub layout: Layout,
     pub adding: bool,
@@ -29,7 +29,7 @@ pub struct RepoManager {
 }
 
 impl Control for RepoManager {
-    fn id(&self) -> u16 { self.id }
+    fn id(&self) -> u32 { self.id }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         if !self.layout.visible { return }
         log.log(format!("repomgr.render"));
@@ -240,7 +240,7 @@ fn print_blank(l: &Layout, top: u16) {
     );
 }
 
-pub fn build_repomanager(id: u16) -> RepoManager {
+pub fn build_repomanager(id: u32) -> RepoManager {
     RepoManager {
         id: id,
         repos: vec![],

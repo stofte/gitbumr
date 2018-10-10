@@ -37,8 +37,9 @@ pub struct App {
     repo: Option<Repository>,
     settings: Settings,
     logger: Logger,
+    control_focus: u32,
     input_buffer: Vec<char>,
-    input_control: Option<u16>,
+    input_control: Option<u32>,
 }
 
 impl App {
@@ -142,10 +143,12 @@ impl App {
         let mut idx = 0;
         console::reset();
         self.startup();
+        let focused_id = self.control_focus;
+        self.context(&mut Event::Focus(focused_id));
         loop {
             let input_edit = self.input_control != None;
             if !input_edit {
-                self.logger.log(format!("{}\t============================================================================", idx));
+                self.logger.log(format!("{}\t========================================", idx));
                 self.render(&mut stdout);
                 stdout.flush().unwrap();
             }
@@ -189,6 +192,7 @@ pub fn build_app() -> App {
         logger: build_logger(),
         input_buffer: vec![],
         input_control: None,
+        control_focus: 4,
     };
     app.controls.push(Box::new(build_header(1)));
     app.controls.push(Box::new(build_repomanager(2)));

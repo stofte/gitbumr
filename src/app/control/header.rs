@@ -14,14 +14,14 @@ use app::{
 static APP_NAME: &'static str = "Gitbumr";
 
 pub struct Header {
-    id: u16,
+    id: u32,
     repo_path: String,
     state: String,
     layout: Layout,
 }
 
 impl Control for Header {
-    fn id(&self) -> u16 { self.id }
+    fn id(&self) -> u32 { self.id }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(format!("header.render (w: {})", self.layout.width));
         let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
@@ -73,7 +73,7 @@ impl Control for Header {
     }
 }
 
-pub fn build_header(id: u16) -> Header {
+pub fn build_header(id: u32) -> Header {
     Header {
         id: id,
         repo_path: "".to_string(),

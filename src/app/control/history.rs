@@ -14,7 +14,7 @@ use app::{
 };
 
 pub struct History {
-    pub id: u16,
+    pub id: u32,
     revwalk: Vec<Oid>,
     rw_idx: usize, // top revision
     cursor_idx: usize,
@@ -26,7 +26,7 @@ pub struct History {
 }
 
 impl Control for History {
-    fn id(&self) -> u16 { self.id }
+    fn id(&self) -> u32 { self.id }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(format!("history.render"));
         let mut auth_vec = vec![];
@@ -158,7 +158,7 @@ impl Control for History {
     }
 }
 
-pub fn build_history(id: u16) -> History {
+pub fn build_history(id: u32) -> History {
     History {
         id: id,
         revwalk: vec![],

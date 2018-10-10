@@ -9,14 +9,14 @@ use app::{
 };
 
 pub struct Branches {
-    id: u16,
+    id: u32,
     local: Vec<git::Branch>,
     checkedout_idx: Option<u16>,
     layout: Layout,
 }
 
 impl Control for Branches {
-    fn id(&self) -> u16 { self.id }
+    fn id(&self) -> u32 { self.id }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(format!("branches.render"));
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
@@ -98,7 +98,7 @@ impl Control for Branches {
     }
 }
 
-pub fn build_branches(id: u16) -> Branches {
+pub fn build_branches(id: u32) -> Branches {
     Branches {
         id: id,
         local: vec![],

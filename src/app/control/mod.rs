@@ -14,5 +14,5 @@ pub trait Control {
     fn render(&mut self, &mut Stdout, &mut Logger);
     fn key(&mut self, event::Key, &mut Logger) -> KeyArg;
     fn ctx(&mut self, &mut Event, &mut Logger) -> EventArg;
-    fn id(&self) -> u16;
+    fn id(&self) -> u32;
 }
