@@ -27,7 +27,7 @@ pub struct History {
 
 impl Control for History {
     fn id(&self) -> u16 { self.id }
-    fn render(&mut self, stdout: &mut Stdout, log: &mut Logger) {
+    fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(&format!("history.render"));
         let mut auth_vec = vec![];
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
@@ -82,7 +82,7 @@ impl Control for History {
         }
         console::stop_drawing();
     }
-    fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
+    fn key(&mut self, _k: Key, log: &mut Logger) -> KeyArg {
         log.log(&format!("history.key"));
         KeyArg::Pass
     }

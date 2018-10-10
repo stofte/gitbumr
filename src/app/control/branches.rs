@@ -11,16 +11,14 @@ use app::{
 pub struct Branches {
     id: u16,
     local: Vec<git::Branch>,
-    remote: Vec<String>,
     checkedout_idx: Option<u16>,
     layout: Layout,
 }
 
 impl Control for Branches {
     fn id(&self) -> u16 { self.id }
-    fn render(&mut self, stdout: &mut Stdout, log: &mut Logger) {
+    fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(&format!("branches.render"));
-        // console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
         let title = "Branches".to_string();
         let title_b_h = console::BOX_H.to_string()
@@ -63,7 +61,7 @@ impl Control for Branches {
             c_off += 1;
         }
         let spacing_rows = self.layout.height as usize - self.local.len();
-        for i in 0..spacing_rows {
+        for _i in 0..spacing_rows {
             console::move_cursor(self.layout.left, self.layout.top + c_off);
             print!("{blank}{b_v}",
                 b_v=console::BOX_V,
@@ -73,7 +71,7 @@ impl Control for Branches {
         }
         console::stop_drawing();
     }
-    fn key(&mut self, k: event::Key, log: &mut Logger) -> KeyArg {
+    fn key(&mut self, _k: event::Key, log: &mut Logger) -> KeyArg {
         log.log(&format!("branches.key"));
         KeyArg::Pass
     }
@@ -101,12 +99,10 @@ impl Control for Branches {
 }
 
 pub fn build_branches(id: u16) -> Branches {
-    let mut b = Branches {
+    Branches {
         id: id,
         local: vec![],
-        remote: vec![],
         checkedout_idx: None,
         layout: build_empty_layout()
-    };
-    b
+    }
 }

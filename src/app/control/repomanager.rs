@@ -30,7 +30,7 @@ pub struct RepoManager {
 
 impl Control for RepoManager {
     fn id(&self) -> u16 { self.id }
-    fn render(&mut self, stdout: &mut Stdout, log: &mut Logger) {
+    fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         if !self.layout.visible { return }
         log.log(&format!("repomgr.render"));
         let title = "Repositories".to_string();
@@ -96,10 +96,8 @@ impl Control for RepoManager {
         for i in 0..self.repos.len() {
             let repo = &self.repos[i];
             let txt = &repo.path;
-            let mut opentxt = "";
             let mut open_mark = ' ';
             if repo.open {
-                opentxt = " [open]";
                 open_mark = console::PNT_R;
             }
             let mut c_fg = console::FG_PRIMARY;

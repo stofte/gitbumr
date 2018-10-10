@@ -16,7 +16,6 @@ use termion::{
     screen::{AlternateScreen, ToMainScreen},
 };
 use app::{
-    console,
     build_app,
     logger::get_log_path,
 };

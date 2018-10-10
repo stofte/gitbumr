@@ -64,9 +64,9 @@ impl Settings {
             Err(..) => return Err("accessing path")
         };
         // verify we have git repo
-        let repo = match Repository::open(&p) {
-            Ok(repo) => (),
-            Err(e) => return Err("not a git repository")
+        match Repository::open(&p) {
+            Ok(..) => (),
+            Err(..) => return Err("not a git repository")
         };
         // todo use try! macro https://docs.rs/rusqlite/0.14.0/rusqlite/struct.Transaction.html#example
         let tx = self.conn.transaction().unwrap();
@@ -74,7 +74,7 @@ impl Settings {
         // this works for now
         match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&p]) {
             Err(..) => {
-                tx.rollback();
+                tx.rollback().unwrap();
                 Err("already in list")
             }
             _ => {
@@ -101,7 +101,7 @@ impl Settings {
         tx.execute("UPDATE repos SET open=0 WHERE 1=1", &[]);
         match tx.execute("UPDATE repos SET open=1 WHERE rowid=?1", &[&id]) {
             Err(..) => {
-                tx.rollback();
+                tx.rollback().unwrap();
                 panic!("open_repository received unknown id")
             }
             _ => {

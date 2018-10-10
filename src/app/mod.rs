@@ -8,15 +8,12 @@ pub mod console;
 pub mod logger;
 
 use std::{
-    time,
-    thread,
-    io::{Write, stdout, stdin, Stdout},
+    io::{Write, Stdout},
 };
 use termion::{
     terminal_size,
     event::Key, 
-    input::TermRead,
-    raw::{IntoRawMode, RawTerminal},
+    raw::{RawTerminal},
     screen::AlternateScreen,
 };
 use channel;
@@ -86,7 +83,7 @@ impl App {
     }
     fn input_completed(&mut self) {
         let ctrl_id = self.input_control.unwrap();
-        let mut inp = self.input_buffer.clone();
+        let inp = self.input_buffer.clone();
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
             if ctrl.id() == ctrl_id {
@@ -119,7 +116,7 @@ impl App {
             KeyArg::OpenRepository(id) => {
                 self.repo_changed(id);
             },
-            KeyArg::InputEdit(id, top, left, size) => {
+            KeyArg::InputEdit(id, _, _, _) => {
                 if self.input_control != None {
                     panic!("input_control was Some()");
                 }
@@ -184,5 +181,6 @@ pub fn build_app() -> App {
     app.controls.push(Box::new(build_repomanager(2)));
     app.controls.push(Box::new(build_branches(3)));
     app.controls.push(Box::new(build_history(4)));
+    app.settings.init(); // ensures db file exists
     app
 }

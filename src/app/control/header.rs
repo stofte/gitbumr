@@ -22,7 +22,7 @@ pub struct Header {
 
 impl Control for Header {
     fn id(&self) -> u16 { self.id }
-    fn render(&mut self, stdout: &mut Stdout, log: &mut Logger) {
+    fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(&format!("header.render (w: {})", self.layout.width));
         let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
         print!("{move}{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
@@ -39,7 +39,7 @@ impl Control for Header {
             fg_r=console::FG_RESET,
         );
     }
-    fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
+    fn key(&mut self, _k: Key, log: &mut Logger) -> KeyArg {
         log.log(&format!("header.key"));
         KeyArg::Pass
     }
