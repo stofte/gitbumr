@@ -4,6 +4,7 @@ pub struct Layout {
     pub width: u16,
     pub height: u16,
     pub visible: bool,
+    pub focus: bool,
     pub console_rows: u16,
     pub console_cols: u16,
 }
@@ -14,6 +15,7 @@ pub fn build_empty_layout() -> Layout {
         left: 0,
         width: 0,
         height: 0,
+        focus: false,
         console_rows: 0,
         console_cols: 0,
         visible: false

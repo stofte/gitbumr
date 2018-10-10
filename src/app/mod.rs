@@ -6,6 +6,7 @@ pub mod git;
 pub mod layout;
 pub mod console;
 pub mod logger;
+pub mod linebuffer;
 
 use std::{
     io::{Write, Stdout},

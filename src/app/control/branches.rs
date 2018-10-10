@@ -6,6 +6,7 @@ use app::{
     control::{Control},
     event::{KeyArg, Event, EventArg},
     logger::Logger,
+    linebuffer::{LineBuffer, build_linebuffer}
 };
 
 pub struct Branches {
@@ -13,6 +14,7 @@ pub struct Branches {
     local: Vec<git::Branch>,
     checkedout_idx: Option<u16>,
     layout: Layout,
+    buffer: LineBuffer,
 }
 
 impl Control for Branches {
@@ -103,6 +105,7 @@ pub fn build_branches(id: u32) -> Branches {
         id: id,
         local: vec![],
         checkedout_idx: None,
-        layout: build_empty_layout()
+        layout: build_empty_layout(),
+        buffer: build_linebuffer(),
     }
 }

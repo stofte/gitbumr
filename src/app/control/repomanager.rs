@@ -13,6 +13,7 @@ use app::{
     event::{Event, ConsumeArg, KeyArg, EventArg},
     control::Control,
     logger::Logger,
+    linebuffer::{LineBuffer, build_linebuffer},
 };
 
 pub struct RepoManager {
@@ -26,6 +27,7 @@ pub struct RepoManager {
     pub repo_cursor: u16,
     pub add_err: Option<String>,
     pub open_repo: Option<i64>,
+    buffer: LineBuffer,
 }
 
 impl Control for RepoManager {
@@ -223,6 +225,7 @@ impl Control for RepoManager {
                 log.log(format!("repomgr.ctx input => {}", s));
                 self.repo_path = Some(s.to_string());
             }
+            Event::Focus(id) => self.layout.focus = *id == self.id,
             Event::Repository(_, ref s) => {
                 self.repos = s.get_repositories();
             }
@@ -252,5 +255,6 @@ pub fn build_repomanager(id: u32) -> RepoManager {
         add_err: None,
         open_repo: None,
         adding: false,
+        buffer: build_linebuffer(),
     }
 }

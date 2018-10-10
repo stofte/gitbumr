@@ -9,6 +9,7 @@ use app::{
     control::{Control},
     event::{KeyArg, Event, EventArg, event_arg_to_string},
     logger::Logger,
+    linebuffer::{LineBuffer, build_linebuffer}
 };
 
 static APP_NAME: &'static str = "Gitbumr";
@@ -18,6 +19,7 @@ pub struct Header {
     repo_path: String,
     state: String,
     layout: Layout,
+    buffer: LineBuffer,
 }
 
 impl Control for Header {
@@ -79,5 +81,6 @@ pub fn build_header(id: u32) -> Header {
         repo_path: "".to_string(),
         state: "".to_string(),
         layout: build_empty_layout(),
+        buffer: build_linebuffer(),
     }
 }

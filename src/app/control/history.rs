@@ -11,6 +11,7 @@ use app::{
     event::{KeyArg, ConsumeArg, Event, EventArg},
     layout::{Layout, build_empty_layout},
     logger::Logger,
+    linebuffer::{LineBuffer, build_linebuffer},
 };
 
 pub struct History {
@@ -23,6 +24,7 @@ pub struct History {
     commits: Vec<git::Commit>,
     layout: Layout,
     tz_offset_secs: i32,
+    buffer: LineBuffer,
 }
 
 impl Control for History {
@@ -88,33 +90,31 @@ impl Control for History {
         let handled = KeyArg::Consumed(ConsumeArg::None);
         let handled_repo = KeyArg::Consumed(ConsumeArg::Repository);
         match k {
-            Key::Down => {
-                let mut r = pass;
-                if self.cursor_idx < self.revwalk.len() - 1 {
-                    self.cursor_idx += 1;
-                    r = handled;
-                }
-                if self.cursor_idx - self.rw_idx > self.layout.height as usize - 1 {
-                    self.rw_idx += 1;
-                    self.rw_read_fw = true;
-                    r = handled_repo;
-                }
-                log.log(format!("history.key => key::down"));
-                r
-            }
             Key::Up => {
+                log.log(format!("history.key => key::up"));
                 let mut r = pass;
                 if self.cursor_idx > 0 {
                     self.cursor_idx -= 1;
-                    r = handled;
                 }
                 if self.cursor_idx < self.rw_idx {
                     self.rw_idx -= 1;
                     self.rw_read_bk = true;
-                    r = handled_repo;
+                    return handled_repo;
                 }
-                r
-            },
+                handled
+            }
+            Key::Down => {
+                log.log(format!("history.key => key::down"));
+                if self.cursor_idx < self.revwalk.len() - 1 {
+                    self.cursor_idx += 1;
+                }
+                if self.cursor_idx - self.rw_idx > self.layout.height as usize - 1 {
+                    self.rw_idx += 1;
+                    self.rw_read_fw = true;
+                    return handled_repo
+                }
+                handled
+            }
             _ => pass
         }
     }
@@ -148,6 +148,7 @@ impl Control for History {
                     None => ()
                 }
             }
+            Event::Focus(id) => self.layout.focus = *id == self.id,
             Event::ConsoleResize(cols, rows) => {
                 self.layout.width = *cols - self.layout.left;
                 self.layout.height = *rows - self.layout.top;
@@ -169,5 +170,6 @@ pub fn build_history(id: u32) -> History {
         commits: vec![],
         tz_offset_secs: get_timesize_offset_secs(),
         layout: build_empty_layout(),
+        buffer: build_linebuffer(),
     }
 }
