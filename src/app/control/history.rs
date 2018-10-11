@@ -33,20 +33,9 @@ impl Control for History {
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(format!("history.render"));
         let mut auth_vec = vec![];
-        console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
-        let title = "History".to_string();
-        let title_b_h = console::BOX_H.to_string()
-            .repeat(self.layout.width as usize - title.len());
-        print!("{b_h}{title}{repeat}",
-            title=title,
-            repeat=title_b_h,
-            b_h=console::BOX_H
-        );
-        let mut t_off = 1;
         let mut c_idx = 0;
         let max_rw_c = cmp::min(self.rw_idx + self.layout.height as usize, self.revwalk.len());
         for i in self.rw_idx..max_rw_c {
-            console::move_cursor(self.layout.left, self.layout.top + t_off);
             let mut c_fg = console::FG_PRIMARY;
             let mut c_bg = console::BG_PRIMARY;
             let mut txt_fg = console::FG_PRIMARY;
@@ -68,17 +57,6 @@ impl Control for History {
             let msg_len = cmp::min(msg_cols, commit.message_line.len());
             let c_msg: String = commit.message_line.chars().take(msg_len).collect();
             let c_msg_blank = self.layout.width as usize - c_msg.len() - c_size;
-            print!("{c_fg}{c_bg} {txt_fg}{time}{fg} {msg}{blank} {txt_fg}{auth}{fg} {fg}{bg}",
-                blank=" ".repeat(c_msg_blank),
-                txt_fg=txt_fg,
-                msg=c_msg,
-                time=c_ts,
-                auth=c_auth,
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-                c_fg=c_fg,
-                c_bg=c_bg,
-            );
             self.buffer.set(format!("{c_fg}{c_bg} {txt_fg}{time}{fg} {msg}{blank} {txt_fg}{auth}{fg} {fg}{bg}",
                 blank=" ".repeat(c_msg_blank),
                 txt_fg=txt_fg,
@@ -90,11 +68,9 @@ impl Control for History {
                 c_fg=c_fg,
                 c_bg=c_bg,
             ));
-            t_off += 1;
             c_idx += 1;
             
         }
-        console::stop_drawing();
         self.buffer.valid = true;
     }
     fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {

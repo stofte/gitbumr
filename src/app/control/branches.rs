@@ -22,19 +22,7 @@ impl Control for Branches {
     fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(format!("branches.render"));
-        console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
-        let title = "Branches".to_string();
-        let title_b_h = console::BOX_H.to_string()
-            .repeat(self.layout.width as usize - title.len() - 2);
-        print!("{b_h}{title}{repeat}{b_dl}",
-            title=title,
-            repeat=title_b_h,
-            b_h=console::BOX_H,
-            b_dl=console::BOX_DH,
-        );
-        let mut c_off = 1;
         for j in 0..self.local.len() {
-            console::move_cursor(self.layout.left, self.layout.top + c_off);
             let s = &self.local[j];
             let mut open_mark = ' ';
             let mut trunc_mark = "".to_string();
@@ -54,25 +42,7 @@ impl Control for Branches {
                 blank=" ".repeat(self.layout.width as usize - trunc_name.len() - 2 - (if trunc_c > 0 { 1 } else { 0 })),
                 b_v=console::BOX_V,
             ));
-            print!("{c_m}{t_m}{name}{blank}{b_v}",
-                c_m=open_mark,
-                name=trunc_name,
-                t_m=trunc_mark,
-                blank=" ".repeat(self.layout.width as usize - trunc_name.len() - 2 - (if trunc_c > 0 { 1 } else { 0 })),
-                b_v=console::BOX_V,
-            );
-            c_off += 1;
         }
-        let spacing_rows = self.layout.height as usize - self.local.len();
-        for _i in 0..spacing_rows {
-            console::move_cursor(self.layout.left, self.layout.top + c_off);
-            print!("{blank}{b_v}",
-                b_v=console::BOX_V,
-                blank=" ".repeat(self.layout.width as usize - 1),
-            );
-            c_off += 1;
-        }
-        console::stop_drawing();
         self.buffer.valid = true;
     }
     fn key(&mut self, _k: event::Key, log: &mut Logger) -> KeyArg {

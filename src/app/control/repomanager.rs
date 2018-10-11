@@ -36,66 +36,12 @@ impl Control for RepoManager {
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         if !self.layout.visible { return }
         log.log(format!("repomgr.render"));
-        let title = "Repositories".to_string();
-        let title_b_h = console::BOX_H.to_string()
-            .repeat(self.layout.width as usize - title.len() - 5);
-        console::start_drawing(self.layout.left, self.layout.top, console::FG_PRIMARY, console::BG_PRIMARY);
-        print!("{b_dr}{b_h}{b_vl}{title}{b_vr}{repeat}{b_dl}",
-            title=title,
-            repeat=title_b_h,
-            b_dr=console::BOX_DR,
-            b_h=console::BOX_H,
-            b_vl=console::BOX_VL,
-            b_vr=console::BOX_VR,
-            b_dl=console::BOX_DL,
-        );
-        print_blank(&self.layout, 1);
-        let mut bottom_off = 2;
-        if self.adding {
-            let mut txt = "  Add repository".to_string();
-            match &self.add_err {
-                Some(err) => {
-                    txt = format!("  Error: {}", err).to_string();
-                },
-                _ => ()
-            };
-            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
-            print!("{b_v}{txt}{blank}{b_v}",
-                txt=txt,
-                blank=" ".repeat(self.layout.width as usize - txt.len() - 2),
-                b_v=console::BOX_V,
-            );
-        
-            bottom_off = bottom_off + 1;
-            print_blank(&self.layout, bottom_off);
-            bottom_off = bottom_off + 1;
-            let label_txt = "  Path: ".to_string();
-            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
-            // we draw input txt at the bottom
-            print!("{b_v}{lbl}{c_fg}{c_bg}{blank}{fg}{bg}  {b_v}",
-                lbl=label_txt,
-                blank=" ".repeat(self.layout.width as usize - label_txt.len() - 4),
-                b_v=console::BOX_V,
-                c_bg=console::BG_PRIMARY_CURSOR,
-                c_fg=console::FG_PRIMARY_CURSOR,
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-            );
-            bottom_off = bottom_off + 1;
-            print_blank(&self.layout, bottom_off);
-            bottom_off = bottom_off + 1;
-            print_blank(&self.layout, bottom_off);
-            bottom_off = bottom_off + 1;
-        }
         if self.repos.len() == 0 {
             let txt = "  No repositories found".to_string();
-            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
-            print!("{b_v}{txt}{blank}{b_v}",
+            self.buffer.set(format!("{txt}{blank}", 
                 txt=txt,
-                blank=" ".repeat(self.layout.width as usize - txt.len() - 2),
-                b_v=console::BOX_V,
-            );
-            bottom_off = bottom_off + 1;
+                blank=" ".repeat(self.layout.width as usize - txt.len()),
+            ));
         }
         for i in 0..self.repos.len() {
             let repo = &self.repos[i];
@@ -110,17 +56,6 @@ impl Control for RepoManager {
                 c_bg = console::BG_PRIMARY_CURSOR;
                 c_fg = console::FG_PRIMARY_CURSOR;
             }
-            console::move_cursor(self.layout.left, self.layout.top + bottom_off);
-            print!("{b_v}  {open_m}{c_fg}{c_bg}{txt}{blank}{fg}{bg}  {b_v}",
-                txt=txt,
-                open_m=open_mark,
-                blank=" ".repeat(self.layout.width as usize - txt.len() - 7),
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-                c_fg=c_fg,
-                c_bg=c_bg,
-                b_v=console::BOX_V,
-            );
             self.buffer.set(format!("  {open_m}{c_fg}{c_bg}{txt}{blank}{fg}{bg}  ",
                 txt=txt,
                 open_m=open_mark,
@@ -130,34 +65,7 @@ impl Control for RepoManager {
                 c_fg=c_fg,
                 c_bg=c_bg,
             ));
-            bottom_off = bottom_off + 1;
         }
-        print_blank(&self.layout, bottom_off);
-        bottom_off = bottom_off + 1;
-        let mut help_txt = " a: Add repository, esc: Close ".to_string();
-        if self.adding {
-            help_txt = " esc: Cancel ".to_string();
-        }
-        let bottom_b_h = console::BOX_H.to_string().repeat(self.layout.width as usize - 3 - help_txt.len());
-        console::move_cursor(self.layout.left, self.layout.top + bottom_off);
-        print!("{b_ur}{repeat}{help}{b_h}{b_ul}",
-            repeat=bottom_b_h,
-            help=help_txt,
-            b_ur=console::BOX_UR,
-            b_ul=console::BOX_UL,
-            b_h=console::BOX_H,
-        );
-        if self.adding {
-            let inp_txt: String = self.input_txt.clone().into_iter().collect();
-            console::move_cursor(2, 2);
-            print!("{c_fg}{c_bg}{inp}{show}",
-                inp=inp_txt,
-                show=cursor::Show,
-                c_bg=console::BG_PRIMARY_CURSOR,
-                c_fg=console::FG_PRIMARY_CURSOR,
-            );
-        }
-        console::stop_drawing();
         self.buffer.valid = true;
     }
     fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {

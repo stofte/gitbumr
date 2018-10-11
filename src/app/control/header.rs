@@ -28,19 +28,6 @@ impl Control for Header {
     fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
         log.log(format!("header.render (w: {})", self.layout.width));
         let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
-        print!("{move}{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
-            move=cursor::Goto(1, 1),
-            name=APP_NAME,
-            path=self.repo_path,
-            blank=" ".repeat(blank_cnt),
-            state=self.state,
-            b_fg=console::FG_BRAND,
-            b_bg=console::BG_BRAND,
-            fg=console::FG_PRIMARY,
-            bg=console::BG_PRIMARY,
-            bg_r=console::BG_RESET,
-            fg_r=console::FG_RESET,
-        );
         self.buffer.set(format!("{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
             name=APP_NAME,
             path=self.repo_path,
