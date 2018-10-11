@@ -79,11 +79,23 @@ impl Control for History {
                 c_fg=c_fg,
                 c_bg=c_bg,
             );
+            self.buffer.set(format!("{c_fg}{c_bg} {txt_fg}{time}{fg} {msg}{blank} {txt_fg}{auth}{fg} {fg}{bg}",
+                blank=" ".repeat(c_msg_blank),
+                txt_fg=txt_fg,
+                msg=c_msg,
+                time=c_ts,
+                auth=c_auth,
+                fg=console::FG_PRIMARY,
+                bg=console::BG_PRIMARY,
+                c_fg=c_fg,
+                c_bg=c_bg,
+            ));
             t_off += 1;
             c_idx += 1;
             
         }
         console::stop_drawing();
+        self.buffer.valid = true;
     }
     fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
         log.log(format!("history.key"));
@@ -127,6 +139,7 @@ impl Control for History {
                 self.layout.left = 36;
                 self.layout.width = *cols - self.layout.left;
                 self.layout.height = *rows - self.layout.top;
+                self.buffer.size(self.layout.width, self.layout.height);
                 match r {
                     Some(repo) => {
                         let mut rv = repo.revwalk().unwrap();
@@ -153,6 +166,7 @@ impl Control for History {
             Event::ConsoleResize(cols, rows) => {
                 self.layout.width = *cols - self.layout.left;
                 self.layout.height = *rows - self.layout.top;
+                self.buffer.size(self.layout.width, self.layout.height);
             }
             _ => ()
         };

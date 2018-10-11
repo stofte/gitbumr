@@ -48,7 +48,7 @@ impl App {
         self.logger.log(format!("app.startup => repo counts: {}", self.settings.get_repositories().len()));
         self.repo = self.settings.get_open_repo();
         let (cols, rows) = terminal_size().unwrap();
-        let mut settings = match self.repo {
+        let mut ctx = match self.repo {
             Some(ref mut r) => {
                 Event::Start(Some(&mut self.settings), Some(r), cols, rows)
             },
@@ -57,11 +57,10 @@ impl App {
         
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
-            ctrl.ctx(&mut settings, &mut self.logger);
+            ctrl.ctx(&mut ctx, &mut self.logger);
         }
     }
     fn context(&mut self, e: &mut Event) {
-
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
             ctrl.ctx(e, &mut self.logger);

@@ -41,6 +41,19 @@ impl Control for Header {
             bg_r=console::BG_RESET,
             fg_r=console::FG_RESET,
         );
+        self.buffer.set(format!("{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
+            name=APP_NAME,
+            path=self.repo_path,
+            blank=" ".repeat(blank_cnt),
+            state=self.state,
+            b_fg=console::FG_BRAND,
+            b_bg=console::BG_BRAND,
+            fg=console::FG_PRIMARY,
+            bg=console::BG_PRIMARY,
+            bg_r=console::BG_RESET,
+            fg_r=console::FG_RESET,
+        ));
+        self.buffer.valid = true;
     }
     fn key(&mut self, _k: Key, log: &mut Logger) -> KeyArg {
         log.log(format!("header.key"));
@@ -52,6 +65,7 @@ impl Control for Header {
             Event::Start(_, r, c, _) => {
                 self.layout.width = *c;
                 self.layout.height = 1;
+                self.buffer.size(self.layout.width, self.layout.height);
                 match r {
                     Some(repo) => {
                         self.repo_path = git::get_repository_path(&repo);
@@ -69,6 +83,7 @@ impl Control for Header {
             }
             Event::ConsoleResize(c, _) => {
                 self.layout.width = *c;
+                self.buffer.size(self.layout.width, self.layout.height);
             }
             _ => ()
         };

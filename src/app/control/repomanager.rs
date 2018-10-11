@@ -65,6 +65,7 @@ impl Control for RepoManager {
                 blank=" ".repeat(self.layout.width as usize - txt.len() - 2),
                 b_v=console::BOX_V,
             );
+        
             bottom_off = bottom_off + 1;
             print_blank(&self.layout, bottom_off);
             bottom_off = bottom_off + 1;
@@ -120,6 +121,15 @@ impl Control for RepoManager {
                 c_bg=c_bg,
                 b_v=console::BOX_V,
             );
+            self.buffer.set(format!("  {open_m}{c_fg}{c_bg}{txt}{blank}{fg}{bg}  ",
+                txt=txt,
+                open_m=open_mark,
+                blank=" ".repeat(self.layout.width as usize - txt.len() - 7),
+                fg=console::FG_PRIMARY,
+                bg=console::BG_PRIMARY,
+                c_fg=c_fg,
+                c_bg=c_bg,
+            ));
             bottom_off = bottom_off + 1;
         }
         print_blank(&self.layout, bottom_off);
@@ -148,6 +158,7 @@ impl Control for RepoManager {
             );
         }
         console::stop_drawing();
+        self.buffer.valid = true;
     }
     fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
         log.log(format!("repomgr.key"));
@@ -211,6 +222,7 @@ impl Control for RepoManager {
                 self.layout.left = 5;
                 self.layout.width = *cols - 2 * (self.layout.left - 1);
                 self.layout.height = *rows - 2 * (self.layout.top - 1);
+                self.buffer.size(self.layout.width, self.layout.height);
                 match s {
                     Some(settings) => {
                         self.repos = settings.get_repositories();
@@ -221,6 +233,7 @@ impl Control for RepoManager {
             Event::ConsoleResize(cols, rows) => {
                 self.layout.width = *cols - 2 * (self.layout.left - 1);
                 self.layout.height = *rows - 2 * (self.layout.top - 1);
+                self.buffer.size(self.layout.width, self.layout.height);
             }
             Event::EditorInput(ref s) => {
                 log.log(format!("repomgr.ctx input => {}", s));

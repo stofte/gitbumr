@@ -57,7 +57,7 @@ fn main() {
         let mut msg: String = "panic!".to_string();
         if let Some(s) = panic_info.payload().downcast_ref::<String>() {
             if let Some(l) = panic_info.location() {
-                msg = format!("{} {}. {} @ {}", msg, s, l.file(), l.line()).to_string();
+                msg = format!("{} {}. {:?}", msg, s, l).to_string();
             } else {
                 msg = format!("{} {}.", msg, s).to_string();
             }

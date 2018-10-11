@@ -32,20 +32,13 @@ impl Control for Branches {
             b_h=console::BOX_H,
             b_dl=console::BOX_DH,
         );
-        let mut cidx = -1;
-        match self.checkedout_idx {
-            Some(i) => {
-                cidx = i as isize;
-            },
-            _ => ()
-        };
         let mut c_off = 1;
         for j in 0..self.local.len() {
             console::move_cursor(self.layout.left, self.layout.top + c_off);
             let s = &self.local[j];
             let mut open_mark = ' ';
             let mut trunc_mark = "".to_string();
-            if cidx == j as isize {
+            if s.checkedout {
                 open_mark = console::PNT_R;
             }
             let mut trunc_c = 0;
@@ -54,6 +47,13 @@ impl Control for Branches {
                 trunc_mark = format!("{}", console::ELLIP_H).to_string();
             }
             let trunc_name: String = s.name.chars().skip(trunc_c).collect();
+            self.buffer.set(format!("{c_m}{t_m}{name}{blank}{b_v}", 
+                c_m=open_mark,
+                name=trunc_name,
+                t_m=trunc_mark,
+                blank=" ".repeat(self.layout.width as usize - trunc_name.len() - 2 - (if trunc_c > 0 { 1 } else { 0 })),
+                b_v=console::BOX_V,
+            ));
             print!("{c_m}{t_m}{name}{blank}{b_v}",
                 c_m=open_mark,
                 name=trunc_name,
@@ -73,6 +73,7 @@ impl Control for Branches {
             c_off += 1;
         }
         console::stop_drawing();
+        self.buffer.valid = true;
     }
     fn key(&mut self, _k: event::Key, log: &mut Logger) -> KeyArg {
         log.log(format!("branches.key"));
@@ -86,6 +87,8 @@ impl Control for Branches {
                 self.layout.left = 1;
                 self.layout.width = 35;
                 self.layout.height = *rows - self.layout.top;
+                self.buffer.title("Branches".to_string());
+                self.buffer.size(self.layout.width, self.layout.height);
                 match r {
                     Some(ref r) => self.local = git::local_branches(r),
                     _ => ()
@@ -93,6 +96,7 @@ impl Control for Branches {
             },
             Event::ConsoleResize(_, rows) => {
                 self.layout.height = *rows - self.layout.top;
+                self.buffer.size(self.layout.width, self.layout.height);
             }
             Event::Repository(ref r, _) => self.local = git::local_branches(r),
             _ => ()
