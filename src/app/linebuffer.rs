@@ -41,7 +41,7 @@ pub struct LineBuffer {
 }
 
 fn cursor(top: u16, left: u16, stdout: &mut StdoutLock, log: &mut Logger) {
-    log.log(format!("pos({}x{})", left + 1, top + 1));
+    // log.log(format!("pos({}x{})", left + 1, top + 1));
     stdout.write(format!("{}", cursor::Goto(left + 1, top + 1)).as_bytes());
 }
 
@@ -59,7 +59,7 @@ impl LineBuffer {
     }
     pub fn render(&mut self, stdout: &mut StdoutLock, log: &mut Logger) {
         assert!("" != self.name);
-        log.log(format!("linebuffer.render:{}", self.name));
+        log.log(format!("linebuffer.render:{}:{}", self.id, self.name));
         for i in 0..self.lines.len() {
             let l = &self.lines[i];
             cursor(self.layout.left, self.layout.top + i as u16, stdout, log);

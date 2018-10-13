@@ -12,6 +12,7 @@ impl Logger {
     pub fn log(&mut self, str: String) {
         self.file.write(str.as_bytes()).unwrap();
         self.file.write("\n".as_bytes()).unwrap();
+        self.file.flush().unwrap();
     }
 }
 
