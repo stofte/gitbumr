@@ -111,7 +111,7 @@ impl Control for History {
         match e {
             Event::Start(_, r, cols, rows) => {
                 buffer.top = 1;
-                buffer.left = 36;
+                buffer.left = 34;
                 let b_top = buffer.top;
                 let b_left = buffer.left;
                 buffer.size(*cols - b_left, *rows - b_top);
