@@ -33,7 +33,7 @@ pub struct RepoManager {
 impl Control for RepoManager {
     fn id(&self) -> u32 { self.id }
     fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
-    fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
+    fn render(&mut self, log: &mut Logger) {
         if !self.layout.visible { return }
         log.log(format!("repomgr.render"));
         if self.repos.len() == 0 {
@@ -70,6 +70,7 @@ impl Control for RepoManager {
     }
     fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
         log.log(format!("repomgr.key"));
+        let z = &self.buffer.lines[1000];
         match k {
             Key::Char(c) => {
                 if c == 'r' {
@@ -166,7 +167,7 @@ fn print_blank(l: &Layout, top: u16) {
 }
 
 pub fn build_repomanager(id: u32) -> RepoManager {
-    RepoManager {
+    let mut r = RepoManager {
         id: id,
         repos: vec![],
         layout: build_empty_layout(),
@@ -178,5 +179,7 @@ pub fn build_repomanager(id: u32) -> RepoManager {
         open_repo: None,
         adding: false,
         buffer: build_linebuffer(),
-    }
+    };
+    r.buffer.name = "repomgr".to_string();
+    r
 }

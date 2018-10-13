@@ -30,7 +30,7 @@ pub struct History {
 impl Control for History {
     fn id(&self) -> u32 { self.id }
     fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
-    fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
+    fn render(&mut self, log: &mut Logger) {
         log.log(format!("history.render"));
         let mut auth_vec = vec![];
         let mut c_idx = 0;
@@ -151,7 +151,7 @@ impl Control for History {
 }
 
 pub fn build_history(id: u32) -> History {
-    History {
+    let mut h = History {
         id: id,
         revwalk: vec![],
         cursor_idx: 0,
@@ -162,5 +162,7 @@ pub fn build_history(id: u32) -> History {
         tz_offset_secs: get_timesize_offset_secs(),
         layout: build_empty_layout(),
         buffer: build_linebuffer(),
-    }
+    };
+    h.buffer.name = "history".to_string();
+    h
 }

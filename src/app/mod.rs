@@ -9,7 +9,7 @@ pub mod logger;
 pub mod linebuffer;
 
 use std::{
-    io::{Write, Stdout},
+    io::{Write, Stdout, StdoutLock},
 };
 use termion::{
     terminal_size,
@@ -54,7 +54,6 @@ impl App {
             },
             None => Event::Start(Some(&mut self.settings), None, cols, rows)
         };
-        
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
             ctrl.ctx(&mut ctx, &mut self.logger);
@@ -96,10 +95,15 @@ impl App {
         self.input_control = None;
         self.input_buffer = vec![];
     }
-    fn render(&mut self, stdout: &mut Stdout) {
+    fn render(&mut self, stdout: &mut StdoutLock) {
         for i in (0..self.controls.len()).rev() {
             let ctrl = &mut self.controls[i];
-            ctrl.render(stdout, &mut self.logger);
+            let cid = ctrl.id();
+            if !ctrl.buffer().valid {
+                self.logger.log(format!("buffer {} was invalid", cid));
+                ctrl.render(&mut self.logger);
+            }
+            ctrl.buffer().render(stdout, &mut self.logger);
         }
     }
     fn key(&mut self, k: Key) {
@@ -139,7 +143,7 @@ impl App {
             _ => ()
         };
     }
-    pub fn run(&mut self, mut stdout: AlternateScreen<RawTerminal<Stdout>>, keys_r: channel::Receiver<Key>, size_r: channel::Receiver<(u16, u16)>) {
+    pub fn run(&mut self, mut stdout: AlternateScreen<RawTerminal<StdoutLock>>, keys_r: channel::Receiver<Key>, size_r: channel::Receiver<(u16, u16)>) {
         let mut idx = 0;
         console::reset();
         self.startup();

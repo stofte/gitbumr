@@ -25,9 +25,11 @@ fn main() {
     
     let (keys_s, keys_r) = channel::bounded(0);
     let (size_s, size_r) = channel::bounded(0);
+
+    let mut raw_stdout = stdout();
     
-    let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
-    write!(screen, "{}", termion::cursor::Hide).unwrap();
+    let mut stdout = AlternateScreen::from(raw_stdout.lock().into_raw_mode().unwrap());
+    stdout.write(format!("{}", termion::cursor::Hide).as_bytes()).unwrap();
     let poll_interval = time::Duration::from_millis(50);
         
     thread::spawn(move || {
@@ -56,15 +58,13 @@ fn main() {
         print!("{}", ToMainScreen);
         let mut msg: String = "panic!".to_string();
         if let Some(s) = panic_info.payload().downcast_ref::<String>() {
-            if let Some(l) = panic_info.location() {
-                msg = format!("{} {}. {:?}", msg, s, l).to_string();
-            } else {
-                msg = format!("{} {}.", msg, s).to_string();
-            }
+            msg = format!("{} {}.", msg, s).to_string();
+        }
+        if let Some(l) = panic_info.location() {
+            msg = format!("{} {:?}", msg, l).to_string();
         }
         print!("{}\r\n", msg);
     }));
-
     let mut app = build_app();
-    app.run(screen, keys_r, size_r);
+    app.run(stdout, keys_r, size_r);
 }

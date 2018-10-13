@@ -20,7 +20,7 @@ pub struct Branches {
 impl Control for Branches {
     fn id(&self) -> u32 { self.id }
     fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
-    fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
+    fn render(&mut self, log: &mut Logger) {
         log.log(format!("branches.render"));
         for j in 0..self.local.len() {
             let s = &self.local[j];
@@ -57,7 +57,6 @@ impl Control for Branches {
                 self.layout.left = 1;
                 self.layout.width = 35;
                 self.layout.height = *rows - self.layout.top;
-                self.buffer.title("Branches".to_string());
                 self.buffer.size(self.layout.width, self.layout.height);
                 match r {
                     Some(ref r) => self.local = git::local_branches(r),
@@ -76,11 +75,13 @@ impl Control for Branches {
 }
 
 pub fn build_branches(id: u32) -> Branches {
-    Branches {
+    let mut x = Branches {
         id: id,
         local: vec![],
         checkedout_idx: None,
         layout: build_empty_layout(),
         buffer: build_linebuffer(),
-    }
+    };
+    x.buffer.name = "branches".to_string();
+    x
 }

@@ -25,7 +25,7 @@ pub struct Header {
 impl Control for Header {
     fn id(&self) -> u32 { self.id }
     fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
-    fn render(&mut self, _stdout: &mut Stdout, log: &mut Logger) {
+    fn render(&mut self, log: &mut Logger) {
         log.log(format!("header.render (w: {})", self.layout.width));
         let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
         self.buffer.set(format!("{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
@@ -79,11 +79,13 @@ impl Control for Header {
 }
 
 pub fn build_header(id: u32) -> Header {
-    Header {
+    let mut h = Header {
         id: id,
         repo_path: "".to_string(),
         state: "".to_string(),
         layout: build_empty_layout(),
         buffer: build_linebuffer(),
-    }
+    };
+    h.buffer.name = "header".to_string();
+    h
 }
