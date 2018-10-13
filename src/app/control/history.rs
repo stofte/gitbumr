@@ -28,6 +28,7 @@ pub struct History {
 impl Control for History {
     fn id(&self) -> u32 { self.id }
     fn render(&mut self, buffer: &mut LineBuffer, log: &mut Logger) {
+        assert_eq!(buffer.id, self.id);
         log.log(format!("history.render"));
         let mut auth_vec = vec![];
         let mut c_idx = 0;
@@ -50,10 +51,10 @@ impl Control for History {
                 auth_vec.push(commit.author.to_string());
             }
             let c_size = c_ts.len() + c_auth.len() + 3;
-            let msg_cols = buffer.width as usize - c_size;
+            let msg_cols = buffer.width as usize - c_size - 1;
             let msg_len = cmp::min(msg_cols, commit.message_line.len());
             let c_msg: String = commit.message_line.chars().take(msg_len).collect();
-            let c_msg_blank = buffer.width as usize - c_msg.len() - c_size;
+            let c_msg_blank = buffer.width as usize - c_msg.len() - c_size - 1;
             buffer.set(format!("{c_fg}{c_bg} {txt_fg}{time}{fg} {msg}{blank} {txt_fg}{auth}{fg} {fg}{bg}",
                 blank=" ".repeat(c_msg_blank),
                 txt_fg=txt_fg,
@@ -105,10 +106,11 @@ impl Control for History {
         }
     }
     fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
+        assert_eq!(buffer.id, self.id);
         log.log(format!("history.ctx"));
         match e {
             Event::Start(_, r, cols, rows) => {
-                buffer.top = 2;
+                buffer.top = 1;
                 buffer.left = 36;
                 let b_top = buffer.top;
                 let b_left = buffer.left;

@@ -23,6 +23,7 @@ pub struct Header {
 impl Control for Header {
     fn id(&self) -> u32 { self.id }
     fn render(&mut self, buffer: &mut LineBuffer, log: &mut Logger) {
+        assert_eq!(buffer.id, self.id);
         log.log(format!("header.render (w: {})", buffer.width));
         let blank_cnt = buffer.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
         buffer.set(format!("{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
@@ -44,6 +45,7 @@ impl Control for Header {
         KeyArg::Pass
     }
     fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
+        assert_eq!(buffer.id, self.id);
         log.log(format!("header.ctx {:?}", event_arg_to_string(e)));
         match e {
             Event::Start(_, r, c, _) => {

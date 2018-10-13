@@ -31,6 +31,7 @@ pub struct RepoManager {
 impl Control for RepoManager {
     fn id(&self) -> u32 { self.id }
     fn render(&mut self, buffer: &mut LineBuffer, log: &mut Logger) {
+        assert_eq!(buffer.id, self.id);
         if !buffer.visible { return }
         log.log(format!("repomgr.render"));
         let b_width = buffer.width as usize;
@@ -122,6 +123,7 @@ impl Control for RepoManager {
         KeyArg::Pass
     }
     fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
+        assert_eq!(buffer.id, self.id);
         log.log(format!("repomgr.ctx"));
         match e {
             Event::Start(s, _, cols, rows) => {

@@ -18,6 +18,7 @@ pub struct Branches {
 impl Control for Branches {
     fn id(&self) -> u32 { self.id }
     fn render(&mut self, buffer: &mut LineBuffer, log: &mut Logger) {
+        assert_eq!(buffer.id, self.id);
         log.log(format!("branches.render"));
         for j in 0..self.local.len() {
             let s = &self.local[j];
@@ -27,20 +28,19 @@ impl Control for Branches {
                 open_mark = console::PNT_R;
             }
             let b_width = buffer.width as usize;
-            log.log(format!("branches buffer width in render: {}", b_width));
             let mut trunc_c = 0;
             if s.name.len() > b_width - 2 {
                 trunc_c = s.name.len() - (b_width - 3);
                 trunc_mark = format!("{}", console::ELLIP_H).to_string();
             }
             let trunc_name: String = s.name.chars().skip(trunc_c).collect();
-            buffer.set(format!("{c_m}{t_m}{name}{blank}{b_v}", 
+            let line_str = format!("{c_m}{t_m}{name}{blank}", 
                 c_m=open_mark,
                 name=trunc_name,
                 t_m=trunc_mark,
                 blank=" ".repeat(b_width - trunc_name.len() - 2 - (if trunc_c > 0 { 1 } else { 0 })),
-                b_v=console::BOX_V,
-            ));
+            );
+            buffer.set(line_str);
         }
         buffer.valid = true;
     }
@@ -49,11 +49,12 @@ impl Control for Branches {
         KeyArg::Pass
     }
     fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
+        assert_eq!(buffer.id, self.id);
         log.log(format!("branches.ctx"));
         match e {
             Event::Start(_, r, _, rows) => {
-                buffer.top = 2;
-                buffer.left = 1;
+                buffer.top = 1;
+                buffer.left = 0;
                 let b_top = buffer.top;
                 buffer.size(35, *rows - b_top);
                 match r {

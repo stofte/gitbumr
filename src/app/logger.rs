@@ -3,6 +3,7 @@ use std::{
     io::Write,
     fs::{File},
 };
+use chrono::prelude::Local;
 
 pub struct Logger {
     file: File,
@@ -10,7 +11,8 @@ pub struct Logger {
 
 impl Logger {
     pub fn log(&mut self, str: String) {
-        self.file.write(str.as_bytes()).unwrap();
+        let dt = Local::now();
+        self.file.write(format!("{}] {}", dt.format("%H:%M:%S.%f"), str).as_bytes()).unwrap();
         self.file.write("\n".as_bytes()).unwrap();
         self.file.flush().unwrap();
     }

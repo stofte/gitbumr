@@ -23,7 +23,6 @@ pub struct LineBuffer {
     pub id: u32,
     pub valid: bool,
     pub border: Border,
-    pub layout: Layout,
     pub lines: Vec<String>,
     pub name: String,
     pub cursor: Cursor,
@@ -40,9 +39,16 @@ pub struct LineBuffer {
     pub focus: bool,
 }
 
-fn cursor(top: u16, left: u16, stdout: &mut StdoutLock, log: &mut Logger) {
-    // log.log(format!("pos({}x{})", left + 1, top + 1));
+fn cursor(left: u16, top: u16, stdout: &mut StdoutLock, log: &mut Logger) {
     stdout.write(format!("{}", cursor::Goto(left + 1, top + 1)).as_bytes());
+}
+
+fn set_primary_colors(stdout: &mut StdoutLock) {
+    let s = format!("{fg}{bg}", 
+        fg=console::FG_PRIMARY,
+        bg=console::BG_PRIMARY,
+    );
+    stdout.write(s.as_bytes());
 }
 
 impl LineBuffer {
@@ -59,10 +65,11 @@ impl LineBuffer {
     }
     pub fn render(&mut self, stdout: &mut StdoutLock, log: &mut Logger) {
         assert!("" != self.name);
-        log.log(format!("linebuffer.render:{}:{}", self.id, self.name));
+        set_primary_colors(stdout);
         for i in 0..self.lines.len() {
             let l = &self.lines[i];
-            cursor(self.layout.left, self.layout.top + i as u16, stdout, log);
+            log.log(format!("linebuffer.render:{}:{} @ {}x{}", self.id, self.name, self.left, self.top + i as u16));
+            cursor(self.left, self.top + i as u16, stdout, log);
             stdout.write(l.as_bytes());
         }
     }
@@ -72,7 +79,6 @@ pub fn build_linebuffer(id: u32) -> LineBuffer {
     LineBuffer {
         id: id,
         valid: false,
-        layout: build_empty_layout(),
         lines: vec![],
         name: "".to_string(),
         fg: console::FG_PRIMARY,
