@@ -22,19 +22,16 @@ pub struct History {
     rw_read_bk: bool,
     rw_read_fw: bool,
     commits: Vec<git::Commit>,
-    layout: Layout,
     tz_offset_secs: i32,
-    buffer: LineBuffer,
 }
 
 impl Control for History {
     fn id(&self) -> u32 { self.id }
-    fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
-    fn render(&mut self, log: &mut Logger) {
+    fn render(&mut self, buffer: &mut LineBuffer, log: &mut Logger) {
         log.log(format!("history.render"));
         let mut auth_vec = vec![];
         let mut c_idx = 0;
-        let max_rw_c = cmp::min(self.rw_idx + self.layout.height as usize, self.revwalk.len());
+        let max_rw_c = cmp::min(self.rw_idx + buffer.height as usize, self.revwalk.len());
         for i in self.rw_idx..max_rw_c {
             let mut c_fg = console::FG_PRIMARY;
             let mut c_bg = console::BG_PRIMARY;
@@ -53,11 +50,11 @@ impl Control for History {
                 auth_vec.push(commit.author.to_string());
             }
             let c_size = c_ts.len() + c_auth.len() + 3;
-            let msg_cols = self.layout.width as usize - c_size;
+            let msg_cols = buffer.width as usize - c_size;
             let msg_len = cmp::min(msg_cols, commit.message_line.len());
             let c_msg: String = commit.message_line.chars().take(msg_len).collect();
-            let c_msg_blank = self.layout.width as usize - c_msg.len() - c_size;
-            self.buffer.set(format!("{c_fg}{c_bg} {txt_fg}{time}{fg} {msg}{blank} {txt_fg}{auth}{fg} {fg}{bg}",
+            let c_msg_blank = buffer.width as usize - c_msg.len() - c_size;
+            buffer.set(format!("{c_fg}{c_bg} {txt_fg}{time}{fg} {msg}{blank} {txt_fg}{auth}{fg} {fg}{bg}",
                 blank=" ".repeat(c_msg_blank),
                 txt_fg=txt_fg,
                 msg=c_msg,
@@ -71,7 +68,7 @@ impl Control for History {
             c_idx += 1;
             
         }
-        self.buffer.valid = true;
+        buffer.valid = true;
     }
     fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
         log.log(format!("history.key"));
@@ -97,25 +94,25 @@ impl Control for History {
                 if self.cursor_idx < self.revwalk.len() - 1 {
                     self.cursor_idx += 1;
                 }
-                if self.cursor_idx - self.rw_idx > self.layout.height as usize - 1 {
-                    self.rw_idx += 1;
-                    self.rw_read_fw = true;
-                    return handled_repo
-                }
+                // if self.cursor_idx - self.rw_idx > self.layout.height as usize - 1 {
+                //     self.rw_idx += 1;
+                //     self.rw_read_fw = true;
+                //     return handled_repo
+                // }
                 handled
             }
             _ => pass
         }
     }
-    fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
+    fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         log.log(format!("history.ctx"));
         match e {
             Event::Start(_, r, cols, rows) => {
-                self.layout.top = 2;
-                self.layout.left = 36;
-                self.layout.width = *cols - self.layout.left;
-                self.layout.height = *rows - self.layout.top;
-                self.buffer.size(self.layout.width, self.layout.height);
+                buffer.top = 2;
+                buffer.left = 36;
+                let b_top = buffer.top;
+                let b_left = buffer.left;
+                buffer.size(*cols - b_left, *rows - b_top);
                 match r {
                     Some(repo) => {
                         let mut rv = repo.revwalk().unwrap();
@@ -126,7 +123,7 @@ impl Control for History {
                         for r in rv {
                             self.revwalk.push(r.unwrap());
                         }
-                        let vis_c = self.layout.height as usize;
+                        let vis_c = buffer.height as usize;
                         let max_rw_c = cmp::min(self.rw_idx + vis_c, self.revwalk.len());
                         self.commits.clear();
                         for i in self.rw_idx..(max_rw_c) {
@@ -138,11 +135,11 @@ impl Control for History {
                     None => ()
                 }
             }
-            Event::Focus(id) => self.layout.focus = *id == self.id,
+            Event::Focus(id) => buffer.focus = *id == self.id,
             Event::ConsoleResize(cols, rows) => {
-                self.layout.width = *cols - self.layout.left;
-                self.layout.height = *rows - self.layout.top;
-                self.buffer.size(self.layout.width, self.layout.height);
+                let b_top = buffer.top;
+                let b_left = buffer.left;
+                buffer.size(*cols - b_left, *rows - b_top);
             }
             _ => ()
         };
@@ -160,9 +157,6 @@ pub fn build_history(id: u32) -> History {
         rw_read_fw: false,
         commits: vec![],
         tz_offset_secs: get_timesize_offset_secs(),
-        layout: build_empty_layout(),
-        buffer: build_linebuffer(),
     };
-    h.buffer.name = "history".to_string();
     h
 }

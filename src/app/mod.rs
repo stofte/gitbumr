@@ -24,6 +24,7 @@ use app::{
     settings::{Settings, build_settings},
     editor::{EditorArg, handle_editor_input},
     logger::{Logger, build_logger},
+    linebuffer::{LineBuffer, build_linebuffer},
     control::{
         Control,
         branches::{build_branches},
@@ -35,6 +36,7 @@ use app::{
 
 pub struct App {
     controls: Vec<Box<Control>>,
+    buffers: Vec<LineBuffer>,
     repo: Option<Repository>,
     settings: Settings,
     logger: Logger,
@@ -56,13 +58,15 @@ impl App {
         };
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
-            ctrl.ctx(&mut ctx, &mut self.logger);
+            let buff = &mut self.buffers[i];
+            ctrl.ctx(&mut ctx, buff, &mut self.logger);
         }
     }
     fn context(&mut self, e: &mut Event) {
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
-            ctrl.ctx(e, &mut self.logger);
+            let buff = &mut self.buffers[i];
+            ctrl.ctx(e, buff, &mut self.logger);
         }
     }
     fn repo_changed(&mut self, id: i64) {
@@ -73,7 +77,8 @@ impl App {
                 let mut ctx = Event::Repository(r, &mut self.settings);
                 for i in 0..self.controls.len() {
                     let ctrl = &mut self.controls[i];
-                    ctrl.ctx(&mut ctx, &mut self.logger);
+                    let buff = &mut self.buffers[i];
+                    ctrl.ctx(&mut ctx, buff, &mut self.logger);
                 }
             },
             None => {
@@ -86,9 +91,10 @@ impl App {
         let inp = self.input_buffer.clone();
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
+            let buff = &mut self.buffers[i];
             if ctrl.id() == ctrl_id {
                 let mut ctx = Event::EditorInput(inp.into_iter().collect::<String>());
-                ctrl.ctx(&mut ctx, &mut self.logger);
+                ctrl.ctx(&mut ctx, buff, &mut self.logger);
                 break;
             }
         }
@@ -98,18 +104,20 @@ impl App {
     fn render(&mut self, stdout: &mut StdoutLock) {
         for i in (0..self.controls.len()).rev() {
             let ctrl = &mut self.controls[i];
+            let buff = &mut self.buffers[i];
             let cid = ctrl.id();
-            if !ctrl.buffer().valid {
+            if !buff.valid {
                 self.logger.log(format!("buffer {} was invalid", cid));
-                ctrl.render(&mut self.logger);
+                ctrl.render(buff, &mut self.logger);
             }
-            ctrl.buffer().render(stdout, &mut self.logger);
+            buff.render(stdout, &mut self.logger);
         }
     }
     fn key(&mut self, k: Key) {
         let mut res = KeyArg::Pass;
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
+            let buff = &mut self.buffers[i];
             res = ctrl.key(k, &mut self.logger);
             self.logger.log(format!(" => {:?}", res));
             match res {
@@ -120,7 +128,7 @@ impl App {
                     match self.repo {
                         Some(ref mut r) => {
                             let mut ctx = Event::Repository(r, &mut self.settings);
-                            ctrl.ctx(&mut ctx, &mut self.logger);
+                            ctrl.ctx(&mut ctx, buff, &mut self.logger);
                         },
                         None => {
                             panic!("key => KeyArg::Consumed(Repository) => repo property was none");
@@ -191,6 +199,7 @@ impl App {
 pub fn build_app() -> App {
     let mut app = App {
         controls: vec![],
+        buffers: vec![],
         settings: build_settings(),
         repo: None,
         logger: build_logger(),
@@ -198,10 +207,22 @@ pub fn build_app() -> App {
         input_control: None,
         control_focus: 4,
     };
+    app.settings.init(); // ensures db file exists
     app.controls.push(Box::new(build_header(1)));
     app.controls.push(Box::new(build_repomanager(2)));
     app.controls.push(Box::new(build_branches(3)));
     app.controls.push(Box::new(build_history(4)));
-    app.settings.init(); // ensures db file exists
+    let mut b1 = build_linebuffer(1);
+    b1.name = "header".to_string();
+    app.buffers.push(b1);
+    let mut b2 = build_linebuffer(2);
+    b2.name = "repomgr".to_string();
+    app.buffers.push(b2);
+    let mut b3 = build_linebuffer(3);
+    b3.name = "branches".to_string();
+    app.buffers.push(b3);
+    let mut b4 = build_linebuffer(4);
+    b4.name = "history".to_string();
+    app.buffers.push(b4);
     app
 }

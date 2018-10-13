@@ -1,5 +1,6 @@
 use git2::Repository;
 use app::settings::Settings;
+use termion::event;
 
 #[derive(Debug)]
 pub enum ConsumeArg {
@@ -22,6 +23,7 @@ pub enum Event<'a> {
     EditorInput(String),
     Repository(&'a mut Repository, &'a mut Settings),
     Focus(u32),
+    Input(event::Key),
 }
 
 pub enum EventArg {
@@ -35,5 +37,6 @@ pub fn event_arg_to_string(ctx: &Event) -> String {
         Event::EditorInput(..) => "EditorInput".to_string(),
         Event::Repository(..) => "Repository".to_string(),
         Event::Focus(..) => "Focus".to_string(),
+        Event::Input(..) => "Input".to_string(),
     }
 }

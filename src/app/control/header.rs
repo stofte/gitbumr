@@ -18,17 +18,14 @@ pub struct Header {
     id: u32,
     repo_path: String,
     state: String,
-    layout: Layout,
-    buffer: LineBuffer,
 }
 
 impl Control for Header {
     fn id(&self) -> u32 { self.id }
-    fn buffer(&mut self) -> &mut LineBuffer { &mut self.buffer }
-    fn render(&mut self, log: &mut Logger) {
-        log.log(format!("header.render (w: {})", self.layout.width));
-        let blank_cnt = self.layout.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
-        self.buffer.set(format!("{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
+    fn render(&mut self, buffer: &mut LineBuffer, log: &mut Logger) {
+        log.log(format!("header.render (w: {})", buffer.width));
+        let blank_cnt = buffer.width as usize - self.repo_path.len() - APP_NAME.len() - self.state.len();
+        buffer.set(format!("{b_fg}{b_bg}{name}{fg}{bg}{path}{blank}{state}{fg_r}{bg_r}",
             name=APP_NAME,
             path=self.repo_path,
             blank=" ".repeat(blank_cnt),
@@ -40,19 +37,19 @@ impl Control for Header {
             bg_r=console::BG_RESET,
             fg_r=console::FG_RESET,
         ));
-        self.buffer.valid = true;
+        buffer.valid = true;
     }
     fn key(&mut self, _k: Key, log: &mut Logger) -> KeyArg {
         log.log(format!("header.key"));
         KeyArg::Pass
     }
-    fn ctx(&mut self, e: &mut Event, log: &mut Logger) -> EventArg {
+    fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         log.log(format!("header.ctx {:?}", event_arg_to_string(e)));
         match e {
             Event::Start(_, r, c, _) => {
-                self.layout.width = *c;
-                self.layout.height = 1;
-                self.buffer.size(self.layout.width, self.layout.height);
+                buffer.top = 0;
+                buffer.left = 0;
+                buffer.size(*c, 1);
                 match r {
                     Some(repo) => {
                         self.repo_path = git::get_repository_path(&repo);
@@ -69,8 +66,7 @@ impl Control for Header {
                 self.state = format!("{:?}", r.state());
             }
             Event::ConsoleResize(c, _) => {
-                self.layout.width = *c;
-                self.buffer.size(self.layout.width, self.layout.height);
+                buffer.size(*c, 1);
             }
             _ => ()
         };
@@ -83,9 +79,6 @@ pub fn build_header(id: u32) -> Header {
         id: id,
         repo_path: "".to_string(),
         state: "".to_string(),
-        layout: build_empty_layout(),
-        buffer: build_linebuffer(),
     };
-    h.buffer.name = "header".to_string();
     h
 }
