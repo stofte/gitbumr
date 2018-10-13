@@ -4,7 +4,7 @@ use app::{
     console, git,
     layout::{Layout, build_empty_layout},
     control::{Control},
-    event::{KeyArg, Event, EventArg},
+    event::{Event, EventArg},
     logger::Logger,
     linebuffer::{LineBuffer, build_linebuffer}
 };
@@ -13,6 +13,13 @@ pub struct Branches {
     id: u32,
     local: Vec<git::Branch>,
     checkedout_idx: Option<u16>,
+}
+
+impl Branches {
+    fn keys(&mut self, _k: event::Key, log: &mut Logger) -> EventArg {
+        log.log(format!("branches.key"));
+        EventArg::None
+    }
 }
 
 impl Control for Branches {
@@ -44,10 +51,6 @@ impl Control for Branches {
         }
         buffer.valid = true;
     }
-    fn key(&mut self, _k: event::Key, log: &mut Logger) -> KeyArg {
-        log.log(format!("branches.key"));
-        KeyArg::Pass
-    }
     fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         assert_eq!(buffer.id, self.id);
         log.log(format!("branches.ctx"));
@@ -66,6 +69,9 @@ impl Control for Branches {
                 buffer.height = *rows - buffer.top;
             }
             Event::Repository(ref r, _) => self.local = git::local_branches(r),
+            Event::Input(k) => {
+                return self.keys(*k, log);
+            }
             _ => ()
         };
         EventArg::None

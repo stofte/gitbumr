@@ -8,14 +8,6 @@ pub enum ConsumeArg {
     Repository,
 }
 
-#[derive(Debug)]
-pub enum KeyArg {
-    Pass,
-    Consumed(ConsumeArg),
-    OpenRepository(i64),
-    InputEdit(u32, u16, u16, u16),
-}
-
 // #[derive(Debug)]
 pub enum Event<'a> {
     Start(Option<&'a mut Settings>, Option<&'a mut Repository>, u16, u16),
@@ -26,8 +18,12 @@ pub enum Event<'a> {
     Input(event::Key),
 }
 
+#[derive(Debug)]
 pub enum EventArg {
     None,
+    InputConsumed(ConsumeArg),
+    OpenRepository(i64),
+    InputEdit(u32, u16, u16, u16),
 }
 
 pub fn event_arg_to_string(ctx: &Event) -> String {

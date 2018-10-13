@@ -6,12 +6,6 @@ use app::{
     layout::{Layout, build_empty_layout},
 };
 
-pub struct Cursor {
-    line: u16,
-    start_offset: u16,
-    start_take: u16,
-}
-
 pub struct Border {
     pub top: bool,
     pub right: bool,
@@ -25,7 +19,7 @@ pub struct LineBuffer {
     pub border: Border,
     pub lines: Vec<String>,
     pub name: String,
-    pub cursor: Cursor,
+    pub cursor: u16,
     pub fg: color::Fg<color::Rgb>,
     pub bg: color::Bg<color::Rgb>,
     set_idx: u16,
@@ -68,10 +62,13 @@ impl LineBuffer {
         set_primary_colors(stdout);
         for i in 0..self.lines.len() {
             let l = &self.lines[i];
-            log.log(format!("linebuffer.render:{}:{} @ {}x{}", self.id, self.name, self.left, self.top + i as u16));
+            // log.log(format!("linebuffer.render:{}:{} @ {}x{}", self.id, self.name, self.left, self.top + i as u16));
             cursor(self.left, self.top + i as u16, stdout, log);
             stdout.write(l.as_bytes());
         }
+    }
+    pub fn cursor(&mut self, line: u16) {
+        self.cursor = line;
     }
 }
 
@@ -90,11 +87,7 @@ pub fn build_linebuffer(id: u32) -> LineBuffer {
             bottom: true,
             left: true,
         },
-        cursor: Cursor {
-            line: 0,
-            start_offset: 0,
-            start_take: 0,
-        },
+        cursor: 0,
         top: 0,
         left: 0,
         width: 0,

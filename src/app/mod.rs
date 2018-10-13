@@ -20,7 +20,7 @@ use termion::{
 use channel;
 use git2::Repository;
 use app::{
-    event::{KeyArg, ConsumeArg, Event},
+    event::{ConsumeArg, Event, EventArg},
     settings::{Settings, build_settings},
     editor::{EditorArg, handle_editor_input},
     logger::{Logger, build_logger},
@@ -40,7 +40,7 @@ pub struct App {
     repo: Option<Repository>,
     settings: Settings,
     logger: Logger,
-    control_focus: u32,
+    focus_id: usize, // usize for use as index into vecs
     input_buffer: Vec<char>,
     input_control: Option<u32>,
 }
@@ -113,40 +113,45 @@ impl App {
             buff.render(stdout, &mut self.logger);
         }
     }
-    fn key(&mut self, k: Key) {
-        let mut res = KeyArg::Pass;
-        for i in 0..self.controls.len() {
-            let ctrl = &mut self.controls[i];
-            let buff = &mut self.buffers[i];
-            res = ctrl.key(k, &mut self.logger);
+    fn input(&mut self, k: Key) {
+        let mut res = EventArg::None;
+        {
+            let f_id = self.focus_id;
+            let buff = &mut self.buffers[f_id];
+            if !buff.focus {
+                panic!("expected buffer to be focused");
+            }
+            let ctrl = &mut self.controls[f_id];
+            res = ctrl.ctx(&mut Event::Input(k), buff, &mut self.logger);
             self.logger.log(format!(" => {:?}", res));
+            // check for control only eventargs
             match res {
                 // the control passed the input. no state change should happen in the ctrl.
-                KeyArg::Pass => continue,
                 // the control consumed the key, but requires more repo access, eg history ctrl needs more data.
-                KeyArg::Consumed(ConsumeArg::Repository) => {
+                EventArg::InputConsumed(ConsumeArg::Repository) => {
                     match self.repo {
                         Some(ref mut r) => {
                             let mut ctx = Event::Repository(r, &mut self.settings);
                             ctrl.ctx(&mut ctx, buff, &mut self.logger);
                         },
                         None => {
-                            panic!("key => KeyArg::Consumed(Repository) => repo property was none");
+                            panic!("key => KeyArg::InputConsumed(Repository) => repo property was none");
                         }
                     }
                 }
-                _ => break,
+                EventArg::InputEdit(id, _, _, _) => {
+                    if self.input_control != None {
+                        panic!("input_control was Some()");
+                    }
+                    self.input_control = Some(id);
+                },
+                _ => (),
             };
         }
+        // check global event args
         match res {
-            KeyArg::OpenRepository(id) => {
+            EventArg::OpenRepository(id) => {
                 self.repo_changed(id);
-            },
-            KeyArg::InputEdit(id, _, _, _) => {
-                if self.input_control != None {
-                    panic!("input_control was Some()");
-                }
-                self.input_control = Some(id);
             },
             _ => ()
         };
@@ -155,8 +160,8 @@ impl App {
         let mut idx = 0;
         console::reset();
         self.startup();
-        let focused_id = self.control_focus;
-        self.context(&mut Event::Focus(focused_id));
+        let focused_id = self.focus_id;
+        self.context(&mut Event::Focus(focused_id as u32));
         loop {
             let input_edit = self.input_control != None;
             if !input_edit {
@@ -182,7 +187,7 @@ impl App {
                             _ => ()
                         }
                     } else {
-                        self.key(k);
+                        self.input(k);
                     }
                 },
                 recv(size_r, size) => {
@@ -205,24 +210,28 @@ pub fn build_app() -> App {
         logger: build_logger(),
         input_buffer: vec![],
         input_control: None,
-        control_focus: 4,
+        focus_id: 3,
     };
     app.settings.init(); // ensures db file exists
-    app.controls.push(Box::new(build_header(1)));
-    app.controls.push(Box::new(build_repomanager(2)));
-    app.controls.push(Box::new(build_branches(3)));
-    app.controls.push(Box::new(build_history(4)));
+    app.controls.push(Box::new(build_header(0)));
+    app.controls.push(Box::new(build_repomanager(1)));
+    app.controls.push(Box::new(build_branches(2)));
+    app.controls.push(Box::new(build_history(3)));
+    let mut b0 = build_linebuffer(0);
+    b0.name = "header".to_string();
+    app.buffers.push(b0);
     let mut b1 = build_linebuffer(1);
-    b1.name = "header".to_string();
+    b1.name = "repomgr".to_string();
     app.buffers.push(b1);
     let mut b2 = build_linebuffer(2);
-    b2.name = "repomgr".to_string();
+    b2.name = "branches".to_string();
     app.buffers.push(b2);
     let mut b3 = build_linebuffer(3);
-    b3.name = "branches".to_string();
+    b3.name = "history".to_string();
     app.buffers.push(b3);
-    let mut b4 = build_linebuffer(4);
-    b4.name = "history".to_string();
-    app.buffers.push(b4);
+    assert_eq!(app.buffers.len(), app.controls.len());
+    for i in 0..app.controls.len() {
+        assert_eq!(app.controls[i].id(), app.buffers[i].id);
+    }
     app
 }

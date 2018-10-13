@@ -8,7 +8,7 @@ use app::{
     git, console,
     settings::get_timesize_offset_secs,
     control::Control,
-    event::{KeyArg, ConsumeArg, Event, EventArg},
+    event::{ConsumeArg, Event, EventArg},
     layout::{Layout, build_empty_layout},
     logger::Logger,
     linebuffer::{LineBuffer, build_linebuffer},
@@ -23,6 +23,43 @@ pub struct History {
     rw_read_fw: bool,
     commits: Vec<git::Commit>,
     tz_offset_secs: i32,
+}
+
+impl History {
+    fn input(&mut self, k: &Key, buf: &mut LineBuffer, log: &mut Logger) -> EventArg {
+        log.log(format!("history.key"));
+        let pass = EventArg::None;
+        let handled = EventArg::InputConsumed(ConsumeArg::None);
+        let handled_repo = EventArg::InputConsumed(ConsumeArg::Repository);
+        match k {
+            Key::Up => {
+                log.log(format!("history.key => key::up"));
+                let mut r = pass;
+                if self.cursor_idx > 0 {
+                    self.cursor_idx -= 1;
+                }
+                if self.cursor_idx < self.rw_idx {
+                    self.rw_idx -= 1;
+                    self.rw_read_bk = true;
+                    return handled_repo;
+                }
+                handled
+            }
+            Key::Down => {
+                log.log(format!("history.key => key::down"));
+                if self.cursor_idx < self.revwalk.len() - 1 {
+                    self.cursor_idx += 1;
+                }
+                // if self.cursor_idx - self.rw_idx > self.layout.height as usize - 1 {
+                //     self.rw_idx += 1;
+                //     self.rw_read_fw = true;
+                //     return handled_repo
+                // }
+                handled
+            }
+            _ => pass
+        }
+    }
 }
 
 impl Control for History {
@@ -71,40 +108,6 @@ impl Control for History {
         }
         buffer.valid = true;
     }
-    fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
-        log.log(format!("history.key"));
-        let pass = KeyArg::Pass;
-        let handled = KeyArg::Consumed(ConsumeArg::None);
-        let handled_repo = KeyArg::Consumed(ConsumeArg::Repository);
-        match k {
-            Key::Up => {
-                log.log(format!("history.key => key::up"));
-                let mut r = pass;
-                if self.cursor_idx > 0 {
-                    self.cursor_idx -= 1;
-                }
-                if self.cursor_idx < self.rw_idx {
-                    self.rw_idx -= 1;
-                    self.rw_read_bk = true;
-                    return handled_repo;
-                }
-                handled
-            }
-            Key::Down => {
-                log.log(format!("history.key => key::down"));
-                if self.cursor_idx < self.revwalk.len() - 1 {
-                    self.cursor_idx += 1;
-                }
-                // if self.cursor_idx - self.rw_idx > self.layout.height as usize - 1 {
-                //     self.rw_idx += 1;
-                //     self.rw_read_fw = true;
-                //     return handled_repo
-                // }
-                handled
-            }
-            _ => pass
-        }
-    }
     fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         assert_eq!(buffer.id, self.id);
         log.log(format!("history.ctx"));
@@ -142,6 +145,9 @@ impl Control for History {
                 let b_top = buffer.top;
                 let b_left = buffer.left;
                 buffer.size(*cols - b_left, *rows - b_top);
+            }
+            Event::Input(k) => {
+                return self.input(k, buffer, log);
             }
             _ => ()
         };

@@ -10,7 +10,7 @@ use app::{
     console,
     settings::StoredRepository,
     layout::{Layout, build_empty_layout},
-    event::{Event, ConsumeArg, KeyArg, EventArg},
+    event::{Event, ConsumeArg, EventArg},
     control::Control,
     logger::Logger,
     linebuffer::{LineBuffer, build_linebuffer},
@@ -28,46 +28,8 @@ pub struct RepoManager {
     pub open_repo: Option<i64>,
 }
 
-impl Control for RepoManager {
-    fn id(&self) -> u32 { self.id }
-    fn render(&mut self, buffer: &mut LineBuffer, log: &mut Logger) {
-        assert_eq!(buffer.id, self.id);
-        if !buffer.visible { return }
-        log.log(format!("repomgr.render"));
-        let b_width = buffer.width as usize;
-        if self.repos.len() == 0 {
-            let txt = "  No repositories found".to_string();
-            buffer.set(format!("{txt}{blank}", 
-                txt=txt,
-                blank=" ".repeat(b_width - txt.len()),
-            ));
-        }
-        for i in 0..self.repos.len() {
-            let repo = &self.repos[i];
-            let txt = &repo.path;
-            let mut open_mark = ' ';
-            if repo.open {
-                open_mark = console::PNT_R;
-            }
-            let mut c_fg = console::FG_PRIMARY;
-            let mut c_bg = console::BG_PRIMARY;
-            if i as u16 == self.repo_cursor && !self.adding {
-                c_bg = console::BG_PRIMARY_CURSOR;
-                c_fg = console::FG_PRIMARY_CURSOR;
-            }
-            buffer.set(format!("  {open_m}{c_fg}{c_bg}{txt}{blank}{fg}{bg}  ",
-                txt=txt,
-                open_m=open_mark,
-                blank=" ".repeat(b_width - txt.len() - 7),
-                fg=console::FG_PRIMARY,
-                bg=console::BG_PRIMARY,
-                c_fg=c_fg,
-                c_bg=c_bg,
-            ));
-        }
-        buffer.valid = true;
-    }
-    fn key(&mut self, k: Key, log: &mut Logger) -> KeyArg {
+impl RepoManager {
+    fn input(&mut self, k: Key, log: &mut Logger) -> EventArg {
         log.log(format!("repomgr.key"));
         // let z = &self.buffer.lines[1000];
         // match k {
@@ -120,7 +82,48 @@ impl Control for RepoManager {
         //     }
         //     _ => KeyArg::Pass
         // }
-        KeyArg::Pass
+        EventArg::None
+    }
+}
+
+impl Control for RepoManager {
+    fn id(&self) -> u32 { self.id }
+    fn render(&mut self, buffer: &mut LineBuffer, log: &mut Logger) {
+        assert_eq!(buffer.id, self.id);
+        if !buffer.visible { return }
+        log.log(format!("repomgr.render"));
+        let b_width = buffer.width as usize;
+        if self.repos.len() == 0 {
+            let txt = "  No repositories found".to_string();
+            buffer.set(format!("{txt}{blank}", 
+                txt=txt,
+                blank=" ".repeat(b_width - txt.len()),
+            ));
+        }
+        for i in 0..self.repos.len() {
+            let repo = &self.repos[i];
+            let txt = &repo.path;
+            let mut open_mark = ' ';
+            if repo.open {
+                open_mark = console::PNT_R;
+            }
+            let mut c_fg = console::FG_PRIMARY;
+            let mut c_bg = console::BG_PRIMARY;
+            if i as u16 == self.repo_cursor && !self.adding {
+                c_bg = console::BG_PRIMARY_CURSOR;
+                c_fg = console::FG_PRIMARY_CURSOR;
+            }
+            buffer.set(format!("  {open_m}{c_fg}{c_bg}{txt}{blank}{fg}{bg}  ",
+                txt=txt,
+                open_m=open_mark,
+                blank=" ".repeat(b_width - txt.len() - 7),
+                fg=console::FG_PRIMARY,
+                bg=console::BG_PRIMARY,
+                c_fg=c_fg,
+                c_bg=c_bg,
+            ));
+        }
+        buffer.valid = true;
     }
     fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         assert_eq!(buffer.id, self.id);

@@ -7,7 +7,7 @@ use app::{
     git, console,
     layout::{Layout, build_empty_layout},
     control::{Control},
-    event::{KeyArg, Event, EventArg, event_arg_to_string},
+    event::{Event, EventArg, event_arg_to_string},
     logger::Logger,
     linebuffer::{LineBuffer, build_linebuffer}
 };
@@ -39,10 +39,6 @@ impl Control for Header {
             fg_r=console::FG_RESET,
         ));
         buffer.valid = true;
-    }
-    fn key(&mut self, _k: Key, log: &mut Logger) -> KeyArg {
-        log.log(format!("header.key"));
-        KeyArg::Pass
     }
     fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         assert_eq!(buffer.id, self.id);
