@@ -19,7 +19,7 @@ pub struct LineBuffer {
     pub border: Border,
     pub lines: Vec<String>,
     pub name: String,
-    pub cursor: u16,
+    pub cursor: usize,
     pub fg: color::Fg<color::Rgb>,
     pub bg: color::Bg<color::Rgb>,
     set_idx: u16,
@@ -66,9 +66,6 @@ impl LineBuffer {
             cursor(self.left, self.top + i as u16, stdout, log);
             stdout.write(l.as_bytes());
         }
-    }
-    pub fn cursor(&mut self, line: u16) {
-        self.cursor = line;
     }
 }
 

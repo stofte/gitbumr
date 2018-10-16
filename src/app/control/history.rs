@@ -18,7 +18,6 @@ pub struct History {
     pub id: u32,
     revwalk: Vec<Oid>,
     rw_idx: usize, // top revision
-    cursor_idx: usize,
     rw_read_bk: bool,
     rw_read_fw: bool,
     commits: Vec<git::Commit>,
@@ -35,10 +34,10 @@ impl History {
             Key::Up => {
                 log.log(format!("history.key => key::up"));
                 let mut r = pass;
-                if self.cursor_idx > 0 {
-                    self.cursor_idx -= 1;
+                if buf.cursor > 0 {
+                    buf.cursor -= 1;
                 }
-                if self.cursor_idx < self.rw_idx {
+                if buf.cursor < self.rw_idx {
                     self.rw_idx -= 1;
                     self.rw_read_bk = true;
                     return handled_repo;
@@ -47,14 +46,14 @@ impl History {
             }
             Key::Down => {
                 log.log(format!("history.key => key::down"));
-                if self.cursor_idx < self.revwalk.len() - 1 {
-                    self.cursor_idx += 1;
+                if buf.cursor < self.revwalk.len() - 1 {
+                    buf.cursor += 1;
                 }
-                // if self.cursor_idx - self.rw_idx > self.layout.height as usize - 1 {
-                //     self.rw_idx += 1;
-                //     self.rw_read_fw = true;
-                //     return handled_repo
-                // }
+                if buf.cursor - self.rw_idx > buf.height as usize - 1 {
+                    self.rw_idx += 1;
+                    self.rw_read_fw = true;
+                    return handled_repo
+                }
                 handled
             }
             _ => pass
@@ -73,13 +72,7 @@ impl Control for History {
         for i in self.rw_idx..max_rw_c {
             let mut c_fg = console::FG_PRIMARY;
             let mut c_bg = console::BG_PRIMARY;
-            let mut txt_fg = console::FG_PRIMARY;
-            if i == self.cursor_idx {
-                c_bg = console::BG_PRIMARY_CURSOR;
-                c_fg = console::FG_PRIMARY_CURSOR;
-            } else {
-                txt_fg = console::FG_LIGHT_PRIMARY;
-            }
+            let mut txt_fg = console::FG_LIGHT_PRIMARY;
             let commit = &self.commits[c_idx];
             let c_ts = commit.time.format("%Y/%m/%d %H:%M").to_string();
             let mut c_auth = &commit.author_abbrev;
@@ -124,7 +117,7 @@ impl Control for History {
                         rv.push_head();
                         self.revwalk.clear();
                         self.rw_idx = 0;
-                        self.cursor_idx = 0;
+                        buffer.cursor = 0;
                         for r in rv {
                             self.revwalk.push(r.unwrap());
                         }
@@ -159,7 +152,6 @@ pub fn build_history(id: u32) -> History {
     let mut h = History {
         id: id,
         revwalk: vec![],
-        cursor_idx: 0,
         rw_idx: 0,
         rw_read_bk: false,
         rw_read_fw: false,
