@@ -125,7 +125,7 @@ impl Control for RepoManager {
         }
         buffer.valid = true;
     }
-    fn ctx(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
+    fn event(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         assert_eq!(buffer.id, self.id);
         log.log(format!("repomgr.ctx"));
         match e {

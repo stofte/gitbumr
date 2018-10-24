@@ -14,5 +14,5 @@ use app::{
 pub trait Control {
     fn id(&self) -> u32;
     fn render(&mut self, &mut LineBuffer, &mut Logger);
-    fn ctx(&mut self, &mut Event, &mut LineBuffer, &mut Logger) -> EventArg;
+    fn event(&mut self, &mut Event, &mut LineBuffer, &mut Logger) -> EventArg;
 }

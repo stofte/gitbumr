@@ -59,14 +59,14 @@ impl App {
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
             let buff = &mut self.buffers[i];
-            ctrl.ctx(&mut ctx, buff, &mut self.logger);
+            ctrl.event(&mut ctx, buff, &mut self.logger);
         }
     }
     fn context(&mut self, e: &mut Event) {
         for i in 0..self.controls.len() {
             let ctrl = &mut self.controls[i];
             let buff = &mut self.buffers[i];
-            ctrl.ctx(e, buff, &mut self.logger);
+            ctrl.event(e, buff, &mut self.logger);
         }
     }
     fn repo_changed(&mut self, id: i64) {
@@ -78,7 +78,7 @@ impl App {
                 for i in 0..self.controls.len() {
                     let ctrl = &mut self.controls[i];
                     let buff = &mut self.buffers[i];
-                    ctrl.ctx(&mut ctx, buff, &mut self.logger);
+                    ctrl.event(&mut ctx, buff, &mut self.logger);
                 }
             },
             None => {
@@ -94,7 +94,7 @@ impl App {
             let buff = &mut self.buffers[i];
             if ctrl.id() == ctrl_id {
                 let mut ctx = Event::EditorInput(inp.into_iter().collect::<String>());
-                ctrl.ctx(&mut ctx, buff, &mut self.logger);
+                ctrl.event(&mut ctx, buff, &mut self.logger);
                 break;
             }
         }
@@ -122,7 +122,7 @@ impl App {
                 panic!("expected buffer to be focused");
             }
             let ctrl = &mut self.controls[f_id];
-            res = ctrl.ctx(&mut Event::Input(k), buff, &mut self.logger);
+            res = ctrl.event(&mut Event::Input(k), buff, &mut self.logger);
             self.logger.log(format!(" => {:?}", res));
             // check for control only eventargs
             match res {
@@ -132,7 +132,7 @@ impl App {
                     match self.repo {
                         Some(ref mut r) => {
                             let mut ctx = Event::Repository(r, &mut self.settings);
-                            ctrl.ctx(&mut ctx, buff, &mut self.logger);
+                            ctrl.event(&mut ctx, buff, &mut self.logger);
                         },
                         None => {
                             panic!("key => KeyArg::InputConsumed(Repository) => repo property was none");
