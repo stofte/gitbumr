@@ -97,9 +97,7 @@ impl Control for History {
                 c_bg=c_bg,
             ));
             c_idx += 1;
-            
         }
-        buffer.valid = true;
     }
     fn event(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         assert_eq!(buffer.id, self.id);

@@ -20,6 +20,10 @@ impl Branches {
         log.log(format!("branches.key"));
         EventArg::None
     }
+    // updates the full buffer
+    fn render(&mut self, buf: &mut LineBuffer) {
+        
+    }
 }
 
 impl Control for Branches {
@@ -49,7 +53,6 @@ impl Control for Branches {
             );
             buffer.set(line_str);
         }
-        buffer.valid = true;
     }
     fn event(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         assert_eq!(buffer.id, self.id);

@@ -15,7 +15,6 @@ pub struct Border {
 
 pub struct LineBuffer {
     pub id: u32,
-    pub valid: bool,
     pub border: Border,
     pub lines: Vec<String>,
     pub name: String,
@@ -48,7 +47,6 @@ fn set_primary_colors(stdout: &mut StdoutLock) {
 impl LineBuffer {
     pub fn size(&mut self, width: u16, height: u16) {
         self.lines = vec!["".to_string(); height as usize];
-        self.valid = false;
         self.set_idx = 0;
         self.width = width;
         self.height = height;
@@ -72,7 +70,6 @@ impl LineBuffer {
 pub fn build_linebuffer(id: u32) -> LineBuffer {
     LineBuffer {
         id: id,
-        valid: false,
         lines: vec![],
         name: "".to_string(),
         fg: console::FG_PRIMARY,

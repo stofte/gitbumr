@@ -103,13 +103,7 @@ impl App {
     }
     fn render(&mut self, stdout: &mut StdoutLock) {
         for i in (0..self.controls.len()).rev() {
-            let ctrl = &mut self.controls[i];
             let buff = &mut self.buffers[i];
-            let cid = ctrl.id();
-            if !buff.valid {
-                self.logger.log(format!("buffer {} was invalid", cid));
-                ctrl.render(buff, &mut self.logger);
-            }
             buff.render(stdout, &mut self.logger);
         }
     }

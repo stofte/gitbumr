@@ -38,7 +38,6 @@ impl Control for Header {
             bg_r=console::BG_RESET,
             fg_r=console::FG_RESET,
         ));
-        buffer.valid = true;
     }
     fn event(&mut self, e: &mut Event, buffer: &mut LineBuffer, log: &mut Logger) -> EventArg {
         assert_eq!(buffer.id, self.id);
