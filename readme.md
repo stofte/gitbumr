@@ -8,6 +8,6 @@ Due to the rust crates used, this cannot build on Windows natively, and this lim
 
 - Use `cargo run` to build and run
 - TTY supporting console (only WSL Bash console tested)
-- rustc 1.29.0
+- rustc 1.30.0
 - libsqlite3-dev
 - gcc
