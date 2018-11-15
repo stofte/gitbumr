@@ -4,13 +4,11 @@ install:
   - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
   - rustup-init -y
   - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-  - set PATH=%PATH%;C:\Qt\5.11.2\msvc2017_64\bin
-  - qmake --version
   - rustc --version
   - cargo --version
-  - cl
-  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64
-  - cl
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+  - set PATH=%PATH%;C:\Qt\5.11.2\msvc2017_64\bin
+  - qmake --version
 
 build_script:
   - qmake -config release app
