@@ -1,5 +1,14 @@
 image: Visual Studio 2017
 
+install:
+  - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
+  - rustup-init -yv
+  - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+  - set PATH=%PATH%;C:\Qt\5.11.1\msvc2017_64\bin
+  - qmake --version
+  - rustc --version
+  - cargo --version
+
 build_script:
   - qmake -config release
   - nmake
