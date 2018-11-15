@@ -21,6 +21,8 @@ public:
     explicit Repositories(QObject *parent = nullptr);
     ~Repositories();
     quint64 count() const;
+    Q_INVOKABLE bool add(const QString& path);
+    Q_INVOKABLE bool remove(quint64 index);
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;

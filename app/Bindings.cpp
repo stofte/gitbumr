@@ -219,6 +219,8 @@ extern "C" {
         void (*)(Repositories*));
     void repositories_free(Repositories::Private*);
     quint64 repositories_count_get(const Repositories::Private*);
+    bool repositories_add(Repositories::Private*, const ushort*, int);
+    bool repositories_remove(Repositories::Private*, quint64);
 };
 
 Repositories::Repositories(bool /*owned*/, QObject *parent):
@@ -290,4 +292,12 @@ void Repositories::initHeaderData() {
 quint64 Repositories::count() const
 {
     return repositories_count_get(m_d);
+}
+bool Repositories::add(const QString& path)
+{
+    return repositories_add(m_d, path.utf16(), path.size());
+}
+bool Repositories::remove(quint64 index)
+{
+    return repositories_remove(m_d, index);
 }

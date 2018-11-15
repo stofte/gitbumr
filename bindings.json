@@ -26,6 +26,24 @@
                     "type": "bool",
                     "write": true
                 }
+            },
+            "functions": {
+                "add": {
+                    "return": "bool",
+                    "mut": true,
+                    "arguments": [{
+                        "name": "path",
+                        "type": "QString"
+                    }]
+                },
+                "remove": {
+                    "return": "bool",
+                    "mut": true,
+                    "arguments": [{
+                        "name": "index",
+                        "type": "quint64"
+                    }]
+                }
             }
         }
     }

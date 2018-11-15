@@ -187,6 +187,8 @@ pub trait RepositoriesTrait {
     fn new(emit: RepositoriesEmitter, model: RepositoriesList) -> Self;
     fn emit(&mut self) -> &mut RepositoriesEmitter;
     fn count(&self) -> u64;
+    fn add(&mut self, path: String) -> bool;
+    fn remove(&mut self, index: u64) -> bool;
     fn row_count(&self) -> usize;
     fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
     fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
@@ -249,6 +251,22 @@ pub unsafe extern "C" fn repositories_free(ptr: *mut Repositories) {
 #[no_mangle]
 pub unsafe extern "C" fn repositories_count_get(ptr: *const Repositories) -> u64 {
     (&*ptr).count()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn repositories_add(ptr: *mut Repositories, path_str: *const c_ushort, path_len: c_int) -> bool {
+    let mut path = String::new();
+    set_string_from_utf16(&mut path, path_str, path_len);
+    let o = &mut *ptr;
+    let r = o.add(path);
+    r
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn repositories_remove(ptr: *mut Repositories, index: u64) -> bool {
+    let o = &mut *ptr;
+    let r = o.remove(index);
+    r
 }
 
 #[no_mangle]
