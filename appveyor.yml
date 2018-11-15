@@ -10,5 +10,9 @@ install:
   - cargo --version
 
 build_script:
-  - qmake -config release
+  - qmake -config release app
   - nmake
+
+cache:
+  - '%USERPROFILE%\.cargo -> appveyor.yml'
+  - '%USERPROFILE%\.rustup -> appveyor.yml'
