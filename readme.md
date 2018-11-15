@@ -1,4 +1,4 @@
-# Gitbumr [![build status](https://travis-ci.org/stofte/gitbumr.svg?branch=develop)](https://travis-ci.org/stofte/gitbumr)
+# Gitbumr [![Build status](https://ci.appveyor.com/api/projects/status/211dlbqs63w61har?svg=true)](https://ci.appveyor.com/project/stofte/gitbumr)
 
 Qt based Git client using a rust backend.
 
@@ -19,4 +19,4 @@ The project has a QtCreator project file for convenience.
  - Qt 5.11.2
  - MSVS 2017 and Native SDK
 
-Command line usage can be found in the [.travis.yml](.travis.yml) build spec.
+Command line usage can be found in the [appveyor.yml](appveyor.yml) build spec.
