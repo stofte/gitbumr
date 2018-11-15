@@ -1,0 +1,11 @@
+[package]
+name = "lib"
+version = "0.1.0"
+authors = ["Svend Tofte <stofte@gmail.com>"]
+
+[dependencies]
+libc = "*"
+
+[lib]
+name = "rust"
+crate-type = ["staticlib"]

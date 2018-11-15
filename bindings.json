@@ -1,0 +1,32 @@
+{
+    "cppFile": "app/Bindings.cpp",
+    "rust": {
+        "dir": "lib",
+        "interfaceModule": "interface",
+        "implementationModule": "implementation"
+    },
+    "objects": {
+        "Repositories": {
+            "type": "List",
+            "properties": {
+                "count": {
+                    "type": "quint64"
+                }
+            },
+            "itemProperties": {
+                "id": {
+                    "type": "quint64",
+                    "write": false
+                },
+                "displayName": {
+                    "type": "QString",
+                    "write": false
+                },
+                "current": {
+                    "type": "bool",
+                    "write": true
+                }
+            }
+        }
+    }
+}

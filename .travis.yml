@@ -1,6 +1,8 @@
+image:
+- Visual Studio 2017
 language: rust
 rust:
-  - 1.29.0
+  - 1.30.0
 branches:
   only:
   - master
