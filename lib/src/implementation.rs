@@ -53,7 +53,17 @@ impl RepositoriesTrait for Repositories {
         self.list[index].id
     }
     fn add(&mut self, path: String) -> bool {
+        let item = RepositoriesItem { 
+            current: true,
+            display_name: path,
+            id: 0
+        };
+        let end = self.list.len();
+        self.model.begin_insert_rows(end, end);
+        self.list.insert(end, item);
+        self.model.end_insert_rows();
         true
+
     }
     fn remove(&mut self, id: u64) -> bool {
         false
