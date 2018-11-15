@@ -52,4 +52,10 @@ impl RepositoriesTrait for Repositories {
     fn id(&self, index: usize) -> u64 {
         self.list[index].id
     }
+    fn add(&mut self, path: String) -> bool {
+        true
+    }
+    fn remove(&mut self, id: u64) -> bool {
+        false
+    }
 }

@@ -18,9 +18,6 @@ ApplicationWindow {
                 verticalAlignment: Text.AlignVCenter
             }
         }
-        Flickable {
-            anchors.fill: parent
-            RepoView { }
-        }
+        RepoView { }
     }
 }
