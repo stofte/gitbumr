@@ -15,7 +15,8 @@ build_script:
   - nmake
   - windeployqt --qmldir app bin\app.exe
 
+test: off
+
 # rustup takes minutes to install
 cache:
-  - '%USERPROFILE%\.cargo -> appveyor.yml'
   - '%USERPROFILE%\.rustup -> appveyor.yml'
