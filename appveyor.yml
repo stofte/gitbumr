@@ -13,6 +13,7 @@ install:
 build_script:
   - qmake -config release app
   - nmake
+  - windeployqt --qmldir app app\release\bin\app.exe
 
 # rustup takes minutes to install
 cache:
