@@ -20,3 +20,8 @@ The project has a QtCreator project file for convenience.
  - MSVS 2017 and Native SDK
 
 Command line usage can be found in the [appveyor.yml](appveyor.yml) build spec.
+
+QtCreator has some gotchas:
+
+ - After editing the project file, manually run qmake by right-clicking the top node in Projects pane
+ - When adding qml components, Use Tools -> QML/JS -> Reset Code Model, to fix IDE errors
