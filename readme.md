@@ -17,11 +17,12 @@ binding code.
 The project has a QtCreator project file for convenience.
 
  - Qt 5.11.2
- - MSVS 2017 and Native SDK
+ - Visual Studio 2017 and Native SDK
 
-Command line usage can be found in the [appveyor.yml](appveyor.yml) build spec.
+Windows CLI build steps can be found in the [appveyor.yml](appveyor.yml) build spec.
 
 QtCreator has some gotchas:
 
  - After editing the project file, manually run qmake by right-clicking the top node in Projects pane
  - When adding qml components, Use Tools -> QML/JS -> Reset Code Model, to fix IDE errors
+ - [Qt+Win+OpenGL](https://wiki.qt.io/Qt_5_on_Windows_ANGLE_and_OpenGL) is host to a multitude of [weird issues and crashes](https://bugreports.qt.io/browse/QTBUG-46074?jql=text%20~%20%22QT_OPENGL%22%20and%20text%20~%20%22Windows%22). There are many env settings you can fiddle with here. I must `set QT_OPENGL=angle` in the project run settings, otherwise the IDE will crash upon startup, due to OpenGL shader incompatabilities or some such nonsense.

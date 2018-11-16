@@ -14,7 +14,7 @@ install:
 build_script:
   - qmake -config release app
   - nmake
-  - windeployqt --verbose 0 --qmldir app bin\app.exe
+  - windeployqt --verbose 0 --qmldir app bin\gitbumr.exe
 
 test: off
 
