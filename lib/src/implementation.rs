@@ -25,7 +25,7 @@ impl RepositoriesTrait for Repositories {
             list: vec![
                 RepositoriesItem { current: true, display_name: "hej mor".to_string(), id: 0 },
                 RepositoriesItem { current: false, display_name: "noget mere tekst her".to_string(), id: 1 },
-                RepositoriesItem { current: false, display_name: "dpi aware?".to_string(), id: 2 },
+                RepositoriesItem { current: false, display_name: "Add dpi aware?".to_string(), id: 2 },
             ],
             count: 3,
         }

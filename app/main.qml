@@ -7,13 +7,16 @@ ApplicationWindow {
     visible: true
     width: 450
     height: 580
+    FontLoader { id: mainFont; name: "Segoe UI" }
     Page {
         anchors.fill: parent
         header: ToolBar {
             Label {
                 anchors.fill: parent
                 text: qsTr("QT Test")
-                font.pixelSize: 20
+                font.pixelSize: 11
+                font.family: mainFont.name
+                renderType: Text.NativeRendering
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }

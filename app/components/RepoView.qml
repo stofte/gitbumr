@@ -43,7 +43,9 @@ Pane {
                             id: label
                             text: displayName
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 20
+                            font.pixelSize: 11
+                            font.family: mainFont.name
+                            renderType: Text.NativeRendering
                         }
                     }
                 }
@@ -54,7 +56,13 @@ Pane {
             delegate: repositoriesDelegate
         }
         Button {
-            text: "Add"
+            Text {
+                anchors.centerIn: parent
+                text: "Add"
+                font.pixelSize: 11
+                font.family: mainFont.name
+                renderType: Text.NativeRendering
+            }
             onClicked: {
                 fileDialog.open()
             }

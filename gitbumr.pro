@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = gitbumr
 
-QT += qml quick opengl
+QT += qml quick opengl quickcontrols2
 CONFIG += c++14
 
 DEFINES += QT_DEPRECATED_WARNINGS
