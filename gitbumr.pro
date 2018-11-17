@@ -1,6 +1,13 @@
 TEMPLATE = app
 TARGET = gitbumr
 
+CONFIG(debug, debug|release):BUILD_MODE=debug
+CONFIG(release, release|debug) {
+    BUILD_MODE=release
+    CARGO_FLAG=--release
+}
+message("Builde mode: $$BUILD_MODE")
+
 QT += qml quick opengl quickcontrols2
 CONFIG += c++14
 
@@ -11,10 +18,7 @@ HEADERS += app/Bindings.h
 RESOURCES += app/qml.qrc app/app.qrc
 
 DESTDIR = bin
-MOC_DIR = obj
-OBJECTS_DIR  = obj
-
-LIBS += -L"$$PWD/lib/target/release" -lrust
+LIBS += -L"$$PWD/lib/target/$$BUILD_MODE" -lrust
 
 win32 {
     LIBS += WS2_32.lib Userenv.lib Advapi32.lib
@@ -30,7 +34,8 @@ RUST_FILES = \
     "$$PWD/lib/src/lib.rs" \
     "$$PWD/lib/src/interface.rs" \
     "$$PWD/lib/src/implementation.rs"
-rust_cargo.output = "$$PWD/lib/target/release/rust.lib"
-rust_cargo.commands = cargo build --manifest-path="$$PWD/lib/Cargo.toml" --release
+rust_cargo.output = "$$PWD/lib/target/$$BUILD_MODE/rust.lib"
+rust_cargo.commands = cargo build --manifest-path="$$PWD/lib/Cargo.toml" $$CARGO_FLAG
 rust_cargo.input = RUST_FILES
 QMAKE_EXTRA_COMPILERS += rust_cargo
+
