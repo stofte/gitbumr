@@ -8,7 +8,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += app/main.cpp app/Bindings.cpp
 HEADERS += app/Bindings.h
-RESOURCES += app/qml.qrc
+RESOURCES += app/qml.qrc app/app.qrc
 
 DESTDIR = bin
 MOC_DIR = obj
