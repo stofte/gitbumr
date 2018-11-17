@@ -10,11 +10,20 @@ SOURCES += app/main.cpp app/Bindings.cpp
 HEADERS += app/Bindings.h
 RESOURCES += app/qml.qrc
 
-LIBS += -L"$$PWD/lib/target/release" -lrust
 DESTDIR = bin
 MOC_DIR = obj
 OBJECTS_DIR  = obj
-win32: LIBS += WS2_32.lib Userenv.lib Advapi32.lib
+
+LIBS += -L"$$PWD/lib/target/release" -lrust
+
+win32 {
+    LIBS += WS2_32.lib Userenv.lib Advapi32.lib
+    RC_FILE = app/res/gitbumr.rc
+    # embed manifest
+    QMAKE_POST_LINK = pushd $$DESTDIR & \
+        mt  -nologo -manifest $$PWD/app/res/gitbumr.exe.manifest \
+            -outputresource:gitbumr.exe;1
+}
 
 # rust lib, requires cargo in path
 RUST_FILES = \

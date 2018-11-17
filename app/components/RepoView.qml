@@ -45,7 +45,6 @@ Pane {
                             verticalAlignment: Text.AlignVCenter
                             font.pixelSize: 11
                             font.family: mainFont.name
-                            renderType: Text.NativeRendering
                         }
                     }
                 }
@@ -61,7 +60,6 @@ Pane {
                 text: "Add"
                 font.pixelSize: 11
                 font.family: mainFont.name
-                renderType: Text.NativeRendering
             }
             onClicked: {
                 fileDialog.open()

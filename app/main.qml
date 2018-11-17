@@ -13,10 +13,9 @@ ApplicationWindow {
         header: ToolBar {
             Label {
                 anchors.fill: parent
-                text: qsTr("QT Test")
+                text: qsTr("gitbumr")
                 font.pixelSize: 11
                 font.family: mainFont.name
-                renderType: Text.NativeRendering
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }

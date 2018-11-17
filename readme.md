@@ -26,3 +26,7 @@ QtCreator has some gotchas:
  - After editing the project file, manually run qmake by right-clicking the top node in Projects pane
  - When adding qml components, Use Tools -> QML/JS -> Reset Code Model, to fix IDE errors
  - [Qt+Win+OpenGL](https://wiki.qt.io/Qt_5_on_Windows_ANGLE_and_OpenGL) is host to a multitude of [weird issues and crashes](https://bugreports.qt.io/browse/QTBUG-46074?jql=text%20~%20%22QT_OPENGL%22%20and%20text%20~%20%22Windows%22). There are many env settings you can fiddle with here. I must `set QT_OPENGL=angle` in the project run settings, otherwise the IDE will crash upon startup, due to OpenGL shader incompatabilities or some such nonsense.
+
+Other notes
+
+ - `app/res/gitbumr.rc` should be 8859-1 encoded
