@@ -1,6 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import RustCode 1.0
 import "components"
 
 ApplicationWindow {
@@ -9,6 +10,9 @@ ApplicationWindow {
     height: 580
     FontLoader { id: mainFont; name: "Segoe UI" }
     Page {
+        App {
+            id: appModel
+        }
         anchors.fill: parent
         header: ToolBar {
             Label {

@@ -5,11 +5,37 @@
 #include <QtCore/QObject>
 #include <QtCore/QAbstractItemModel>
 
+class App;
 class Repositories;
+
+class App : public QObject
+{
+    Q_OBJECT
+public:
+    class Private;
+private:
+    Repositories* const m_repositories;
+    Private * m_d;
+    bool m_ownsPrivate;
+    Q_PROPERTY(Repositories* repositories READ repositories NOTIFY repositoriesChanged FINAL)
+    explicit App(bool owned, QObject *parent);
+public:
+    explicit App(QObject *parent = nullptr);
+    ~App();
+    const Repositories* repositories() const;
+    Repositories* repositories();
+    Q_INVOKABLE quint64 addRepository(const QString& path);
+    Q_INVOKABLE QString addRepositoryGetLastError() const;
+    Q_INVOKABLE void init();
+    Q_INVOKABLE quint64 repositoryIndex(quint64 id) const;
+Q_SIGNALS:
+    void repositoriesChanged();
+};
 
 class Repositories : public QAbstractItemModel
 {
     Q_OBJECT
+    friend class App;
 public:
     class Private;
 private:
@@ -21,7 +47,7 @@ public:
     explicit Repositories(QObject *parent = nullptr);
     ~Repositories();
     quint64 count() const;
-    Q_INVOKABLE bool add(const QString& path);
+    Q_INVOKABLE bool add(quint64 index, const QString& path);
     Q_INVOKABLE bool remove(quint64 index);
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;

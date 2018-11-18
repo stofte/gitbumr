@@ -3,8 +3,50 @@
 #![allow(dead_code)]
 use interface::*;
 
+pub struct App {
+    emit: AppEmitter,
+    repositories: Repositories,
+}
+
+impl AppTrait for App {
+    fn new(emit: AppEmitter,
+        repositories: Repositories) -> Self {
+        let mut app = App {
+            emit,
+            repositories,
+        };
+        {
+            let repos = app.repositories_mut();
+            repos.list.push(RepositoriesItem { current: false, display_name: "hej mor!".to_string(), id: 0 });
+            repos.count = repos.list.len() as u64;
+        }
+        app
+    }
+    fn init(&mut self) {
+
+    }
+    fn add_repository(&mut self, path: String) -> u64 {
+        1
+    }
+    fn add_repository_get_last_error(&self) -> String {
+        "Folder was not a git repository".to_string()
+    }
+    fn repository_index(&self, id: u64) -> u64 {
+        0
+    }
+    fn emit(&mut self) -> &mut AppEmitter {
+        &mut self.emit
+    }
+    fn repositories(&self) -> &Repositories {
+        &self.repositories
+    }
+    fn repositories_mut(&mut self) -> &mut Repositories {
+        &mut self.repositories
+    }
+}
+
 #[derive(Default, Clone)]
-struct RepositoriesItem {
+pub struct RepositoriesItem {
     current: bool,
     display_name: String,
     id: u64,
@@ -13,8 +55,8 @@ struct RepositoriesItem {
 pub struct Repositories {
     emit: RepositoriesEmitter,
     model: RepositoriesList,
-    count: u64,
-    list: Vec<RepositoriesItem>,
+    pub count: u64,
+    pub list: Vec<RepositoriesItem>,
 }
 
 impl RepositoriesTrait for Repositories {
@@ -22,12 +64,8 @@ impl RepositoriesTrait for Repositories {
         Repositories {
             emit,
             model,
-            list: vec![
-                RepositoriesItem { current: true, display_name: "hej mor".to_string(), id: 0 },
-                RepositoriesItem { current: false, display_name: "noget mere tekst her".to_string(), id: 1 },
-                RepositoriesItem { current: false, display_name: "Add dpi aware?".to_string(), id: 2 },
-            ],
-            count: 3,
+            list: vec![],
+            count: 0,
         }
     }
     fn emit(&mut self) -> &mut RepositoriesEmitter {
@@ -52,15 +90,15 @@ impl RepositoriesTrait for Repositories {
     fn id(&self, index: usize) -> u64 {
         self.list[index].id
     }
-    fn add(&mut self, path: String) -> bool {
+    fn add(&mut self, index: u64, path: String) -> bool {
         let item = RepositoriesItem { 
             current: true,
             display_name: path,
             id: 0
         };
-        let end = self.list.len();
-        self.model.begin_insert_rows(end, end);
-        self.list.insert(end, item);
+        let idx = index as usize;
+        self.model.begin_insert_rows(idx, idx);
+        self.list.insert(idx, item);
         self.model.end_insert_rows();
         true
 

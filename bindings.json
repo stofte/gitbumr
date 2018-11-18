@@ -6,6 +6,37 @@
         "implementationModule": "implementation"
     },
     "objects": {
+        "App": {
+            "type": "Object",
+            "properties": {
+                "repositories": {
+                    "type": "Repositories"
+                }
+            },
+            "functions": {
+                "init": {
+                    "return": "void",
+                    "mut": true
+                },
+                "addRepository": {
+                    "return": "quint64",
+                    "mut": true,
+                    "arguments": [
+                        {"name": "path", "type": "QString"}
+                    ]
+                },
+                "addRepositoryGetLastError": {
+                    "return": "QString"
+                },
+                "repositoryIndex": {
+                    "return": "quint64",
+                    "mut": false,
+                    "arguments": [
+                        {"name": "id", "type": "quint64"}
+                    ]
+                }
+            }
+        },
         "Repositories": {
             "type": "List",
             "properties": {
@@ -31,10 +62,10 @@
                 "add": {
                     "return": "bool",
                     "mut": true,
-                    "arguments": [{
-                        "name": "path",
-                        "type": "QString"
-                    }]
+                    "arguments": [
+                        { "name": "index", "type": "quint64" },
+                        { "name": "path", "type": "QString" }
+                    ]
                 },
                 "remove": {
                     "return": "bool",

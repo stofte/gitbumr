@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("fusion");
     QGuiApplication app(argc, argv);
     app.setWindowIcon(QIcon(":/ApplicationIcon"));
+    qmlRegisterType<App>("RustCode", 1, 0, "App");
     qmlRegisterType<Repositories>("RustCode", 1, 0, "Repositories");
 
     QQmlApplicationEngine engine;

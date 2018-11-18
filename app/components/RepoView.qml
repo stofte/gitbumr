@@ -6,16 +6,19 @@ import RustCode 1.0
 
 Pane {
     anchors.fill: parent
-    Repositories {
-        id: repositoriesModel
-    }
     FileDialog {
         id: fileDialog
         title: "Select a Git repository to add"
         folder: shortcuts.home
         selectFolder: true
         onAccepted: {
-            if (!repositoriesModel.add(fileDialog.fileUrls)) {
+            var id = appModel.addRepository(fileDialog.fileUrls);
+            console.log("repo id: ", id)
+            if (id) {
+                var idx = appModel.repositoryIndex(id);
+                appModel.repositories.add(idx, fileDialog.fileUrls);
+            } else {
+                addFailedMessageDialog.detailedText = appModel.addRepositoryGetLastError();
                 addFailedMessageDialog.visible = true;
             }
         }
@@ -51,7 +54,7 @@ Pane {
             }
             clip: true
             ScrollBar.vertical: ScrollBar { }
-            model: repositoriesModel
+            model: appModel.repositories
             delegate: repositoriesDelegate
         }
         Button {
