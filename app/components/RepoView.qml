@@ -71,7 +71,7 @@ Pane {
                             onExited: {
                                 labelBackground.border.color = "#F0F0F0";
                             }
-                            onClicked: {
+                            onDoubleClicked: {
                                 console.log('clicked: ', displayName);
                             }
                         }
