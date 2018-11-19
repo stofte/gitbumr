@@ -42,12 +42,38 @@ Pane {
                     Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        TextItem {
-                            id: label
-                            text: displayName
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 12
-                            font.family: mainFont.name
+                        Rectangle {
+                            id: labelBackground
+                            anchors.fill: parent
+                            border.width: 1
+                            border.color: "#F0F0F0"
+                            color: "transparent"
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                color: "transparent"
+                                TextItem {
+                                    id: label
+                                    text: displayName
+                                    verticalAlignment: Text.AlignVCenter
+                                    font.pixelSize: 12
+                                    font.family: mainFont.name
+                                }
+                            }
+                        }
+                        MouseArea {
+                            id: itemMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: {
+                                labelBackground.border.color = "#D3D3D3";
+                            }
+                            onExited: {
+                                labelBackground.border.color = "#F0F0F0";
+                            }
+                            onClicked: {
+                                console.log('clicked: ', displayName);
+                            }
                         }
                     }
                 }
