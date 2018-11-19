@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>components/RepoView.qml</file>
-        <file>components/TextItem.qml</file>
+        <file>qml/base/TextItem.qml</file>
+        <file>qml/components/RepoView.qml</file>
     </qresource>
 </RCC>
