@@ -27,7 +27,7 @@ Pane {
         id: addFailedMessageDialog
         title: "Error"
         icon: StandardIcon.Critical
-        text: "Could not add the selected folder."
+        TextItem { text: "Could not add the selected folder." }
     }
     ColumnLayout {
         anchors.fill: parent
@@ -42,11 +42,11 @@ Pane {
                     Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Label {
+                        TextItem {
                             id: label
                             text: displayName
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 11
+                            font.pixelSize: 12
                             font.family: mainFont.name
                         }
                     }
@@ -58,10 +58,10 @@ Pane {
             delegate: repositoriesDelegate
         }
         Button {
-            Text {
+            TextItem {
                 anchors.centerIn: parent
                 text: "Add"
-                font.pixelSize: 11
+                font.pixelSize: 12
                 font.family: mainFont.name
             }
             onClicked: {

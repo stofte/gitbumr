@@ -15,10 +15,10 @@ ApplicationWindow {
         }
         anchors.fill: parent
         header: ToolBar {
-            Label {
+            TextItem {
                 anchors.fill: parent
                 text: qsTr("gitbumr")
-                font.pixelSize: 11
+                font.pixelSize: 12
                 font.family: mainFont.name
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
