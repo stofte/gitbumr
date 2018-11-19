@@ -13,7 +13,6 @@ pub struct RepositoriesItem {
 pub struct Repositories {
     emit: RepositoriesEmitter,
     model: RepositoriesList,
-    pub count: u64,
     pub list: Vec<RepositoriesItem>,
 }
 
@@ -23,14 +22,10 @@ impl RepositoriesTrait for Repositories {
             emit,
             model,
             list: vec![],
-            count: 0,
         }
     }
     fn emit(&mut self) -> &mut RepositoriesEmitter {
         &mut self.emit
-    }
-    fn count(&self) -> u64 {
-        self.count
     }
     fn row_count(&self) -> usize {
         self.list.len()

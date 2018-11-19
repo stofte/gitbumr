@@ -39,11 +39,6 @@
         },
         "Repositories": {
             "type": "List",
-            "properties": {
-                "count": {
-                    "type": "quint64"
-                }
-            },
             "itemProperties": {
                 "id": {
                     "type": "quint64",
@@ -75,6 +70,15 @@
                         "type": "quint64"
                     }]
                 }
+            }
+        },
+        "History": {
+            "type": "List",
+            "itemProperties": {
+                "oid": { "type": "QString" },
+                "time": { "type": "QString" },
+                "author": { "type": "QString" },
+                "message": { "type": "QString" }
             }
         }
     }

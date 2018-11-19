@@ -28,13 +28,9 @@ namespace {
     inline QVariant cleanNullQVariant(const QVariant& v) {
         return (v.isNull()) ?QVariant() :v;
     }
-    inline void repositoriesCountChanged(Repositories* o)
-    {
-        Q_EMIT o->countChanged();
-    }
 }
 extern "C" {
-    App::Private* app_new(App*, Repositories*, void (*)(Repositories*),
+    App::Private* app_new(App*, Repositories*,
         void (*)(const Repositories*),
         void (*)(Repositories*),
         void (*)(Repositories*),
@@ -53,6 +49,181 @@ extern "C" {
     void app_add_repository_get_last_error(const App::Private*, QString*, qstring_set);
     void app_init(App::Private*);
     quint64 app_repository_index(const App::Private*, quint64);
+};
+
+extern "C" {
+    void history_data_author(const History::Private*, int, QString*, qstring_set);
+    void history_data_message(const History::Private*, int, QString*, qstring_set);
+    void history_data_oid(const History::Private*, int, QString*, qstring_set);
+    void history_data_time(const History::Private*, int, QString*, qstring_set);
+    void history_sort(History::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
+
+    int history_row_count(const History::Private*);
+    bool history_insert_rows(History::Private*, int, int);
+    bool history_remove_rows(History::Private*, int, int);
+    bool history_can_fetch_more(const History::Private*);
+    void history_fetch_more(History::Private*);
+}
+int History::columnCount(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : 1;
+}
+
+bool History::hasChildren(const QModelIndex &parent) const
+{
+    return rowCount(parent) > 0;
+}
+
+int History::rowCount(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : history_row_count(m_d);
+}
+
+bool History::insertRows(int row, int count, const QModelIndex &)
+{
+    return history_insert_rows(m_d, row, count);
+}
+
+bool History::removeRows(int row, int count, const QModelIndex &)
+{
+    return history_remove_rows(m_d, row, count);
+}
+
+QModelIndex History::index(int row, int column, const QModelIndex &parent) const
+{
+    if (!parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0 && column < 1) {
+        return createIndex(row, column, (quintptr)row);
+    }
+    return QModelIndex();
+}
+
+QModelIndex History::parent(const QModelIndex &) const
+{
+    return QModelIndex();
+}
+
+bool History::canFetchMore(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : history_can_fetch_more(m_d);
+}
+
+void History::fetchMore(const QModelIndex &parent)
+{
+    if (!parent.isValid()) {
+        history_fetch_more(m_d);
+    }
+}
+void History::updatePersistentIndexes() {}
+
+void History::sort(int column, Qt::SortOrder order)
+{
+    history_sort(m_d, column, order);
+}
+Qt::ItemFlags History::flags(const QModelIndex &i) const
+{
+    auto flags = QAbstractItemModel::flags(i);
+    return flags;
+}
+
+QString History::author(int row) const
+{
+    QString s;
+    history_data_author(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QString History::message(int row) const
+{
+    QString s;
+    history_data_message(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QString History::oid(int row) const
+{
+    QString s;
+    history_data_oid(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QString History::time(int row) const
+{
+    QString s;
+    history_data_time(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QVariant History::data(const QModelIndex &index, int role) const
+{
+    Q_ASSERT(rowCount(index.parent()) > index.row());
+    switch (index.column()) {
+    case 0:
+        switch (role) {
+        case Qt::UserRole + 0:
+            return QVariant::fromValue(author(index.row()));
+        case Qt::UserRole + 1:
+            return QVariant::fromValue(message(index.row()));
+        case Qt::UserRole + 2:
+            return QVariant::fromValue(oid(index.row()));
+        case Qt::UserRole + 3:
+            return QVariant::fromValue(time(index.row()));
+        }
+        break;
+    }
+    return QVariant();
+}
+
+int History::role(const char* name) const {
+    auto names = roleNames();
+    auto i = names.constBegin();
+    while (i != names.constEnd()) {
+        if (i.value() == name) {
+            return i.key();
+        }
+        ++i;
+    }
+    return -1;
+}
+QHash<int, QByteArray> History::roleNames() const {
+    QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
+    names.insert(Qt::UserRole + 0, "author");
+    names.insert(Qt::UserRole + 1, "message");
+    names.insert(Qt::UserRole + 2, "oid");
+    names.insert(Qt::UserRole + 3, "time");
+    return names;
+}
+QVariant History::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation != Qt::Horizontal) {
+        return QVariant();
+    }
+    return m_headerData.value(qMakePair(section, (Qt::ItemDataRole)role), role == Qt::DisplayRole ?QString::number(section + 1) :QVariant());
+}
+
+bool History::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+{
+    if (orientation != Qt::Horizontal) {
+        return false;
+    }
+    m_headerData.insert(qMakePair(section, (Qt::ItemDataRole)role), value);
+    return true;
+}
+
+extern "C" {
+    History::Private* history_new(History*,
+        void (*)(const History*),
+        void (*)(History*),
+        void (*)(History*),
+        void (*)(History*, quintptr, quintptr),
+        void (*)(History*),
+        void (*)(History*),
+        void (*)(History*, int, int),
+        void (*)(History*),
+        void (*)(History*, int, int, int),
+        void (*)(History*),
+        void (*)(History*, int, int),
+        void (*)(History*));
+    void history_free(History::Private*);
 };
 
 extern "C" {
@@ -226,7 +397,7 @@ bool Repositories::setData(const QModelIndex &index, const QVariant &value, int 
 }
 
 extern "C" {
-    Repositories::Private* repositories_new(Repositories*, void (*)(Repositories*),
+    Repositories::Private* repositories_new(Repositories*,
         void (*)(const Repositories*),
         void (*)(Repositories*),
         void (*)(Repositories*),
@@ -240,7 +411,6 @@ extern "C" {
         void (*)(Repositories*, int, int),
         void (*)(Repositories*));
     void repositories_free(Repositories::Private*);
-    quint64 repositories_count_get(const Repositories::Private*);
     bool repositories_add(Repositories::Private*, quint64, const ushort*, int);
     bool repositories_remove(Repositories::Private*, quint64);
 };
@@ -257,7 +427,6 @@ App::App(QObject *parent):
     QObject(parent),
     m_repositories(new Repositories(false, this)),
     m_d(app_new(this, m_repositories,
-        repositoriesCountChanged,
         [](const Repositories* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -336,6 +505,71 @@ quint64 App::repositoryIndex(quint64 id) const
 {
     return app_repository_index(m_d, id);
 }
+History::History(bool /*owned*/, QObject *parent):
+    QAbstractItemModel(parent),
+    m_d(nullptr),
+    m_ownsPrivate(false)
+{
+    initHeaderData();
+}
+
+History::History(QObject *parent):
+    QAbstractItemModel(parent),
+    m_d(history_new(this,
+        [](const History* o) {
+            Q_EMIT o->newDataReady(QModelIndex());
+        },
+        [](History* o) {
+            Q_EMIT o->layoutAboutToBeChanged();
+        },
+        [](History* o) {
+            o->updatePersistentIndexes();
+            Q_EMIT o->layoutChanged();
+        },
+        [](History* o, quintptr first, quintptr last) {
+            o->dataChanged(o->createIndex(first, 0, first),
+                       o->createIndex(last, 0, last));
+        },
+        [](History* o) {
+            o->beginResetModel();
+        },
+        [](History* o) {
+            o->endResetModel();
+        },
+        [](History* o, int first, int last) {
+            o->beginInsertRows(QModelIndex(), first, last);
+        },
+        [](History* o) {
+            o->endInsertRows();
+        },
+        [](History* o, int first, int last, int destination) {
+            o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
+        },
+        [](History* o) {
+            o->endMoveRows();
+        },
+        [](History* o, int first, int last) {
+            o->beginRemoveRows(QModelIndex(), first, last);
+        },
+        [](History* o) {
+            o->endRemoveRows();
+        }
+)),
+    m_ownsPrivate(true)
+{
+    connect(this, &History::newDataReady, this, [this](const QModelIndex& i) {
+        this->fetchMore(i);
+    }, Qt::QueuedConnection);
+    initHeaderData();
+}
+
+History::~History() {
+    if (m_ownsPrivate) {
+        history_free(m_d);
+    }
+}
+void History::initHeaderData() {
+}
 Repositories::Repositories(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),
     m_d(nullptr),
@@ -347,7 +581,6 @@ Repositories::Repositories(bool /*owned*/, QObject *parent):
 Repositories::Repositories(QObject *parent):
     QAbstractItemModel(parent),
     m_d(repositories_new(this,
-        repositoriesCountChanged,
         [](const Repositories* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -401,10 +634,6 @@ Repositories::~Repositories() {
     }
 }
 void Repositories::initHeaderData() {
-}
-quint64 Repositories::count() const
-{
-    return repositories_count_get(m_d);
 }
 bool Repositories::add(quint64 index, const QString& path)
 {

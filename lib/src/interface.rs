@@ -131,7 +131,6 @@ pub trait AppTrait {
 pub extern "C" fn app_new(
     app: *mut AppQObject,
     repositories: *mut RepositoriesQObject,
-    repositories_count_changed: fn(*mut RepositoriesQObject),
     repositories_new_data_ready: fn(*mut RepositoriesQObject),
     repositories_layout_about_to_be_changed: fn(*mut RepositoriesQObject),
     repositories_layout_changed: fn(*mut RepositoriesQObject),
@@ -147,7 +146,6 @@ pub extern "C" fn app_new(
 ) -> *mut App {
     let repositories_emit = RepositoriesEmitter {
         qobject: Arc::new(AtomicPtr::new(repositories)),
-        count_changed: repositories_count_changed,
         new_data_ready: repositories_new_data_ready,
     };
     let model = RepositoriesList {
@@ -214,11 +212,233 @@ pub unsafe extern "C" fn app_repository_index(ptr: *const App, id: u64) -> u64 {
     r
 }
 
+pub struct HistoryQObject {}
+
+pub struct HistoryEmitter {
+    qobject: Arc<AtomicPtr<HistoryQObject>>,
+    new_data_ready: fn(*mut HistoryQObject),
+}
+
+unsafe impl Send for HistoryEmitter {}
+
+impl HistoryEmitter {
+    /// Clone the emitter
+    ///
+    /// The emitter can only be cloned when it is mutable. The emitter calls
+    /// into C++ code which may call into Rust again. If emmitting is possible
+    /// from immutable structures, that might lead to access to a mutable
+    /// reference. That is undefined behaviour and forbidden.
+    pub fn clone(&mut self) -> HistoryEmitter {
+        HistoryEmitter {
+            qobject: self.qobject.clone(),
+            new_data_ready: self.new_data_ready,
+        }
+    }
+    fn clear(&self) {
+        let n: *const HistoryQObject = null();
+        self.qobject.store(n as *mut HistoryQObject, Ordering::SeqCst);
+    }
+    pub fn new_data_ready(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.new_data_ready)(ptr);
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct HistoryList {
+    qobject: *mut HistoryQObject,
+    layout_about_to_be_changed: fn(*mut HistoryQObject),
+    layout_changed: fn(*mut HistoryQObject),
+    data_changed: fn(*mut HistoryQObject, usize, usize),
+    begin_reset_model: fn(*mut HistoryQObject),
+    end_reset_model: fn(*mut HistoryQObject),
+    begin_insert_rows: fn(*mut HistoryQObject, usize, usize),
+    end_insert_rows: fn(*mut HistoryQObject),
+    begin_move_rows: fn(*mut HistoryQObject, usize, usize, usize),
+    end_move_rows: fn(*mut HistoryQObject),
+    begin_remove_rows: fn(*mut HistoryQObject, usize, usize),
+    end_remove_rows: fn(*mut HistoryQObject),
+}
+
+impl HistoryList {
+    pub fn layout_about_to_be_changed(&mut self) {
+        (self.layout_about_to_be_changed)(self.qobject);
+    }
+    pub fn layout_changed(&mut self) {
+        (self.layout_changed)(self.qobject);
+    }
+    pub fn data_changed(&mut self, first: usize, last: usize) {
+        (self.data_changed)(self.qobject, first, last);
+    }
+    pub fn begin_reset_model(&mut self) {
+        (self.begin_reset_model)(self.qobject);
+    }
+    pub fn end_reset_model(&mut self) {
+        (self.end_reset_model)(self.qobject);
+    }
+    pub fn begin_insert_rows(&mut self, first: usize, last: usize) {
+        (self.begin_insert_rows)(self.qobject, first, last);
+    }
+    pub fn end_insert_rows(&mut self) {
+        (self.end_insert_rows)(self.qobject);
+    }
+    pub fn begin_move_rows(&mut self, first: usize, last: usize, destination: usize) {
+        (self.begin_move_rows)(self.qobject, first, last, destination);
+    }
+    pub fn end_move_rows(&mut self) {
+        (self.end_move_rows)(self.qobject);
+    }
+    pub fn begin_remove_rows(&mut self, first: usize, last: usize) {
+        (self.begin_remove_rows)(self.qobject, first, last);
+    }
+    pub fn end_remove_rows(&mut self) {
+        (self.end_remove_rows)(self.qobject);
+    }
+}
+
+pub trait HistoryTrait {
+    fn new(emit: HistoryEmitter, model: HistoryList) -> Self;
+    fn emit(&mut self) -> &mut HistoryEmitter;
+    fn row_count(&self) -> usize;
+    fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
+    fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
+    fn can_fetch_more(&self) -> bool {
+        false
+    }
+    fn fetch_more(&mut self) {}
+    fn sort(&mut self, u8, SortOrder) {}
+    fn author(&self, index: usize) -> &str;
+    fn message(&self, index: usize) -> &str;
+    fn oid(&self, index: usize) -> &str;
+    fn time(&self, index: usize) -> &str;
+}
+
+#[no_mangle]
+pub extern "C" fn history_new(
+    history: *mut HistoryQObject,
+    history_new_data_ready: fn(*mut HistoryQObject),
+    history_layout_about_to_be_changed: fn(*mut HistoryQObject),
+    history_layout_changed: fn(*mut HistoryQObject),
+    history_data_changed: fn(*mut HistoryQObject, usize, usize),
+    history_begin_reset_model: fn(*mut HistoryQObject),
+    history_end_reset_model: fn(*mut HistoryQObject),
+    history_begin_insert_rows: fn(*mut HistoryQObject, usize, usize),
+    history_end_insert_rows: fn(*mut HistoryQObject),
+    history_begin_move_rows: fn(*mut HistoryQObject, usize, usize, usize),
+    history_end_move_rows: fn(*mut HistoryQObject),
+    history_begin_remove_rows: fn(*mut HistoryQObject, usize, usize),
+    history_end_remove_rows: fn(*mut HistoryQObject),
+) -> *mut History {
+    let history_emit = HistoryEmitter {
+        qobject: Arc::new(AtomicPtr::new(history)),
+        new_data_ready: history_new_data_ready,
+    };
+    let model = HistoryList {
+        qobject: history,
+        layout_about_to_be_changed: history_layout_about_to_be_changed,
+        layout_changed: history_layout_changed,
+        data_changed: history_data_changed,
+        begin_reset_model: history_begin_reset_model,
+        end_reset_model: history_end_reset_model,
+        begin_insert_rows: history_begin_insert_rows,
+        end_insert_rows: history_end_insert_rows,
+        begin_move_rows: history_begin_move_rows,
+        end_move_rows: history_end_move_rows,
+        begin_remove_rows: history_begin_remove_rows,
+        end_remove_rows: history_end_remove_rows,
+    };
+    let d_history = History::new(history_emit, model);
+    Box::into_raw(Box::new(d_history))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn history_free(ptr: *mut History) {
+    Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn history_row_count(ptr: *const History) -> c_int {
+    to_c_int((&*ptr).row_count())
+}
+#[no_mangle]
+pub unsafe extern "C" fn history_insert_rows(ptr: *mut History, row: c_int, count: c_int) -> bool {
+    (&mut *ptr).insert_rows(to_usize(row), to_usize(count))
+}
+#[no_mangle]
+pub unsafe extern "C" fn history_remove_rows(ptr: *mut History, row: c_int, count: c_int) -> bool {
+    (&mut *ptr).remove_rows(to_usize(row), to_usize(count))
+}
+#[no_mangle]
+pub unsafe extern "C" fn history_can_fetch_more(ptr: *const History) -> bool {
+    (&*ptr).can_fetch_more()
+}
+#[no_mangle]
+pub unsafe extern "C" fn history_fetch_more(ptr: *mut History) {
+    (&mut *ptr).fetch_more()
+}
+#[no_mangle]
+pub unsafe extern "C" fn history_sort(
+    ptr: *mut History,
+    column: u8,
+    order: SortOrder,
+) {
+    (&mut *ptr).sort(column, order)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn history_data_author(
+    ptr: *const History, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.author(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn history_data_message(
+    ptr: *const History, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.message(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn history_data_oid(
+    ptr: *const History, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.oid(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn history_data_time(
+    ptr: *const History, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.time(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
 pub struct RepositoriesQObject {}
 
 pub struct RepositoriesEmitter {
     qobject: Arc<AtomicPtr<RepositoriesQObject>>,
-    count_changed: fn(*mut RepositoriesQObject),
     new_data_ready: fn(*mut RepositoriesQObject),
 }
 
@@ -234,19 +454,12 @@ impl RepositoriesEmitter {
     pub fn clone(&mut self) -> RepositoriesEmitter {
         RepositoriesEmitter {
             qobject: self.qobject.clone(),
-            count_changed: self.count_changed,
             new_data_ready: self.new_data_ready,
         }
     }
     fn clear(&self) {
         let n: *const RepositoriesQObject = null();
         self.qobject.store(n as *mut RepositoriesQObject, Ordering::SeqCst);
-    }
-    pub fn count_changed(&mut self) {
-        let ptr = self.qobject.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            (self.count_changed)(ptr);
-        }
     }
     pub fn new_data_ready(&mut self) {
         let ptr = self.qobject.load(Ordering::SeqCst);
@@ -311,7 +524,6 @@ impl RepositoriesList {
 pub trait RepositoriesTrait {
     fn new(emit: RepositoriesEmitter, model: RepositoriesList) -> Self;
     fn emit(&mut self) -> &mut RepositoriesEmitter;
-    fn count(&self) -> u64;
     fn add(&mut self, index: u64, path: String) -> bool;
     fn remove(&mut self, index: u64) -> bool;
     fn row_count(&self) -> usize;
@@ -331,7 +543,6 @@ pub trait RepositoriesTrait {
 #[no_mangle]
 pub extern "C" fn repositories_new(
     repositories: *mut RepositoriesQObject,
-    repositories_count_changed: fn(*mut RepositoriesQObject),
     repositories_new_data_ready: fn(*mut RepositoriesQObject),
     repositories_layout_about_to_be_changed: fn(*mut RepositoriesQObject),
     repositories_layout_changed: fn(*mut RepositoriesQObject),
@@ -347,7 +558,6 @@ pub extern "C" fn repositories_new(
 ) -> *mut Repositories {
     let repositories_emit = RepositoriesEmitter {
         qobject: Arc::new(AtomicPtr::new(repositories)),
-        count_changed: repositories_count_changed,
         new_data_ready: repositories_new_data_ready,
     };
     let model = RepositoriesList {
@@ -371,11 +581,6 @@ pub extern "C" fn repositories_new(
 #[no_mangle]
 pub unsafe extern "C" fn repositories_free(ptr: *mut Repositories) {
     Box::from_raw(ptr).emit().clear();
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn repositories_count_get(ptr: *const Repositories) -> u64 {
-    (&*ptr).count()
 }
 
 #[no_mangle]

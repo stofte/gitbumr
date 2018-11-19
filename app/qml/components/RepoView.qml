@@ -51,7 +51,7 @@ Pane {
                             color: "transparent"
                             Rectangle {
                                 anchors.fill: parent
-                                anchors.margins: 8
+                                anchors.topMargin: 8
                                 color: "transparent"
                                 TextItem {
                                     id: label

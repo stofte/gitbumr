@@ -19,7 +19,6 @@ impl AppTrait for App {
         {
             let repos = app.repositories_mut();
             repos.list.push(RepositoriesItem { current: false, display_name: "hej mor!".to_string(), id: 0 });
-            repos.count = repos.list.len() as u64;
         }
         app
     }

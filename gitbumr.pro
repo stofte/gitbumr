@@ -10,6 +10,7 @@ message("Builde mode: $$BUILD_MODE")
 
 QT += qml quick opengl quickcontrols2
 CONFIG += c++14
+CONFIG += qtquickcompiler # http://doc.qt.io/QtQuickCompiler/
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
@@ -35,7 +36,8 @@ RUST_FILES = \
     lib/src/interface.rs \
     lib/src/implementation\mod.rs \
     lib/src/implementation\app.rs \
-    lib/src/implementation\repositories.rs
+    lib/src/implementation\repositories.rs \
+    lib/src/implementation\history.rs
 rust_cargo.output = "$$PWD/lib/target/$$BUILD_MODE/rust.lib"
 rust_cargo.commands = cargo build --manifest-path="$$PWD/lib/Cargo.toml" $$CARGO_FLAG
 rust_cargo.input = RUST_FILES
