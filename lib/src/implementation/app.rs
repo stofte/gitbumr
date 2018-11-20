@@ -43,4 +43,16 @@ impl AppTrait for App {
     fn repositories_mut(&mut self) -> &mut Repositories {
         &mut self.repositories
     }
+    fn set_active_repository(&mut self, id: u64) {
+
+    }
+    fn active_repository(&self) -> u64 {
+        1
+    }
+    fn active_repository_display_name(&self) -> &str {
+        "foo"
+    }
+    fn active_repository_path(&self) -> &str {
+        "C:\\some\\where"
+    }
 }

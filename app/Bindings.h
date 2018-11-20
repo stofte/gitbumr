@@ -18,18 +18,28 @@ private:
     Repositories* const m_repositories;
     Private * m_d;
     bool m_ownsPrivate;
+    Q_PROPERTY(quint64 activeRepository READ activeRepository NOTIFY activeRepositoryChanged FINAL)
+    Q_PROPERTY(QString activeRepositoryDisplayName READ activeRepositoryDisplayName NOTIFY activeRepositoryDisplayNameChanged FINAL)
+    Q_PROPERTY(QString activeRepositoryPath READ activeRepositoryPath NOTIFY activeRepositoryPathChanged FINAL)
     Q_PROPERTY(Repositories* repositories READ repositories NOTIFY repositoriesChanged FINAL)
     explicit App(bool owned, QObject *parent);
 public:
     explicit App(QObject *parent = nullptr);
     ~App();
+    quint64 activeRepository() const;
+    QString activeRepositoryDisplayName() const;
+    QString activeRepositoryPath() const;
     const Repositories* repositories() const;
     Repositories* repositories();
     Q_INVOKABLE quint64 addRepository(const QString& path);
     Q_INVOKABLE QString addRepositoryGetLastError() const;
     Q_INVOKABLE void init();
     Q_INVOKABLE quint64 repositoryIndex(quint64 id) const;
+    Q_INVOKABLE void setActiveRepository(quint64 id);
 Q_SIGNALS:
+    void activeRepositoryChanged();
+    void activeRepositoryDisplayNameChanged();
+    void activeRepositoryPathChanged();
     void repositoriesChanged();
 };
 

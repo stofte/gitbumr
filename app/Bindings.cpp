@@ -28,9 +28,21 @@ namespace {
     inline QVariant cleanNullQVariant(const QVariant& v) {
         return (v.isNull()) ?QVariant() :v;
     }
+    inline void appActiveRepositoryChanged(App* o)
+    {
+        Q_EMIT o->activeRepositoryChanged();
+    }
+    inline void appActiveRepositoryDisplayNameChanged(App* o)
+    {
+        Q_EMIT o->activeRepositoryDisplayNameChanged();
+    }
+    inline void appActiveRepositoryPathChanged(App* o)
+    {
+        Q_EMIT o->activeRepositoryPathChanged();
+    }
 }
 extern "C" {
-    App::Private* app_new(App*, Repositories*,
+    App::Private* app_new(App*, void (*)(App*), void (*)(App*), void (*)(App*), Repositories*,
         void (*)(const Repositories*),
         void (*)(Repositories*),
         void (*)(Repositories*),
@@ -44,11 +56,15 @@ extern "C" {
         void (*)(Repositories*, int, int),
         void (*)(Repositories*));
     void app_free(App::Private*);
+    quint64 app_active_repository_get(const App::Private*);
+    void app_active_repository_display_name_get(const App::Private*, QString*, qstring_set);
+    void app_active_repository_path_get(const App::Private*, QString*, qstring_set);
     Repositories::Private* app_repositories_get(const App::Private*);
     quint64 app_add_repository(App::Private*, const ushort*, int);
     void app_add_repository_get_last_error(const App::Private*, QString*, qstring_set);
     void app_init(App::Private*);
     quint64 app_repository_index(const App::Private*, quint64);
+    void app_set_active_repository(App::Private*, quint64);
 };
 
 extern "C" {
@@ -427,7 +443,10 @@ App::App(bool /*owned*/, QObject *parent):
 App::App(QObject *parent):
     QObject(parent),
     m_repositories(new Repositories(false, this)),
-    m_d(app_new(this, m_repositories,
+    m_d(app_new(this,
+        appActiveRepositoryChanged,
+        appActiveRepositoryDisplayNameChanged,
+        appActiveRepositoryPathChanged, m_repositories,
         [](const Repositories* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -480,6 +499,22 @@ App::~App() {
         app_free(m_d);
     }
 }
+quint64 App::activeRepository() const
+{
+    return app_active_repository_get(m_d);
+}
+QString App::activeRepositoryDisplayName() const
+{
+    QString v;
+    app_active_repository_display_name_get(m_d, &v, set_qstring);
+    return v;
+}
+QString App::activeRepositoryPath() const
+{
+    QString v;
+    app_active_repository_path_get(m_d, &v, set_qstring);
+    return v;
+}
 const Repositories* App::repositories() const
 {
     return m_repositories;
@@ -505,6 +540,10 @@ void App::init()
 quint64 App::repositoryIndex(quint64 id) const
 {
     return app_repository_index(m_d, id);
+}
+void App::setActiveRepository(quint64 id)
+{
+    return app_set_active_repository(m_d, id);
 }
 History::History(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),

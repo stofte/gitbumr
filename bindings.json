@@ -9,9 +9,10 @@
         "App": {
             "type": "Object",
             "properties": {
-                "repositories": {
-                    "type": "Repositories"
-                }
+                "repositories": { "type": "Repositories" },
+                "activeRepository": { "type": "quint64" },
+                "activeRepositoryPath": { "type": "QString" },
+                "activeRepositoryDisplayName": { "type": "QString" }  
             },
             "functions": {
                 "init": {
@@ -33,6 +34,13 @@
                     "mut": false,
                     "arguments": [
                         {"name": "id", "type": "quint64"}
+                    ]
+                },
+                "setActiveRepository": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "id", "type": "quint64" }
                     ]
                 }
             }

@@ -93,6 +93,9 @@ pub struct AppQObject {}
 
 pub struct AppEmitter {
     qobject: Arc<AtomicPtr<AppQObject>>,
+    active_repository_changed: fn(*mut AppQObject),
+    active_repository_display_name_changed: fn(*mut AppQObject),
+    active_repository_path_changed: fn(*mut AppQObject),
 }
 
 unsafe impl Send for AppEmitter {}
@@ -107,11 +110,32 @@ impl AppEmitter {
     pub fn clone(&mut self) -> AppEmitter {
         AppEmitter {
             qobject: self.qobject.clone(),
+            active_repository_changed: self.active_repository_changed,
+            active_repository_display_name_changed: self.active_repository_display_name_changed,
+            active_repository_path_changed: self.active_repository_path_changed,
         }
     }
     fn clear(&self) {
         let n: *const AppQObject = null();
         self.qobject.store(n as *mut AppQObject, Ordering::SeqCst);
+    }
+    pub fn active_repository_changed(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.active_repository_changed)(ptr);
+        }
+    }
+    pub fn active_repository_display_name_changed(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.active_repository_display_name_changed)(ptr);
+        }
+    }
+    pub fn active_repository_path_changed(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.active_repository_path_changed)(ptr);
+        }
     }
 }
 
@@ -119,17 +143,24 @@ pub trait AppTrait {
     fn new(emit: AppEmitter,
         repositories: Repositories) -> Self;
     fn emit(&mut self) -> &mut AppEmitter;
+    fn active_repository(&self) -> u64;
+    fn active_repository_display_name(&self) -> &str;
+    fn active_repository_path(&self) -> &str;
     fn repositories(&self) -> &Repositories;
     fn repositories_mut(&mut self) -> &mut Repositories;
     fn add_repository(&mut self, path: String) -> u64;
     fn add_repository_get_last_error(&self) -> String;
     fn init(&mut self) -> ();
     fn repository_index(&self, id: u64) -> u64;
+    fn set_active_repository(&mut self, id: u64) -> ();
 }
 
 #[no_mangle]
 pub extern "C" fn app_new(
     app: *mut AppQObject,
+    app_active_repository_changed: fn(*mut AppQObject),
+    app_active_repository_display_name_changed: fn(*mut AppQObject),
+    app_active_repository_path_changed: fn(*mut AppQObject),
     repositories: *mut RepositoriesQObject,
     repositories_new_data_ready: fn(*mut RepositoriesQObject),
     repositories_layout_about_to_be_changed: fn(*mut RepositoriesQObject),
@@ -165,6 +196,9 @@ pub extern "C" fn app_new(
     let d_repositories = Repositories::new(repositories_emit, model);
     let app_emit = AppEmitter {
         qobject: Arc::new(AtomicPtr::new(app)),
+        active_repository_changed: app_active_repository_changed,
+        active_repository_display_name_changed: app_active_repository_display_name_changed,
+        active_repository_path_changed: app_active_repository_path_changed,
     };
     let d_app = App::new(app_emit,
         d_repositories);
@@ -174,6 +208,35 @@ pub extern "C" fn app_new(
 #[no_mangle]
 pub unsafe extern "C" fn app_free(ptr: *mut App) {
     Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn app_active_repository_get(ptr: *const App) -> u64 {
+    (&*ptr).active_repository()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn app_active_repository_display_name_get(
+    ptr: *const App,
+    p: *mut QString,
+    set: fn(*mut QString, *const c_char, c_int),
+) {
+    let o = &*ptr;
+    let v = o.active_repository_display_name();
+    let s: *const c_char = v.as_ptr() as (*const c_char);
+    set(p, s, to_c_int(v.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn app_active_repository_path_get(
+    ptr: *const App,
+    p: *mut QString,
+    set: fn(*mut QString, *const c_char, c_int),
+) {
+    let o = &*ptr;
+    let v = o.active_repository_path();
+    let s: *const c_char = v.as_ptr() as (*const c_char);
+    set(p, s, to_c_int(v.len()));
 }
 
 #[no_mangle]
@@ -209,6 +272,13 @@ pub unsafe extern "C" fn app_init(ptr: *mut App) -> () {
 pub unsafe extern "C" fn app_repository_index(ptr: *const App, id: u64) -> u64 {
     let o = &*ptr;
     let r = o.repository_index(id);
+    r
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn app_set_active_repository(ptr: *mut App, id: u64) -> () {
+    let o = &mut *ptr;
+    let r = o.set_active_repository(id);
     r
 }
 
