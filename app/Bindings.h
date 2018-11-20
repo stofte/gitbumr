@@ -46,6 +46,7 @@ private:
 public:
     explicit History(QObject *parent = nullptr);
     ~History();
+    Q_INVOKABLE void load(const QString& path);
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;

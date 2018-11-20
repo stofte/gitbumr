@@ -224,6 +224,7 @@ extern "C" {
         void (*)(History*, int, int),
         void (*)(History*));
     void history_free(History::Private*);
+    void history_load(History::Private*, const ushort*, int);
 };
 
 extern "C" {
@@ -569,6 +570,10 @@ History::~History() {
     }
 }
 void History::initHeaderData() {
+}
+void History::load(const QString& path)
+{
+    return history_load(m_d, path.utf16(), path.size());
 }
 Repositories::Repositories(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),

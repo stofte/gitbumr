@@ -301,6 +301,7 @@ impl HistoryList {
 pub trait HistoryTrait {
     fn new(emit: HistoryEmitter, model: HistoryList) -> Self;
     fn emit(&mut self) -> &mut HistoryEmitter;
+    fn load(&mut self, path: String) -> ();
     fn row_count(&self) -> usize;
     fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
     fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
@@ -356,6 +357,15 @@ pub extern "C" fn history_new(
 #[no_mangle]
 pub unsafe extern "C" fn history_free(ptr: *mut History) {
     Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn history_load(ptr: *mut History, path_str: *const c_ushort, path_len: c_int) -> () {
+    let mut path = String::new();
+    set_string_from_utf16(&mut path, path_str, path_len);
+    let o = &mut *ptr;
+    let r = o.load(path);
+    r
 }
 
 #[no_mangle]

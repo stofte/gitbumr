@@ -79,6 +79,13 @@
                 "time": { "type": "QString" },
                 "author": { "type": "QString" },
                 "message": { "type": "QString" }
+            },
+            "functions": {
+                "load": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [{ "name": "path", "type": "QString" }]
+                }
             }
         }
     }
