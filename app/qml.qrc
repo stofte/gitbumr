@@ -4,5 +4,6 @@
         <file>qml/base/TextItem.qml</file>
         <file>qml/components/RepoView.qml</file>
         <file>qml/style/AppStyle.qml</file>
+        <file>qml/style/qmldir</file>
     </qresource>
 </RCC>
