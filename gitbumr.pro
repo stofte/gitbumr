@@ -1,7 +1,10 @@
 TEMPLATE = app
 TARGET = gitbumr
 
-CONFIG(debug, debug|release):BUILD_MODE=debug
+CONFIG(debug, debug|release) {
+    BUILD_MODE=debug
+    DEFINES += DEBUG
+}
 CONFIG(release, release|debug) {
     BUILD_MODE=release
     CARGO_FLAG=--release
@@ -16,7 +19,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += app/main.cpp app/Bindings.cpp
 HEADERS += app/Bindings.h
-RESOURCES += app/qml.qrc
+RESOURCES += app/qml.qrc app/app.qrc
 
 DESTDIR = bin
 LIBS += -L"$$PWD/lib/target/$$BUILD_MODE" -lrust
@@ -34,10 +37,10 @@ win32 {
 RUST_FILES = \
     lib/src/lib.rs \
     lib/src/interface.rs \
-    lib/src/implementation\mod.rs \
-    lib/src/implementation\app.rs \
-    lib/src/implementation\repositories.rs \
-    lib/src/implementation\history.rs
+    lib/src/implementation/mod.rs \
+    lib/src/implementation/app.rs \
+    lib/src/implementation/repositories.rs \
+    lib/src/implementation/history.rs
 rust_cargo.output = "$$PWD/lib/target/$$BUILD_MODE/rust.lib"
 rust_cargo.commands = cargo build --manifest-path="$$PWD/lib/Cargo.toml" $$CARGO_FLAG
 rust_cargo.input = RUST_FILES

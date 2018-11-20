@@ -40,7 +40,7 @@ Pane {
                 id: repositoriesDelegate
                 RowLayout {
                     width: parent.width
-                    height: 30
+                    height: 20
                     Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
