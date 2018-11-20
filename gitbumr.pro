@@ -16,7 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += app/main.cpp app/Bindings.cpp
 HEADERS += app/Bindings.h
-RESOURCES += app/qml.qrc app/app.qrc
+RESOURCES += app/qml.qrc
 
 DESTDIR = bin
 LIBS += -L"$$PWD/lib/target/$$BUILD_MODE" -lrust
