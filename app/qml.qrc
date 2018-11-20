@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>qml/base/TextItem.qml</file>
         <file>qml/components/RepoView.qml</file>
+        <file>qml/style/AppStyle.qml</file>
     </qresource>
 </RCC>

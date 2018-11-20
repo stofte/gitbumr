@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.3
 import RustCode 1.0
 import "qml/components"
 import "qml/base"
+import "qml/style"
 
 ApplicationWindow {
     visible: true
@@ -19,7 +20,7 @@ ApplicationWindow {
             TextItem {
                 anchors.fill: parent
                 text: qsTr("gitbumr")
-                font.pixelSize: 12
+                font.pointSize: AppStyle.fontPointSize
                 font.family: mainFont.name
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

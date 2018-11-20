@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.3
 import QtQuick.Dialogs 1.3
 import RustCode 1.0
 import "../base"
+import "../style"
 
 Pane {
     anchors.fill: parent
@@ -57,7 +58,7 @@ Pane {
                                     id: label
                                     text: displayName
                                     verticalAlignment: Text.AlignVCenter
-                                    font.pixelSize: 12
+                                    font.pointSize: AppStyle.fontPointSize
                                     font.family: mainFont.name
                                 }
                             }
@@ -88,7 +89,7 @@ Pane {
             TextItem {
                 anchors.centerIn: parent
                 text: "Add"
-                font.pixelSize: 12
+                font.pointSize: AppStyle.fontPointSize
                 font.family: mainFont.name
             }
             onClicked: {
