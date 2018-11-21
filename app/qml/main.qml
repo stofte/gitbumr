@@ -1,6 +1,6 @@
 import QtQuick 2.9
-import QtQuick.Controls 2.2
-import QtQuick.Controls 1.4
+import QtQuick.Controls 2.3
+import QtQuick.Controls 1.4 as QQC14
 import QtQuick.Layouts 1.3
 import RustCode 1.0
 import "components"
@@ -27,16 +27,17 @@ ApplicationWindow {
                 verticalAlignment: Text.AlignVCenter
             }
         }
-        SplitView {
+        QQC14.SplitView {
+            orientation: Qt.Horizontal
             anchors.fill: parent
+            handleDelegate: Rectangle {
+                color: AppStyle.dark
+                width: 1
+            }
             RepoView {
+                id: repoView
                 Layout.fillHeight: true
                 Layout.preferredWidth: 200
-            }
-            Rectangle {
-                color: "transparent"
-                Layout.maximumWidth: 2
-                Layout.minimumWidth: 2
             }
 
             History {
