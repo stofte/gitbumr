@@ -7,7 +7,6 @@ import "../base"
 import "../style"
 
 Pane {
-    anchors.fill: parent
     FileDialog {
         id: fileDialog
         title: "Select a Git repository to add"
@@ -52,10 +51,10 @@ Pane {
                             color: "transparent"
                             Rectangle {
                                 anchors.fill: parent
-                                anchors.topMargin: 8
-                                anchors.leftMargin: 1
-                                anchors.rightMargin: 1
-                                anchors.bottomMargin: 1
+                                anchors.topMargin: 5
+                                anchors.leftMargin: 2
+                                anchors.rightMargin: 2
+                                anchors.bottomMargin: 5
                                 color: "transparent"
                                 TextItem {
                                     id: label

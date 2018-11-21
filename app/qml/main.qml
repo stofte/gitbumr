@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+import QtQuick.Controls 1.4
 import QtQuick.Layouts 1.3
 import RustCode 1.0
 import "components"
@@ -26,6 +27,22 @@ ApplicationWindow {
                 verticalAlignment: Text.AlignVCenter
             }
         }
-        RepoView { }
+        SplitView {
+            anchors.fill: parent
+            RepoView {
+                Layout.fillHeight: true
+                Layout.preferredWidth: 200
+            }
+            Rectangle {
+                color: "transparent"
+                Layout.maximumWidth: 2
+                Layout.minimumWidth: 2
+            }
+
+            History {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
+        }
     }
 }
