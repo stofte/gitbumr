@@ -2,6 +2,10 @@
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QIcon>
+#include <QStandardPaths>
+#include <QFile>
+#include <QDir>
+#include <QQmlContext>
 #include "Bindings.h"
 
 int main(int argc, char *argv[])
@@ -19,7 +23,20 @@ int main(int argc, char *argv[])
     qmlRegisterType<App>("RustCode", 1, 0, "App");
     qmlRegisterType<Repositories>("RustCode", 1, 0, "Repositories");
 
+#if DEBUG
+    QString dataPath = QGuiApplication::applicationDirPath();
+#else
+    QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+#endif
+
+    QString dbFilePath = QDir(dataPath).filePath("gitbumr.sqlite");
+    QFile dbFile(dbFilePath);
+    if (!dbFile.exists()) {
+        dbFile.open(QIODevice::WriteOnly);
+        dbFile.close();
+    }
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("DatabaseFilePath", dbFilePath);
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
 #if DEBUG
