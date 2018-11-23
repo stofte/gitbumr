@@ -5,7 +5,7 @@ import "../base"
 import "../style"
 
 Rectangle {
-    color: AppStyle.window
+    color: Style.window
     ListModel {
         id: libraryModel
         ListElement {

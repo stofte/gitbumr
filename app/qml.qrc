@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/components/RepoView.qml</file>
-        <file>qml/style/AppStyle.qml</file>
+        <file>qml/style/Style.qml</file>
         <file>qml/style/qmldir</file>
         <file>qml/components/History.qml</file>
         <file>qml/main.qml</file>

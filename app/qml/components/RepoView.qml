@@ -60,7 +60,7 @@ Pane {
                                     id: label
                                     text: displayName
                                     verticalAlignment: Text.AlignVCenter
-                                    font.pointSize: AppStyle.fontPointSize
+                                    font.pointSize: Style.fontPointSize
                                     font.family: mainFont.name
                                 }
                             }
@@ -91,7 +91,7 @@ Pane {
             TextItem {
                 anchors.centerIn: parent
                 text: "Add"
-                font.pointSize: AppStyle.fontPointSize
+                font.pointSize: Style.fontPointSize
                 font.family: mainFont.name
             }
             onClicked: {

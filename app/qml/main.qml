@@ -21,7 +21,7 @@ ApplicationWindow {
             TextItem {
                 anchors.fill: parent
                 text: qsTr("gitbumr")
-                font.pointSize: AppStyle.fontPointSize
+                font.pointSize: Style.fontPointSize
                 font.family: mainFont.name
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -31,7 +31,7 @@ ApplicationWindow {
             orientation: Qt.Horizontal
             anchors.fill: parent
             handleDelegate: Rectangle {
-                color: AppStyle.dark
+                color: Style.dark
                 width: 1
             }
             RepoView {
