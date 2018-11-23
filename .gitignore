@@ -1,5 +1,6 @@
-target
+lib/target
 **/*.rs.bk
-# qt shadow build folders
 *.pro.user
+*.sublime-workspace
+# qt shadow build folders
 build*
