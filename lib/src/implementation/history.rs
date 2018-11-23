@@ -44,5 +44,6 @@ impl HistoryTrait for History {
         &self.list[index].time
     }
     fn load(&mut self, path: String) {
+
     }
 }

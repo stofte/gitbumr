@@ -1,5 +1,5 @@
 target
 **/*.rs.bk
 # qt shadow build folders
-build-app-*
 *.pro.user
+build*

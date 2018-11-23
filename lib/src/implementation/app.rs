@@ -1,12 +1,15 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
+use std::{env, path::{Path}, fs::{File, canonicalize}};
+use rusqlite::{Connection};
 use interface::*;
 use super::*;
 
 pub struct App {
     emit: AppEmitter,
     repositories: Repositories,
+    conn: Option<Connection>,
 }
 
 impl AppTrait for App {
@@ -15,6 +18,7 @@ impl AppTrait for App {
         let mut app = App {
             emit,
             repositories,
+            conn: None,
         };
         {
             let repos = app.repositories_mut();
@@ -55,4 +59,13 @@ impl AppTrait for App {
     fn active_repository_path(&self) -> &str {
         "C:\\some\\where"
     }
+}
+
+pub fn build_db() -> Connection {
+    let db_path = format!("{}/.gitbumrdb", env::var("HOME").unwrap());
+    let p = Path::new(&db_path);
+    if !p.exists() {
+        File::create(&db_path).unwrap();
+    }
+    Connection::open(p).unwrap()
 }

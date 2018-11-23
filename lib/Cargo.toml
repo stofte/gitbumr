@@ -6,6 +6,10 @@ authors = ["Svend Tofte <stofte@gmail.com>"]
 [dependencies]
 libc = "*"
 
+[dependencies.rusqlite]
+version = "0.15.0"
+features = ["bundled"]
+
 [lib]
 name = "rust"
 crate-type = ["staticlib"]

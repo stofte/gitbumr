@@ -4,10 +4,12 @@ TARGET = gitbumr
 CONFIG(debug, debug|release) {
     BUILD_MODE=debug
     DEFINES += DEBUG
+    win32:CFLAGS += /MDd
 }
 CONFIG(release, release|debug) {
     BUILD_MODE=release
     CARGO_FLAG=--release
+    win32:CFLAGS += /MD
 }
 message("Builde mode: $$BUILD_MODE")
 
@@ -45,4 +47,3 @@ rust_cargo.output = "$$PWD/lib/target/$$BUILD_MODE/rust.lib"
 rust_cargo.commands = cargo build --manifest-path="$$PWD/lib/Cargo.toml" $$CARGO_FLAG
 rust_cargo.input = RUST_FILES
 QMAKE_EXTRA_COMPILERS += rust_cargo
-

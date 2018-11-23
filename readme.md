@@ -14,7 +14,7 @@ binding code.
 
 ## Developing
 
-The project has a QtCreator project file for convenience.
+The project has a QtCreator project, which doubles as a project file and a makefile for [qmake](http://doc.qt.io/qt-5/qmake-manual.html).
 
  - Qt 5.11.2
  - Visual Studio 2017 and Native SDK
@@ -30,3 +30,4 @@ QtCreator has some gotchas:
 Other notes
 
  - `app/res/gitbumr.rc` should be 8859-1 encoded
+ - Building [`rusqlite`](https://github.com/jgallagher/rusqlite) can cause [linking issues](https://stackoverflow.com/questions/3007312/resolving-lnk4098-defaultlib-msvcrt-conflicts-with) with various C runtimes. The `rusqlite` crate uses `cc-rs` which looks at the `CFLAGS` environment variable. We want to ensure consistent use of these flags, so the `pro` file sets these flags for Windows. Due to how the rust code is associated in `pro`, some object files can contains incorrect linker settings, etc. Clear the `lib/target` folder to get a clean compilation. A proper cmake file is probably the way to go here.
