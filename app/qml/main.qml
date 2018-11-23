@@ -13,9 +13,6 @@ ApplicationWindow {
     height: 580
     FontLoader { id: mainFont; name: "Segoe UI" }
     Page {
-        App {
-            id: appModel
-        }
         anchors.fill: parent
         header: ToolBar {
             TextItem {

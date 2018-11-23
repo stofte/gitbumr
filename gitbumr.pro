@@ -40,7 +40,6 @@ RUST_FILES = \
     lib/src/lib.rs \
     lib/src/interface.rs \
     lib/src/implementation/mod.rs \
-    lib/src/implementation/app.rs \
     lib/src/implementation/repositories.rs \
     lib/src/implementation/history.rs
 rust_cargo.output = "$$PWD/lib/target/$$BUILD_MODE/rust.lib"

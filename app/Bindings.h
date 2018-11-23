@@ -5,48 +5,12 @@
 #include <QtCore/QObject>
 #include <QtCore/QAbstractItemModel>
 
-class App;
 class History;
 class Repositories;
-
-class App : public QObject
-{
-    Q_OBJECT
-public:
-    class Private;
-private:
-    Repositories* const m_repositories;
-    Private * m_d;
-    bool m_ownsPrivate;
-    Q_PROPERTY(quint64 activeRepository READ activeRepository NOTIFY activeRepositoryChanged FINAL)
-    Q_PROPERTY(QString activeRepositoryDisplayName READ activeRepositoryDisplayName NOTIFY activeRepositoryDisplayNameChanged FINAL)
-    Q_PROPERTY(QString activeRepositoryPath READ activeRepositoryPath NOTIFY activeRepositoryPathChanged FINAL)
-    Q_PROPERTY(Repositories* repositories READ repositories NOTIFY repositoriesChanged FINAL)
-    explicit App(bool owned, QObject *parent);
-public:
-    explicit App(QObject *parent = nullptr);
-    ~App();
-    quint64 activeRepository() const;
-    QString activeRepositoryDisplayName() const;
-    QString activeRepositoryPath() const;
-    const Repositories* repositories() const;
-    Repositories* repositories();
-    Q_INVOKABLE quint64 addRepository(const QString& path);
-    Q_INVOKABLE QString addRepositoryGetLastError() const;
-    Q_INVOKABLE void init();
-    Q_INVOKABLE quint64 repositoryIndex(quint64 id) const;
-    Q_INVOKABLE void setActiveRepository(quint64 id);
-Q_SIGNALS:
-    void activeRepositoryChanged();
-    void activeRepositoryDisplayNameChanged();
-    void activeRepositoryPathChanged();
-    void repositoriesChanged();
-};
 
 class History : public QAbstractItemModel
 {
     Q_OBJECT
-    friend class App;
 public:
     class Private;
 private:
@@ -92,18 +56,21 @@ Q_SIGNALS:
 class Repositories : public QAbstractItemModel
 {
     Q_OBJECT
-    friend class App;
 public:
     class Private;
 private:
     Private * m_d;
     bool m_ownsPrivate;
+    Q_PROPERTY(QString activeRepository READ activeRepository NOTIFY activeRepositoryChanged FINAL)
     explicit Repositories(bool owned, QObject *parent);
 public:
     explicit Repositories(QObject *parent = nullptr);
     ~Repositories();
+    QString activeRepository() const;
     Q_INVOKABLE bool add(quint64 index, const QString& path);
+    Q_INVOKABLE QString addLastError() const;
     Q_INVOKABLE bool remove(quint64 index);
+    Q_INVOKABLE void setCurrent(quint64 index);
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -121,9 +88,7 @@ public:
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
     Q_INVOKABLE bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     Q_INVOKABLE bool current(int row) const;
-    Q_INVOKABLE bool setCurrent(int row, bool value);
     Q_INVOKABLE QString displayName(int row) const;
     Q_INVOKABLE quint64 id(int row) const;
 
@@ -135,5 +100,6 @@ private:
     void initHeaderData();
     void updatePersistentIndexes();
 Q_SIGNALS:
+    void activeRepositoryChanged();
 };
 #endif // BINDINGS_H

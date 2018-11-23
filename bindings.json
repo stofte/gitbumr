@@ -6,45 +6,6 @@
         "implementationModule": "implementation"
     },
     "objects": {
-        "App": {
-            "type": "Object",
-            "properties": {
-                "repositories": { "type": "Repositories" },
-                "activeRepository": { "type": "quint64" },
-                "activeRepositoryPath": { "type": "QString" },
-                "activeRepositoryDisplayName": { "type": "QString" }  
-            },
-            "functions": {
-                "init": {
-                    "return": "void",
-                    "mut": true
-                },
-                "addRepository": {
-                    "return": "quint64",
-                    "mut": true,
-                    "arguments": [
-                        {"name": "path", "type": "QString"}
-                    ]
-                },
-                "addRepositoryGetLastError": {
-                    "return": "QString"
-                },
-                "repositoryIndex": {
-                    "return": "quint64",
-                    "mut": false,
-                    "arguments": [
-                        {"name": "id", "type": "quint64"}
-                    ]
-                },
-                "setActiveRepository": {
-                    "return": "void",
-                    "mut": true,
-                    "arguments": [
-                        { "name": "id", "type": "quint64" }
-                    ]
-                }
-            }
-        },
         "Repositories": {
             "type": "List",
             "itemProperties": {
@@ -58,8 +19,11 @@
                 },
                 "current": {
                     "type": "bool",
-                    "write": true
+                    "write": false
                 }
+            },
+            "properties": {
+                "activeRepository": { "type": "QString" }
             },
             "functions": {
                 "add": {
@@ -70,13 +34,22 @@
                         { "name": "path", "type": "QString" }
                     ]
                 },
+                "addLastError": {
+                    "return": "QString"
+                },
                 "remove": {
                     "return": "bool",
                     "mut": true,
-                    "arguments": [{
-                        "name": "index",
-                        "type": "quint64"
-                    }]
+                    "arguments": [
+                        { "name": "index", "type": "quint64" }
+                    ]
+                },
+                "setCurrent": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "index", "type": "quint64" }
+                    ]
                 }
             }
         },

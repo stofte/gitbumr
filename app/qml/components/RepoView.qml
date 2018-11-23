@@ -7,6 +7,10 @@ import "../base"
 import "../style"
 
 Pane {
+    Repositories {
+        id: repositoriesModel
+    }
+
     FileDialog {
         id: fileDialog
         title: "Select a Git repository to add"
@@ -83,8 +87,8 @@ Pane {
                 }
             }
             clip: true
-            ScrollBar.vertical: ScrollBar { }
-            model: appModel.repositories
+            interactive: false
+            model: repositoriesModel
             delegate: repositoriesDelegate
         }
         Button {

@@ -89,199 +89,6 @@ fn to_c_int(n: usize) -> c_int {
 }
 
 
-pub struct AppQObject {}
-
-pub struct AppEmitter {
-    qobject: Arc<AtomicPtr<AppQObject>>,
-    active_repository_changed: fn(*mut AppQObject),
-    active_repository_display_name_changed: fn(*mut AppQObject),
-    active_repository_path_changed: fn(*mut AppQObject),
-}
-
-unsafe impl Send for AppEmitter {}
-
-impl AppEmitter {
-    /// Clone the emitter
-    ///
-    /// The emitter can only be cloned when it is mutable. The emitter calls
-    /// into C++ code which may call into Rust again. If emmitting is possible
-    /// from immutable structures, that might lead to access to a mutable
-    /// reference. That is undefined behaviour and forbidden.
-    pub fn clone(&mut self) -> AppEmitter {
-        AppEmitter {
-            qobject: self.qobject.clone(),
-            active_repository_changed: self.active_repository_changed,
-            active_repository_display_name_changed: self.active_repository_display_name_changed,
-            active_repository_path_changed: self.active_repository_path_changed,
-        }
-    }
-    fn clear(&self) {
-        let n: *const AppQObject = null();
-        self.qobject.store(n as *mut AppQObject, Ordering::SeqCst);
-    }
-    pub fn active_repository_changed(&mut self) {
-        let ptr = self.qobject.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            (self.active_repository_changed)(ptr);
-        }
-    }
-    pub fn active_repository_display_name_changed(&mut self) {
-        let ptr = self.qobject.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            (self.active_repository_display_name_changed)(ptr);
-        }
-    }
-    pub fn active_repository_path_changed(&mut self) {
-        let ptr = self.qobject.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            (self.active_repository_path_changed)(ptr);
-        }
-    }
-}
-
-pub trait AppTrait {
-    fn new(emit: AppEmitter,
-        repositories: Repositories) -> Self;
-    fn emit(&mut self) -> &mut AppEmitter;
-    fn active_repository(&self) -> u64;
-    fn active_repository_display_name(&self) -> &str;
-    fn active_repository_path(&self) -> &str;
-    fn repositories(&self) -> &Repositories;
-    fn repositories_mut(&mut self) -> &mut Repositories;
-    fn add_repository(&mut self, path: String) -> u64;
-    fn add_repository_get_last_error(&self) -> String;
-    fn init(&mut self) -> ();
-    fn repository_index(&self, id: u64) -> u64;
-    fn set_active_repository(&mut self, id: u64) -> ();
-}
-
-#[no_mangle]
-pub extern "C" fn app_new(
-    app: *mut AppQObject,
-    app_active_repository_changed: fn(*mut AppQObject),
-    app_active_repository_display_name_changed: fn(*mut AppQObject),
-    app_active_repository_path_changed: fn(*mut AppQObject),
-    repositories: *mut RepositoriesQObject,
-    repositories_new_data_ready: fn(*mut RepositoriesQObject),
-    repositories_layout_about_to_be_changed: fn(*mut RepositoriesQObject),
-    repositories_layout_changed: fn(*mut RepositoriesQObject),
-    repositories_data_changed: fn(*mut RepositoriesQObject, usize, usize),
-    repositories_begin_reset_model: fn(*mut RepositoriesQObject),
-    repositories_end_reset_model: fn(*mut RepositoriesQObject),
-    repositories_begin_insert_rows: fn(*mut RepositoriesQObject, usize, usize),
-    repositories_end_insert_rows: fn(*mut RepositoriesQObject),
-    repositories_begin_move_rows: fn(*mut RepositoriesQObject, usize, usize, usize),
-    repositories_end_move_rows: fn(*mut RepositoriesQObject),
-    repositories_begin_remove_rows: fn(*mut RepositoriesQObject, usize, usize),
-    repositories_end_remove_rows: fn(*mut RepositoriesQObject),
-) -> *mut App {
-    let repositories_emit = RepositoriesEmitter {
-        qobject: Arc::new(AtomicPtr::new(repositories)),
-        new_data_ready: repositories_new_data_ready,
-    };
-    let model = RepositoriesList {
-        qobject: repositories,
-        layout_about_to_be_changed: repositories_layout_about_to_be_changed,
-        layout_changed: repositories_layout_changed,
-        data_changed: repositories_data_changed,
-        begin_reset_model: repositories_begin_reset_model,
-        end_reset_model: repositories_end_reset_model,
-        begin_insert_rows: repositories_begin_insert_rows,
-        end_insert_rows: repositories_end_insert_rows,
-        begin_move_rows: repositories_begin_move_rows,
-        end_move_rows: repositories_end_move_rows,
-        begin_remove_rows: repositories_begin_remove_rows,
-        end_remove_rows: repositories_end_remove_rows,
-    };
-    let d_repositories = Repositories::new(repositories_emit, model);
-    let app_emit = AppEmitter {
-        qobject: Arc::new(AtomicPtr::new(app)),
-        active_repository_changed: app_active_repository_changed,
-        active_repository_display_name_changed: app_active_repository_display_name_changed,
-        active_repository_path_changed: app_active_repository_path_changed,
-    };
-    let d_app = App::new(app_emit,
-        d_repositories);
-    Box::into_raw(Box::new(d_app))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_free(ptr: *mut App) {
-    Box::from_raw(ptr).emit().clear();
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_active_repository_get(ptr: *const App) -> u64 {
-    (&*ptr).active_repository()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_active_repository_display_name_get(
-    ptr: *const App,
-    p: *mut QString,
-    set: fn(*mut QString, *const c_char, c_int),
-) {
-    let o = &*ptr;
-    let v = o.active_repository_display_name();
-    let s: *const c_char = v.as_ptr() as (*const c_char);
-    set(p, s, to_c_int(v.len()));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_active_repository_path_get(
-    ptr: *const App,
-    p: *mut QString,
-    set: fn(*mut QString, *const c_char, c_int),
-) {
-    let o = &*ptr;
-    let v = o.active_repository_path();
-    let s: *const c_char = v.as_ptr() as (*const c_char);
-    set(p, s, to_c_int(v.len()));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_repositories_get(ptr: *mut App) -> *mut Repositories {
-    (&mut *ptr).repositories_mut()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_add_repository(ptr: *mut App, path_str: *const c_ushort, path_len: c_int) -> u64 {
-    let mut path = String::new();
-    set_string_from_utf16(&mut path, path_str, path_len);
-    let o = &mut *ptr;
-    let r = o.add_repository(path);
-    r
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_add_repository_get_last_error(ptr: *const App, d: *mut QString, set: fn(*mut QString, str: *const c_char, len: c_int)) {
-    let o = &*ptr;
-    let r = o.add_repository_get_last_error();
-    let s: *const c_char = r.as_ptr() as (*const c_char);
-    set(d, s, r.len() as i32);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_init(ptr: *mut App) -> () {
-    let o = &mut *ptr;
-    let r = o.init();
-    r
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_repository_index(ptr: *const App, id: u64) -> u64 {
-    let o = &*ptr;
-    let r = o.repository_index(id);
-    r
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn app_set_active_repository(ptr: *mut App, id: u64) -> () {
-    let o = &mut *ptr;
-    let r = o.set_active_repository(id);
-    r
-}
-
 pub struct HistoryQObject {}
 
 pub struct HistoryEmitter {
@@ -519,6 +326,7 @@ pub struct RepositoriesQObject {}
 
 pub struct RepositoriesEmitter {
     qobject: Arc<AtomicPtr<RepositoriesQObject>>,
+    active_repository_changed: fn(*mut RepositoriesQObject),
     new_data_ready: fn(*mut RepositoriesQObject),
 }
 
@@ -534,12 +342,19 @@ impl RepositoriesEmitter {
     pub fn clone(&mut self) -> RepositoriesEmitter {
         RepositoriesEmitter {
             qobject: self.qobject.clone(),
+            active_repository_changed: self.active_repository_changed,
             new_data_ready: self.new_data_ready,
         }
     }
     fn clear(&self) {
         let n: *const RepositoriesQObject = null();
         self.qobject.store(n as *mut RepositoriesQObject, Ordering::SeqCst);
+    }
+    pub fn active_repository_changed(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.active_repository_changed)(ptr);
+        }
     }
     pub fn new_data_ready(&mut self) {
         let ptr = self.qobject.load(Ordering::SeqCst);
@@ -604,8 +419,11 @@ impl RepositoriesList {
 pub trait RepositoriesTrait {
     fn new(emit: RepositoriesEmitter, model: RepositoriesList) -> Self;
     fn emit(&mut self) -> &mut RepositoriesEmitter;
+    fn active_repository(&self) -> &str;
     fn add(&mut self, index: u64, path: String) -> bool;
+    fn add_last_error(&self) -> String;
     fn remove(&mut self, index: u64) -> bool;
+    fn set_current(&mut self, index: u64) -> ();
     fn row_count(&self) -> usize;
     fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
     fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
@@ -615,7 +433,6 @@ pub trait RepositoriesTrait {
     fn fetch_more(&mut self) {}
     fn sort(&mut self, u8, SortOrder) {}
     fn current(&self, index: usize) -> bool;
-    fn set_current(&mut self, index: usize, bool) -> bool;
     fn display_name(&self, index: usize) -> &str;
     fn id(&self, index: usize) -> u64;
 }
@@ -623,6 +440,7 @@ pub trait RepositoriesTrait {
 #[no_mangle]
 pub extern "C" fn repositories_new(
     repositories: *mut RepositoriesQObject,
+    repositories_active_repository_changed: fn(*mut RepositoriesQObject),
     repositories_new_data_ready: fn(*mut RepositoriesQObject),
     repositories_layout_about_to_be_changed: fn(*mut RepositoriesQObject),
     repositories_layout_changed: fn(*mut RepositoriesQObject),
@@ -638,6 +456,7 @@ pub extern "C" fn repositories_new(
 ) -> *mut Repositories {
     let repositories_emit = RepositoriesEmitter {
         qobject: Arc::new(AtomicPtr::new(repositories)),
+        active_repository_changed: repositories_active_repository_changed,
         new_data_ready: repositories_new_data_ready,
     };
     let model = RepositoriesList {
@@ -664,6 +483,18 @@ pub unsafe extern "C" fn repositories_free(ptr: *mut Repositories) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn repositories_active_repository_get(
+    ptr: *const Repositories,
+    p: *mut QString,
+    set: fn(*mut QString, *const c_char, c_int),
+) {
+    let o = &*ptr;
+    let v = o.active_repository();
+    let s: *const c_char = v.as_ptr() as (*const c_char);
+    set(p, s, to_c_int(v.len()));
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn repositories_add(ptr: *mut Repositories, index: u64, path_str: *const c_ushort, path_len: c_int) -> bool {
     let mut path = String::new();
     set_string_from_utf16(&mut path, path_str, path_len);
@@ -673,9 +504,24 @@ pub unsafe extern "C" fn repositories_add(ptr: *mut Repositories, index: u64, pa
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn repositories_add_last_error(ptr: *const Repositories, d: *mut QString, set: fn(*mut QString, str: *const c_char, len: c_int)) {
+    let o = &*ptr;
+    let r = o.add_last_error();
+    let s: *const c_char = r.as_ptr() as (*const c_char);
+    set(d, s, r.len() as i32);
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn repositories_remove(ptr: *mut Repositories, index: u64) -> bool {
     let o = &mut *ptr;
     let r = o.remove(index);
+    r
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn repositories_set_current(ptr: *mut Repositories, index: u64) -> () {
+    let o = &mut *ptr;
+    let r = o.set_current(index);
     r
 }
 
@@ -712,14 +558,6 @@ pub unsafe extern "C" fn repositories_sort(
 pub unsafe extern "C" fn repositories_data_current(ptr: *const Repositories, row: c_int) -> bool {
     let o = &*ptr;
     o.current(to_usize(row)).into()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn repositories_set_data_current(
-    ptr: *mut Repositories, row: c_int,
-    v: bool,
-) -> bool {
-    (&mut *ptr).set_current(to_usize(row), v)
 }
 
 #[no_mangle]

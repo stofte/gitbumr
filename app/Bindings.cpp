@@ -28,45 +28,11 @@ namespace {
     inline QVariant cleanNullQVariant(const QVariant& v) {
         return (v.isNull()) ?QVariant() :v;
     }
-    inline void appActiveRepositoryChanged(App* o)
+    inline void repositoriesActiveRepositoryChanged(Repositories* o)
     {
         Q_EMIT o->activeRepositoryChanged();
     }
-    inline void appActiveRepositoryDisplayNameChanged(App* o)
-    {
-        Q_EMIT o->activeRepositoryDisplayNameChanged();
-    }
-    inline void appActiveRepositoryPathChanged(App* o)
-    {
-        Q_EMIT o->activeRepositoryPathChanged();
-    }
 }
-extern "C" {
-    App::Private* app_new(App*, void (*)(App*), void (*)(App*), void (*)(App*), Repositories*,
-        void (*)(const Repositories*),
-        void (*)(Repositories*),
-        void (*)(Repositories*),
-        void (*)(Repositories*, quintptr, quintptr),
-        void (*)(Repositories*),
-        void (*)(Repositories*),
-        void (*)(Repositories*, int, int),
-        void (*)(Repositories*),
-        void (*)(Repositories*, int, int, int),
-        void (*)(Repositories*),
-        void (*)(Repositories*, int, int),
-        void (*)(Repositories*));
-    void app_free(App::Private*);
-    quint64 app_active_repository_get(const App::Private*);
-    void app_active_repository_display_name_get(const App::Private*, QString*, qstring_set);
-    void app_active_repository_path_get(const App::Private*, QString*, qstring_set);
-    Repositories::Private* app_repositories_get(const App::Private*);
-    quint64 app_add_repository(App::Private*, const ushort*, int);
-    void app_add_repository_get_last_error(const App::Private*, QString*, qstring_set);
-    void app_init(App::Private*);
-    quint64 app_repository_index(const App::Private*, quint64);
-    void app_set_active_repository(App::Private*, quint64);
-};
-
 extern "C" {
     void history_data_author(const History::Private*, int, QString*, qstring_set);
     void history_data_message(const History::Private*, int, QString*, qstring_set);
@@ -245,7 +211,6 @@ extern "C" {
 
 extern "C" {
     bool repositories_data_current(const Repositories::Private*, int);
-    bool repositories_set_data_current(Repositories::Private*, int, bool);
     void repositories_data_display_name(const Repositories::Private*, int, QString*, qstring_set);
     quint64 repositories_data_id(const Repositories::Private*, int);
     void repositories_sort(Repositories::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
@@ -314,26 +279,12 @@ void Repositories::sort(int column, Qt::SortOrder order)
 Qt::ItemFlags Repositories::flags(const QModelIndex &i) const
 {
     auto flags = QAbstractItemModel::flags(i);
-    if (i.column() == 0) {
-        flags |= Qt::ItemIsEditable;
-    }
     return flags;
 }
 
 bool Repositories::current(int row) const
 {
     return repositories_data_current(m_d, row);
-}
-
-bool Repositories::setCurrent(int row, bool value)
-{
-    bool set = false;
-    set = repositories_set_data_current(m_d, row, value);
-    if (set) {
-        QModelIndex index = createIndex(row, 0, row);
-        Q_EMIT dataChanged(index, index);
-    }
-    return set;
 }
 
 QString Repositories::displayName(int row) const
@@ -401,20 +352,8 @@ bool Repositories::setHeaderData(int section, Qt::Orientation orientation, const
     return true;
 }
 
-bool Repositories::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-    if (index.column() == 0) {
-        if (role == Qt::UserRole + 0) {
-            if (value.canConvert(qMetaTypeId<bool>())) {
-                return setCurrent(index.row(), value.value<bool>());
-            }
-        }
-    }
-    return false;
-}
-
 extern "C" {
-    Repositories::Private* repositories_new(Repositories*,
+    Repositories::Private* repositories_new(Repositories*, void (*)(Repositories*),
         void (*)(const Repositories*),
         void (*)(Repositories*),
         void (*)(Repositories*),
@@ -428,123 +367,13 @@ extern "C" {
         void (*)(Repositories*, int, int),
         void (*)(Repositories*));
     void repositories_free(Repositories::Private*);
+    void repositories_active_repository_get(const Repositories::Private*, QString*, qstring_set);
     bool repositories_add(Repositories::Private*, quint64, const ushort*, int);
+    void repositories_add_last_error(const Repositories::Private*, QString*, qstring_set);
     bool repositories_remove(Repositories::Private*, quint64);
+    void repositories_set_current(Repositories::Private*, quint64);
 };
 
-App::App(bool /*owned*/, QObject *parent):
-    QObject(parent),
-    m_repositories(new Repositories(false, this)),
-    m_d(nullptr),
-    m_ownsPrivate(false)
-{
-}
-
-App::App(QObject *parent):
-    QObject(parent),
-    m_repositories(new Repositories(false, this)),
-    m_d(app_new(this,
-        appActiveRepositoryChanged,
-        appActiveRepositoryDisplayNameChanged,
-        appActiveRepositoryPathChanged, m_repositories,
-        [](const Repositories* o) {
-            Q_EMIT o->newDataReady(QModelIndex());
-        },
-        [](Repositories* o) {
-            Q_EMIT o->layoutAboutToBeChanged();
-        },
-        [](Repositories* o) {
-            o->updatePersistentIndexes();
-            Q_EMIT o->layoutChanged();
-        },
-        [](Repositories* o, quintptr first, quintptr last) {
-            o->dataChanged(o->createIndex(first, 0, first),
-                       o->createIndex(last, 0, last));
-        },
-        [](Repositories* o) {
-            o->beginResetModel();
-        },
-        [](Repositories* o) {
-            o->endResetModel();
-        },
-        [](Repositories* o, int first, int last) {
-            o->beginInsertRows(QModelIndex(), first, last);
-        },
-        [](Repositories* o) {
-            o->endInsertRows();
-        },
-        [](Repositories* o, int first, int last, int destination) {
-            o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
-        },
-        [](Repositories* o) {
-            o->endMoveRows();
-        },
-        [](Repositories* o, int first, int last) {
-            o->beginRemoveRows(QModelIndex(), first, last);
-        },
-        [](Repositories* o) {
-            o->endRemoveRows();
-        }
-)),
-    m_ownsPrivate(true)
-{
-    m_repositories->m_d = app_repositories_get(m_d);
-    connect(this->m_repositories, &Repositories::newDataReady, this->m_repositories, [this](const QModelIndex& i) {
-        this->m_repositories->fetchMore(i);
-    }, Qt::QueuedConnection);
-}
-
-App::~App() {
-    if (m_ownsPrivate) {
-        app_free(m_d);
-    }
-}
-quint64 App::activeRepository() const
-{
-    return app_active_repository_get(m_d);
-}
-QString App::activeRepositoryDisplayName() const
-{
-    QString v;
-    app_active_repository_display_name_get(m_d, &v, set_qstring);
-    return v;
-}
-QString App::activeRepositoryPath() const
-{
-    QString v;
-    app_active_repository_path_get(m_d, &v, set_qstring);
-    return v;
-}
-const Repositories* App::repositories() const
-{
-    return m_repositories;
-}
-Repositories* App::repositories()
-{
-    return m_repositories;
-}
-quint64 App::addRepository(const QString& path)
-{
-    return app_add_repository(m_d, path.utf16(), path.size());
-}
-QString App::addRepositoryGetLastError() const
-{
-    QString s;
-    app_add_repository_get_last_error(m_d, &s, set_qstring);
-    return s;
-}
-void App::init()
-{
-    return app_init(m_d);
-}
-quint64 App::repositoryIndex(quint64 id) const
-{
-    return app_repository_index(m_d, id);
-}
-void App::setActiveRepository(quint64 id)
-{
-    return app_set_active_repository(m_d, id);
-}
 History::History(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),
     m_d(nullptr),
@@ -625,6 +454,7 @@ Repositories::Repositories(bool /*owned*/, QObject *parent):
 Repositories::Repositories(QObject *parent):
     QAbstractItemModel(parent),
     m_d(repositories_new(this,
+        repositoriesActiveRepositoryChanged,
         [](const Repositories* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -679,11 +509,27 @@ Repositories::~Repositories() {
 }
 void Repositories::initHeaderData() {
 }
+QString Repositories::activeRepository() const
+{
+    QString v;
+    repositories_active_repository_get(m_d, &v, set_qstring);
+    return v;
+}
 bool Repositories::add(quint64 index, const QString& path)
 {
     return repositories_add(m_d, index, path.utf16(), path.size());
 }
+QString Repositories::addLastError() const
+{
+    QString s;
+    repositories_add_last_error(m_d, &s, set_qstring);
+    return s;
+}
 bool Repositories::remove(quint64 index)
 {
     return repositories_remove(m_d, index);
+}
+void Repositories::setCurrent(quint64 index)
+{
+    return repositories_set_current(m_d, index);
 }

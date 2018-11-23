@@ -33,9 +33,11 @@ impl RepositoriesTrait for Repositories {
     fn current(&self, index: usize) -> bool {
         self.list[index].current
     }
-    fn set_current(&mut self, index: usize, v: bool) -> bool {
-        self.list[index].current = v;
-        true
+    fn set_current(&mut self, index: u64) {
+        for elm in &mut self.list {
+            elm.current = false;
+        }
+        self.list[index as usize].current = true;
     }
     fn display_name(&self, index: usize) -> &str {
         &self.list[index].display_name
@@ -58,5 +60,11 @@ impl RepositoriesTrait for Repositories {
     }
     fn remove(&mut self, id: u64) -> bool {
         false
+    }
+    fn active_repository(&self) -> &str {
+        "C:\\src\\CLEVER"
+    }
+    fn add_last_error(&self) -> String {
+        "".to_string()
     }
 }
