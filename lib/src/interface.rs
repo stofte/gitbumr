@@ -420,8 +420,9 @@ pub trait RepositoriesTrait {
     fn new(emit: RepositoriesEmitter, model: RepositoriesList) -> Self;
     fn emit(&mut self) -> &mut RepositoriesEmitter;
     fn active_repository(&self) -> &str;
-    fn add(&mut self, index: u64, path: String) -> bool;
+    fn add(&mut self, path: String) -> bool;
     fn add_last_error(&self) -> String;
+    fn init(&mut self, db_file_name: String) -> ();
     fn remove(&mut self, index: u64) -> bool;
     fn set_current(&mut self, index: u64) -> ();
     fn row_count(&self) -> usize;
@@ -434,7 +435,7 @@ pub trait RepositoriesTrait {
     fn sort(&mut self, u8, SortOrder) {}
     fn current(&self, index: usize) -> bool;
     fn display_name(&self, index: usize) -> &str;
-    fn id(&self, index: usize) -> u64;
+    fn id(&self, index: usize) -> i64;
 }
 
 #[no_mangle]
@@ -495,11 +496,11 @@ pub unsafe extern "C" fn repositories_active_repository_get(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn repositories_add(ptr: *mut Repositories, index: u64, path_str: *const c_ushort, path_len: c_int) -> bool {
+pub unsafe extern "C" fn repositories_add(ptr: *mut Repositories, path_str: *const c_ushort, path_len: c_int) -> bool {
     let mut path = String::new();
     set_string_from_utf16(&mut path, path_str, path_len);
     let o = &mut *ptr;
-    let r = o.add(index, path);
+    let r = o.add(path);
     r
 }
 
@@ -509,6 +510,15 @@ pub unsafe extern "C" fn repositories_add_last_error(ptr: *const Repositories, d
     let r = o.add_last_error();
     let s: *const c_char = r.as_ptr() as (*const c_char);
     set(d, s, r.len() as i32);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn repositories_init(ptr: *mut Repositories, db_file_name_str: *const c_ushort, db_file_name_len: c_int) -> () {
+    let mut db_file_name = String::new();
+    set_string_from_utf16(&mut db_file_name, db_file_name_str, db_file_name_len);
+    let o = &mut *ptr;
+    let r = o.init(db_file_name);
+    r
 }
 
 #[no_mangle]
@@ -573,7 +583,7 @@ pub unsafe extern "C" fn repositories_data_display_name(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn repositories_data_id(ptr: *const Repositories, row: c_int) -> u64 {
+pub unsafe extern "C" fn repositories_data_id(ptr: *const Repositories, row: c_int) -> i64 {
     let o = &*ptr;
     o.id(to_usize(row)).into()
 }

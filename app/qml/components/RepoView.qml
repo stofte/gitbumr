@@ -10,6 +10,10 @@ Pane {
     Repositories {
         id: repositoriesModel
     }
+    Component.onCompleted: {
+        repositoriesModel.init(DatabaseFileName);
+        console.log("repo started up")
+    }
 
     FileDialog {
         id: fileDialog
@@ -17,13 +21,8 @@ Pane {
         folder: shortcuts.home
         selectFolder: true
         onAccepted: {
-            var id = appModel.addRepository(fileDialog.fileUrls);
-            console.log("repo id: ", id)
-            if (id) {
-                var idx = appModel.repositoryIndex(id);
-                appModel.repositories.add(idx, fileDialog.fileUrls);
-            } else {
-                addFailedMessageDialog.detailedText = appModel.addRepositoryGetLastError();
+            if (!repositoriesModel.add(fileDialog.fileUrls)) {
+                addFailedMessageDialog.detailedText = repositoriesModel.addLastError();
                 addFailedMessageDialog.visible = true;
             }
         }

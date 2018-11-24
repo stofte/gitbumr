@@ -25,9 +25,8 @@ QtCreator has some gotchas:
 
  - After editing the project file, manually run qmake by right-clicking the top node in Projects pane
  - When adding qml components, Use Tools -> QML/JS -> Reset Code Model, to fix IDE errors
- - [Qt+Win+OpenGL](https://wiki.qt.io/Qt_5_on_Windows_ANGLE_and_OpenGL) is host to a multitude of [weird issues and crashes](https://bugreports.qt.io/browse/QTBUG-46074?jql=text%20~%20%22QT_OPENGL%22%20and%20text%20~%20%22Windows%22). There are many env settings you can fiddle with here. I must `set QT_OPENGL=angle` in the project run settings, otherwise the IDE will crash upon startup, due to OpenGL shader incompatabilities or some such nonsense.
+ - [Qt+Win+OpenGL](https://wiki.qt.io/Qt_5_on_Windows_ANGLE_and_OpenGL) is host to a multitude of [weird issues and crashes](https://bugreports.qt.io/browse/QTBUG-46074?jql=text%20~%20%22QT_OPENGL%22%20and%20text%20~%20%22Windows%22). There are many env settings you can fiddle with here. I put `set QT_OPENGL=angle` in the project run settings, otherwise the executable will crash upon startup, due to OpenGL shader incompatabilities or some such nonsense.
 
 Other notes
 
  - `app/res/gitbumr.rc` should be 8859-1 encoded
- - Building [`rusqlite`](https://github.com/jgallagher/rusqlite) can cause [linking issues](https://stackoverflow.com/questions/3007312/resolving-lnk4098-defaultlib-msvcrt-conflicts-with) with various C runtimes. The `rusqlite` crate uses `cc-rs` which looks at the `CFLAGS` environment variable. We want to ensure consistent use of these flags, so the `pro` file sets these flags for Windows. Due to how the rust code is associated in `pro`, some object files can contains incorrect linker settings, etc. Clear the `lib/target` folder to get a clean compilation. A proper cmake file is probably the way to go here.

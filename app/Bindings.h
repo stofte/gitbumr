@@ -67,8 +67,9 @@ public:
     explicit Repositories(QObject *parent = nullptr);
     ~Repositories();
     QString activeRepository() const;
-    Q_INVOKABLE bool add(quint64 index, const QString& path);
+    Q_INVOKABLE bool add(const QString& path);
     Q_INVOKABLE QString addLastError() const;
+    Q_INVOKABLE void init(const QString& db_file_name);
     Q_INVOKABLE bool remove(quint64 index);
     Q_INVOKABLE void setCurrent(quint64 index);
 
@@ -90,7 +91,7 @@ public:
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Q_INVOKABLE bool current(int row) const;
     Q_INVOKABLE QString displayName(int row) const;
-    Q_INVOKABLE quint64 id(int row) const;
+    Q_INVOKABLE qint64 id(int row) const;
 
 Q_SIGNALS:
     // new data is ready to be made available to the model with fetchMore()

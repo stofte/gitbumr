@@ -10,7 +10,7 @@
             "type": "List",
             "itemProperties": {
                 "id": {
-                    "type": "quint64",
+                    "type": "qint64",
                     "write": false
                 },
                 "displayName": {
@@ -26,11 +26,17 @@
                 "activeRepository": { "type": "QString" }
             },
             "functions": {
+                "init": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "db_file_name", "type": "QString" }
+                    ]
+                },
                 "add": {
                     "return": "bool",
                     "mut": true,
                     "arguments": [
-                        { "name": "index", "type": "quint64" },
                         { "name": "path", "type": "QString" }
                     ]
                 },

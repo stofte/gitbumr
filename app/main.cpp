@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
         dbFile.close();
     }
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("DatabaseFilePath", dbFilePath);
+    engine.rootContext()->setContextProperty("DatabaseFileName", dbFilePath);
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
 #if DEBUG

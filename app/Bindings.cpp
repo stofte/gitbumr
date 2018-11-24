@@ -212,7 +212,7 @@ extern "C" {
 extern "C" {
     bool repositories_data_current(const Repositories::Private*, int);
     void repositories_data_display_name(const Repositories::Private*, int, QString*, qstring_set);
-    quint64 repositories_data_id(const Repositories::Private*, int);
+    qint64 repositories_data_id(const Repositories::Private*, int);
     void repositories_sort(Repositories::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
 
     int repositories_row_count(const Repositories::Private*);
@@ -294,7 +294,7 @@ QString Repositories::displayName(int row) const
     return s;
 }
 
-quint64 Repositories::id(int row) const
+qint64 Repositories::id(int row) const
 {
     return repositories_data_id(m_d, row);
 }
@@ -368,8 +368,9 @@ extern "C" {
         void (*)(Repositories*));
     void repositories_free(Repositories::Private*);
     void repositories_active_repository_get(const Repositories::Private*, QString*, qstring_set);
-    bool repositories_add(Repositories::Private*, quint64, const ushort*, int);
+    bool repositories_add(Repositories::Private*, const ushort*, int);
     void repositories_add_last_error(const Repositories::Private*, QString*, qstring_set);
+    void repositories_init(Repositories::Private*, const ushort*, int);
     bool repositories_remove(Repositories::Private*, quint64);
     void repositories_set_current(Repositories::Private*, quint64);
 };
@@ -515,15 +516,19 @@ QString Repositories::activeRepository() const
     repositories_active_repository_get(m_d, &v, set_qstring);
     return v;
 }
-bool Repositories::add(quint64 index, const QString& path)
+bool Repositories::add(const QString& path)
 {
-    return repositories_add(m_d, index, path.utf16(), path.size());
+    return repositories_add(m_d, path.utf16(), path.size());
 }
 QString Repositories::addLastError() const
 {
     QString s;
     repositories_add_last_error(m_d, &s, set_qstring);
     return s;
+}
+void Repositories::init(const QString& db_file_name)
+{
+    return repositories_init(m_d, db_file_name.utf16(), db_file_name.size());
 }
 bool Repositories::remove(quint64 index)
 {
