@@ -13,7 +13,7 @@ install:
 
 build_script:
   - qmake -config release
-  - nmake
+  - jom /j 2
   - windeployqt --verbose 0 --qmldir app bin\gitbumr.exe
 
 test: off
