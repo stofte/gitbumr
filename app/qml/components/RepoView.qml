@@ -22,16 +22,15 @@ Pane {
         selectFolder: true
         onAccepted: {
             if (!repositoriesModel.add(fileDialog.fileUrls)) {
-                addFailedMessageDialog.detailedText = repositoriesModel.addLastError();
+                addFailedMessageDialog.text = repositoriesModel.addLastError();
                 addFailedMessageDialog.visible = true;
             }
         }
     }
     MessageDialog {
         id: addFailedMessageDialog
-        title: "Error"
+        title: "Could not add the selected folder."
         icon: StandardIcon.Critical
-        TextItem { text: "Could not add the selected folder." }
     }
     ColumnLayout {
         anchors.fill: parent

@@ -73,7 +73,7 @@ impl RepositoriesTrait for Repositories {
     fn add(&mut self, path: String) -> bool {
         // path strings suck in rust
         let os_path = Url::parse(&path).unwrap().to_file_path().unwrap().into_os_string();
-        let p = os_path.to_string_lossy();
+        let p = os_path.to_string_lossy().to_string();
         match is_git_repo(&p) {
             Err(txt) => {
                 self.add_last_error_text = txt.to_string();
@@ -90,8 +90,8 @@ impl RepositoriesTrait for Repositories {
         };
         let item = RepositoriesItem {
             current: true,
-            display_name: path.clone(),
-            path: path,
+            display_name: p.clone(),
+            path: p,
             id: 0
         };
         let idx = 0; // inserts at the top
@@ -158,10 +158,7 @@ fn get_repositories(repos: &Repositories) -> Vec<RepositoriesItem> {
             }).unwrap();
 
             for r in rows {
-                let z = r.unwrap();
-                let zz = z.clone();
-                println!("get_repositories: {}", zz.path);
-                res.push(z);
+                res.push(r.unwrap());
             }
             res
         }
@@ -179,7 +176,7 @@ fn add_repository(repos: &mut Repositories, path: &str) -> Result<(), &'static s
             match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&path]) {
                 Err(..) => {
                     tx.rollback().unwrap();
-                    Err("already in list")
+                    Err("Repository already added")
                 }
                 _ => {
                     tx.commit().unwrap();
