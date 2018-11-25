@@ -51,6 +51,7 @@ RUST_FILES = \
     lib/src/lib.rs \
     lib/src/git.rs \
     lib/src/interface.rs \
+    lib/src/utils.rs \
     lib/src/implementation/mod.rs \
     lib/src/implementation/repositories.rs \
     lib/src/implementation/history.rs

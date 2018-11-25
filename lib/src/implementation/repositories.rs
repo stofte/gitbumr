@@ -5,6 +5,7 @@ use std::{path::Path, println};
 use rusqlite::{Connection, NO_PARAMS};
 use url::Url;
 use git::is_git_repo;
+use utils::{pathbuf_filename_to_string, pathbuf_to_string};
 use interface::*;
 
 #[derive(Default, Clone)]
@@ -90,9 +91,9 @@ impl RepositoriesTrait for Repositories {
         self.list[index].id
     }
     fn add(&mut self, path: String) -> bool {
-        // path strings suck in rust
-        let os_path = Url::parse(&path).unwrap().to_file_path().unwrap().into_os_string();
-        let p = os_path.to_string_lossy().to_string();
+        let pathbuf = Url::parse(&path).unwrap().to_file_path().unwrap();
+        let dir_name = pathbuf_filename_to_string(&pathbuf);
+        let p = pathbuf_to_string(pathbuf);
         match is_git_repo(&p) {
             Err(txt) => {
                 self.add_last_error_text = txt.to_string();
@@ -100,27 +101,31 @@ impl RepositoriesTrait for Repositories {
             },
             Ok(..) => ()
         };
-        let rowid = match add_repository(self, &p) {
+        let rowid = match add_repository(self, &p, &dir_name) {
             Err(txt) => {
                 self.add_last_error_text = txt.to_string();
+                println!("insert failed: {}", txt);
                 return false
             }
-            Ok(id) => id
+            Ok(id) => {
+                println!("insert went ok {}", id);
+                id
+            }
         };
         // mark others as inactive
+        self.model.begin_reset_model();
         for mut e in &mut self.list {
             e.current = false;
         }
         let item = RepositoriesItem {
             current: true,
-            display_name: p.clone(),
+            display_name: dir_name,
             path: p,
             id: 0
         };
         let idx = 0; // inserts at the top
-        self.model.begin_insert_rows(idx, idx);
         self.list.insert(idx, item);
-        self.model.end_insert_rows();
+        self.model.end_reset_model();
         self.active_repository_idx = 0;
         self.emit.active_repository_changed();
         true
@@ -129,7 +134,10 @@ impl RepositoriesTrait for Repositories {
         false
     }
     fn active_repository(&self) -> &str {
-        &self.list[self.active_repository_idx].display_name
+        if self.list.len() > self.active_repository_idx {
+            return &self.list[self.active_repository_idx].display_name
+        }
+        "" // abused as falsy wee
     }
     fn add_last_error(&self) -> String {
         self.add_last_error_text.clone()
@@ -159,6 +167,7 @@ fn init_sqlite(repos: &Repositories) {
                 conn.execute("
                     CREATE TABLE repos (
                         path TEXT UNIQUE NOT NULL,
+                        name TEXT NOT NULL,
                         open BIT NOT NULL
                     )", NO_PARAMS).unwrap();
             }            
@@ -171,13 +180,13 @@ fn get_repositories(repos: &Repositories) -> Vec<RepositoriesItem> {
     match &repos.conn {
         Some(conn) => {
             let mut res = vec![];
-            let mut stmt = conn.prepare("SELECT rowid, path, open FROM repos ORDER BY path;").unwrap();
+            let mut stmt = conn.prepare("SELECT rowid, path, name, open FROM repos ORDER BY rowid desc").unwrap();
             let rows = stmt.query_map(NO_PARAMS, |row| {
                 RepositoriesItem {
                     id: row.get(0),
                     path: row.get(1),
-                    current: row.get(2),
-                    display_name: row.get(1),
+                    display_name: row.get(2),
+                    current: row.get(3),
                 }
             }).unwrap();
 
@@ -190,7 +199,7 @@ fn get_repositories(repos: &Repositories) -> Vec<RepositoriesItem> {
     }
 }
 
-fn add_repository(repos: &mut Repositories, path: &str) -> Result<i64, &'static str> {
+fn add_repository(repos: &mut Repositories, path: &str, name: &str) -> Result<i64, &'static str> {
     match &mut repos.conn {
         Some(conn) => {
             let mut res = Err("err");
@@ -199,7 +208,7 @@ fn add_repository(repos: &mut Repositories, path: &str) -> Result<i64, &'static 
                 let tx = conn.transaction().unwrap();
                 tx.execute("UPDATE repos SET open=0 WHERE 1=1", NO_PARAMS).unwrap();
                 // this works for now
-                res = match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&path]) {
+                res = match tx.execute("INSERT INTO repos(path, name, open) VALUES(?1, ?2, 1)", &[&path, &name]) {
                     Err(..) => {
                         tx.rollback().unwrap();
                         Err("Repository already added")

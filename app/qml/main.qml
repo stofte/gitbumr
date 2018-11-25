@@ -20,6 +20,12 @@ ApplicationWindow {
         id: repositoriesModel
         onActiveRepositoryChanged: {
             branchView.gitPath = activeRepository;
+            if (activeRepository) { // x = !!y doesnt seem to work to convert to boolean?
+                noRepoView.visible = false;
+            } else {
+                noRepoView.visible = true;
+            }
+
         }
     }
 
@@ -29,6 +35,9 @@ ApplicationWindow {
         if (!repoMgr) {
             var component = Qt.createComponent("components/RepositoryManager.qml");
             repoMgr = component.createObject(root);
+            if (!repositoriesModel.activeRepository) {
+                noRepoView.visible = true;
+            }
         }
     }
 
@@ -46,6 +55,7 @@ ApplicationWindow {
                 }
             }
         }
+
         QQC14.SplitView {
             orientation: Qt.Horizontal
             anchors.fill: parent
@@ -63,5 +73,16 @@ ApplicationWindow {
                 Layout.fillHeight: true
             }
         }
+
+        Pane {
+            id: noRepoView
+            anchors.fill: parent
+            visible: false
+            TextItem {
+                anchors.centerIn: parent
+                text: "No repository open"
+            }
+        }
     }
+
 }
