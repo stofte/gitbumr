@@ -22,12 +22,45 @@ Pane {
             id: gitDelegate
             Item {
                 height: 20
-                TextItem {
-                    text: name
-                    font.bold: checkedout
+                anchors.left: parent.left
+                anchors.right: parent.right
+                Rectangle {
+                    id: labelBackground
+                    anchors.fill: parent
+                    border.width: 1
+                    border.color: "#F0F0F0"
+                    color: "transparent"
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 5
+                        color: "transparent"
+                        TextItem {
+                            text: name
+                            verticalAlignment: Text.AlignVCenter
+                            font.pointSize: Style.fontPointSize
+                            font.family: Style.fontName
+                            font.bold: checkedout
+                        }
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onEntered: {
+                        labelBackground.border.color = "#D3D3D3";
+                    }
+                    onExited: {
+                        labelBackground.border.color = "#F0F0F0";
+                    }
+                    onDoubleClicked: {
+                        console.log("branch clicked ", name)
+                    }
                 }
             }
         }
+        clip: true
+        ScrollBar.vertical: ScrollBar {}
+        boundsBehavior: Flickable.StopAtBounds
         model: branches
         delegate: gitDelegate
     }
