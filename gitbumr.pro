@@ -27,16 +27,21 @@ SOURCES += app/main.cpp app/Bindings.cpp
 HEADERS += app/Bindings.h
 RESOURCES += app/qml.qrc app/app.qrc
 
-DESTDIR = bin
 RUST_TARGET=x86_64-pc-windows-msvc
 LIBS += -L"$$PWD/lib/target/$$RUST_TARGET/$$BUILD_MODE" -lrust
+
+MT_DESTDIR = $$BUILD_MODE
+!$$(QTCREATOR) { # set env in qtcreators build modes, avoids debug linking issues
+    DESTDIR = bin
+    MT_DESTDIR = bin
+}
 
 win32 {
     LIBS += WS2_32.lib Userenv.lib Advapi32.lib \
         winhttp.lib Rpcrt4.lib OLE32.LIB Userenv.lib user32.lib
     RC_FILE = app/res/gitbumr.rc
     # embed manifest
-    QMAKE_POST_LINK = pushd $$DESTDIR & \
+    QMAKE_POST_LINK = pushd $$MT_DESTDIR & \
         mt  -nologo -manifest $$PWD/app/res/gitbumr.exe.manifest \
             -outputresource:gitbumr.exe;1
 }
