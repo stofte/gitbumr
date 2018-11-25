@@ -200,6 +200,7 @@ extern "C" {
         void (*)(Branches*));
     void git_free(Git::Private*);
     Branches::Private* git_branches_get(const Git::Private*);
+    void git_load(Git::Private*, const ushort*, int);
 };
 
 extern "C" {
@@ -681,6 +682,10 @@ const Branches* Git::branches() const
 Branches* Git::branches()
 {
     return m_branches;
+}
+void Git::load(const QString& path)
+{
+    return git_load(m_d, path.utf16(), path.size());
 }
 Log::Log(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),

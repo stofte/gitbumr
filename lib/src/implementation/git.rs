@@ -1,9 +1,12 @@
+use git2::Repository;
 use interface::{ GitTrait, GitEmitter };
-use super::Branches;
+use super::{ Branches, BranchesItem, fill_branches };
+use utils::local_branches;
 
 pub struct Git {
     emit: GitEmitter,
     branches: Branches,
+    git: Option<Repository>,
 }
 
 impl GitTrait for Git {
@@ -11,6 +14,7 @@ impl GitTrait for Git {
         Git {
             emit,
             branches,
+            git: None
         }
     }
     fn emit(&mut self) -> &mut GitEmitter {
@@ -21,5 +25,14 @@ impl GitTrait for Git {
     }
     fn branches_mut(&mut self) -> &mut Branches {
         &mut self.branches
+    }
+    fn load(&mut self, path: String) {
+        match Repository::open(path) {
+            Ok(r) => {
+                fill_branches(&mut self.branches, local_branches(&r));
+                self.git = Some(r);
+            }
+            Err(..) => panic!("not a git Repository")
+        };
     }
 }

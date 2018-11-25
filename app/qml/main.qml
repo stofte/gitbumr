@@ -24,7 +24,6 @@ ApplicationWindow {
             } else {
                 noRepoView.visible = true;
             }
-
         }
     }
 

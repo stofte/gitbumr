@@ -21,6 +21,9 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     app.setWindowIcon(QIcon(":/ApplicationIcon"));
     qmlRegisterType<Repositories>("RustCode", 1, 0, "Repositories");
+    qmlRegisterType<Git>("RustCode", 1, 0, "Git");
+    qmlRegisterType<Branches>("RustCode", 1, 0, "Branches");
+    qmlRegisterType<Log>("RustCode", 1, 0, "Log");
 
 #if DEBUG
     QString dataPath = QGuiApplication::applicationDirPath();

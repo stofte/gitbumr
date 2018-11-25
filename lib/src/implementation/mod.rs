@@ -1,6 +1,6 @@
 mod repositories;
 mod log;
-mod branches;
+pub mod branches;
 mod git;
 
 pub use self::repositories::*;

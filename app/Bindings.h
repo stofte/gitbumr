@@ -69,6 +69,7 @@ public:
     ~Git();
     const Branches* branches() const;
     Branches* branches();
+    Q_INVOKABLE void load(const QString& path);
 Q_SIGNALS:
     void branchesChanged();
 };

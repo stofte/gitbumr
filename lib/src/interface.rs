@@ -312,6 +312,7 @@ pub trait GitTrait {
     fn emit(&mut self) -> &mut GitEmitter;
     fn branches(&self) -> &Branches;
     fn branches_mut(&mut self) -> &mut Branches;
+    fn load(&mut self, path: String) -> ();
 }
 
 #[no_mangle]
@@ -366,6 +367,15 @@ pub unsafe extern "C" fn git_free(ptr: *mut Git) {
 #[no_mangle]
 pub unsafe extern "C" fn git_branches_get(ptr: *mut Git) -> *mut Branches {
     (&mut *ptr).branches_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn git_load(ptr: *mut Git, path_str: *const c_ushort, path_len: c_int) -> () {
+    let mut path = String::new();
+    set_string_from_utf16(&mut path, path_str, path_len);
+    let o = &mut *ptr;
+    let r = o.load(path);
+    r
 }
 
 pub struct LogQObject {}

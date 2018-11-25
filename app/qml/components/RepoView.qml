@@ -8,12 +8,9 @@ import "../style"
 
 Pane {
     anchors.fill: parent
-
     Component.onCompleted: {
         repositoriesModel.init(DatabaseFileName);
-        console.log("repo started up")
     }
-
     FileDialog {
         id: fileDialog
         title: "Select a Git repository to add"
@@ -58,7 +55,6 @@ Pane {
                                 anchors.bottomMargin: 5
                                 color: "transparent"
                                 TextItem {
-                                    id: label
                                     text: displayName
                                     verticalAlignment: Text.AlignVCenter
                                     font.pointSize: Style.fontPointSize
@@ -102,4 +98,3 @@ Pane {
         }
     }
 }
-

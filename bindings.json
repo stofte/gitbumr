@@ -63,6 +63,13 @@
             "type": "Object",
             "properties": {
                 "branches": { "type": "Branches" }
+            },
+            "functions": {
+                "load": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [{ "name": "path", "type": "QString" }]
+                }
             }
         },
         "Branches": {

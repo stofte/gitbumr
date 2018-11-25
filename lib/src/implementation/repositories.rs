@@ -133,7 +133,7 @@ impl RepositoriesTrait for Repositories {
     }
     fn active_repository(&self) -> &str {
         if self.list.len() > self.active_repository_idx {
-            return &self.list[self.active_repository_idx].display_name
+            return &self.list[self.active_repository_idx].path
         }
         "" // abused as falsy wee
     }
