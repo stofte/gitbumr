@@ -49,12 +49,13 @@ win32 {
 # rust lib, requires cargo in path
 RUST_FILES = \
     lib/src/lib.rs \
-    lib/src/git.rs \
     lib/src/interface.rs \
     lib/src/utils.rs \
     lib/src/implementation/mod.rs \
+    lib/src/implementation/branches.rs \
+    lib/src/implementation/git.rs \
     lib/src/implementation/repositories.rs \
-    lib/src/implementation/history.rs
+    lib/src/implementation/log.rs
 rust_cargo.output = "$$PWD/lib/target/$$RUST_TARGET/$$BUILD_MODE/rust.lib"
 rust_cargo.commands = $$CCRS_CFLAGS & \
     cargo build --manifest-path="$$PWD/lib/Cargo.toml" --target=$$RUST_TARGET $$CARGO_FLAG

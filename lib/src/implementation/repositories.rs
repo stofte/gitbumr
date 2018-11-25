@@ -1,12 +1,11 @@
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
+#![allow(unused_assignments)]
 use std::{path::Path, println};
 use rusqlite::{Connection, NO_PARAMS};
 use url::Url;
-use git::is_git_repo;
-use utils::{pathbuf_filename_to_string, pathbuf_to_string};
-use interface::*;
+use utils::{is_git_repo, pathbuf_filename_to_string, pathbuf_to_string};
+use interface::{
+    RepositoriesEmitter, RepositoriesList, RepositoriesTrait
+};
 
 #[derive(Default, Clone)]
 pub struct RepositoriesItem {

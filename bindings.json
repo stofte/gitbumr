@@ -59,7 +59,20 @@
                 }
             }
         },
-        "History": {
+        "Git": {
+            "type": "Object",
+            "properties": {
+                "branches": { "type": "Branches" }
+            }
+        },
+        "Branches": {
+            "type": "List",
+            "itemProperties": {
+                "name": { "type": "QString" },
+                "checkedout": { "type": "bool" }
+            }
+        },
+        "Log": {
             "type": "List",
             "itemProperties": {
                 "oid": { "type": "QString" },
@@ -72,6 +85,11 @@
                     "return": "void",
                     "mut": true,
                     "arguments": [{ "name": "path", "type": "QString" }]
+                },
+                "filter": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [{ "name": "filter", "type": "QString" }]
                 }
             }
         }

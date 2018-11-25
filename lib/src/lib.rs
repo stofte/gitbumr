@@ -5,5 +5,4 @@ extern crate url;
 
 pub mod interface;
 mod implementation;
-mod git;
 mod utils;

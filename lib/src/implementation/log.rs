@@ -1,31 +1,30 @@
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
-use interface::*;
+use interface::{
+    LogList, LogEmitter, LogTrait
+};
 
 #[derive(Default, Clone)]
-pub struct HistoryItem {
+pub struct LogItem {
     pub oid: String,
     pub time: String,
     pub author: String,
     pub message: String,
 }
 
-pub struct History {
-    emit: HistoryEmitter,
-    model: HistoryList,
-    list: Vec<HistoryItem>,
+pub struct Log {
+    emit: LogEmitter,
+    model: LogList,
+    list: Vec<LogItem>,
 }
 
-impl HistoryTrait for History {
-    fn new(emit: HistoryEmitter, model: HistoryList) -> History {
-        History {
+impl LogTrait for Log {
+    fn new(emit: LogEmitter, model: LogList) -> Log {
+        Log {
             emit,
             model,
             list: vec![],
         }
     }
-    fn emit(&mut self) -> &mut HistoryEmitter {
+    fn emit(&mut self) -> &mut LogEmitter {
         &mut self.emit
     }
     fn row_count(&self) -> usize {
@@ -44,6 +43,9 @@ impl HistoryTrait for History {
         &self.list[index].time
     }
     fn load(&mut self, path: String) {
+
+    }
+    fn filter(&mut self, filter: String) {
 
     }
 }

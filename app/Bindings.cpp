@@ -34,44 +34,42 @@ namespace {
     }
 }
 extern "C" {
-    void history_data_author(const History::Private*, int, QString*, qstring_set);
-    void history_data_message(const History::Private*, int, QString*, qstring_set);
-    void history_data_oid(const History::Private*, int, QString*, qstring_set);
-    void history_data_time(const History::Private*, int, QString*, qstring_set);
-    void history_sort(History::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
+    bool branches_data_checkedout(const Branches::Private*, int);
+    void branches_data_name(const Branches::Private*, int, QString*, qstring_set);
+    void branches_sort(Branches::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
 
-    int history_row_count(const History::Private*);
-    bool history_insert_rows(History::Private*, int, int);
-    bool history_remove_rows(History::Private*, int, int);
-    bool history_can_fetch_more(const History::Private*);
-    void history_fetch_more(History::Private*);
+    int branches_row_count(const Branches::Private*);
+    bool branches_insert_rows(Branches::Private*, int, int);
+    bool branches_remove_rows(Branches::Private*, int, int);
+    bool branches_can_fetch_more(const Branches::Private*);
+    void branches_fetch_more(Branches::Private*);
 }
-int History::columnCount(const QModelIndex &parent) const
+int Branches::columnCount(const QModelIndex &parent) const
 {
     return (parent.isValid()) ? 0 : 1;
 }
 
-bool History::hasChildren(const QModelIndex &parent) const
+bool Branches::hasChildren(const QModelIndex &parent) const
 {
     return rowCount(parent) > 0;
 }
 
-int History::rowCount(const QModelIndex &parent) const
+int Branches::rowCount(const QModelIndex &parent) const
 {
-    return (parent.isValid()) ? 0 : history_row_count(m_d);
+    return (parent.isValid()) ? 0 : branches_row_count(m_d);
 }
 
-bool History::insertRows(int row, int count, const QModelIndex &)
+bool Branches::insertRows(int row, int count, const QModelIndex &)
 {
-    return history_insert_rows(m_d, row, count);
+    return branches_insert_rows(m_d, row, count);
 }
 
-bool History::removeRows(int row, int count, const QModelIndex &)
+bool Branches::removeRows(int row, int count, const QModelIndex &)
 {
-    return history_remove_rows(m_d, row, count);
+    return branches_remove_rows(m_d, row, count);
 }
 
-QModelIndex History::index(int row, int column, const QModelIndex &parent) const
+QModelIndex Branches::index(int row, int column, const QModelIndex &parent) const
 {
     if (!parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0 && column < 1) {
         return createIndex(row, column, (quintptr)row);
@@ -79,63 +77,234 @@ QModelIndex History::index(int row, int column, const QModelIndex &parent) const
     return QModelIndex();
 }
 
-QModelIndex History::parent(const QModelIndex &) const
+QModelIndex Branches::parent(const QModelIndex &) const
 {
     return QModelIndex();
 }
 
-bool History::canFetchMore(const QModelIndex &parent) const
+bool Branches::canFetchMore(const QModelIndex &parent) const
 {
-    return (parent.isValid()) ? 0 : history_can_fetch_more(m_d);
+    return (parent.isValid()) ? 0 : branches_can_fetch_more(m_d);
 }
 
-void History::fetchMore(const QModelIndex &parent)
+void Branches::fetchMore(const QModelIndex &parent)
 {
     if (!parent.isValid()) {
-        history_fetch_more(m_d);
+        branches_fetch_more(m_d);
     }
 }
-void History::updatePersistentIndexes() {}
+void Branches::updatePersistentIndexes() {}
 
-void History::sort(int column, Qt::SortOrder order)
+void Branches::sort(int column, Qt::SortOrder order)
 {
-    history_sort(m_d, column, order);
+    branches_sort(m_d, column, order);
 }
-Qt::ItemFlags History::flags(const QModelIndex &i) const
+Qt::ItemFlags Branches::flags(const QModelIndex &i) const
 {
     auto flags = QAbstractItemModel::flags(i);
     return flags;
 }
 
-QString History::author(int row) const
+bool Branches::checkedout(int row) const
+{
+    return branches_data_checkedout(m_d, row);
+}
+
+QString Branches::name(int row) const
 {
     QString s;
-    history_data_author(m_d, row, &s, set_qstring);
+    branches_data_name(m_d, row, &s, set_qstring);
     return s;
 }
 
-QString History::message(int row) const
+QVariant Branches::data(const QModelIndex &index, int role) const
+{
+    Q_ASSERT(rowCount(index.parent()) > index.row());
+    switch (index.column()) {
+    case 0:
+        switch (role) {
+        case Qt::UserRole + 0:
+            return QVariant::fromValue(checkedout(index.row()));
+        case Qt::UserRole + 1:
+            return QVariant::fromValue(name(index.row()));
+        }
+        break;
+    }
+    return QVariant();
+}
+
+int Branches::role(const char* name) const {
+    auto names = roleNames();
+    auto i = names.constBegin();
+    while (i != names.constEnd()) {
+        if (i.value() == name) {
+            return i.key();
+        }
+        ++i;
+    }
+    return -1;
+}
+QHash<int, QByteArray> Branches::roleNames() const {
+    QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
+    names.insert(Qt::UserRole + 0, "checkedout");
+    names.insert(Qt::UserRole + 1, "name");
+    return names;
+}
+QVariant Branches::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation != Qt::Horizontal) {
+        return QVariant();
+    }
+    return m_headerData.value(qMakePair(section, (Qt::ItemDataRole)role), role == Qt::DisplayRole ?QString::number(section + 1) :QVariant());
+}
+
+bool Branches::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+{
+    if (orientation != Qt::Horizontal) {
+        return false;
+    }
+    m_headerData.insert(qMakePair(section, (Qt::ItemDataRole)role), value);
+    return true;
+}
+
+extern "C" {
+    Branches::Private* branches_new(Branches*,
+        void (*)(const Branches*),
+        void (*)(Branches*),
+        void (*)(Branches*),
+        void (*)(Branches*, quintptr, quintptr),
+        void (*)(Branches*),
+        void (*)(Branches*),
+        void (*)(Branches*, int, int),
+        void (*)(Branches*),
+        void (*)(Branches*, int, int, int),
+        void (*)(Branches*),
+        void (*)(Branches*, int, int),
+        void (*)(Branches*));
+    void branches_free(Branches::Private*);
+};
+
+extern "C" {
+    Git::Private* git_new(Git*, Branches*,
+        void (*)(const Branches*),
+        void (*)(Branches*),
+        void (*)(Branches*),
+        void (*)(Branches*, quintptr, quintptr),
+        void (*)(Branches*),
+        void (*)(Branches*),
+        void (*)(Branches*, int, int),
+        void (*)(Branches*),
+        void (*)(Branches*, int, int, int),
+        void (*)(Branches*),
+        void (*)(Branches*, int, int),
+        void (*)(Branches*));
+    void git_free(Git::Private*);
+    Branches::Private* git_branches_get(const Git::Private*);
+};
+
+extern "C" {
+    void log_data_author(const Log::Private*, int, QString*, qstring_set);
+    void log_data_message(const Log::Private*, int, QString*, qstring_set);
+    void log_data_oid(const Log::Private*, int, QString*, qstring_set);
+    void log_data_time(const Log::Private*, int, QString*, qstring_set);
+    void log_sort(Log::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
+
+    int log_row_count(const Log::Private*);
+    bool log_insert_rows(Log::Private*, int, int);
+    bool log_remove_rows(Log::Private*, int, int);
+    bool log_can_fetch_more(const Log::Private*);
+    void log_fetch_more(Log::Private*);
+}
+int Log::columnCount(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : 1;
+}
+
+bool Log::hasChildren(const QModelIndex &parent) const
+{
+    return rowCount(parent) > 0;
+}
+
+int Log::rowCount(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : log_row_count(m_d);
+}
+
+bool Log::insertRows(int row, int count, const QModelIndex &)
+{
+    return log_insert_rows(m_d, row, count);
+}
+
+bool Log::removeRows(int row, int count, const QModelIndex &)
+{
+    return log_remove_rows(m_d, row, count);
+}
+
+QModelIndex Log::index(int row, int column, const QModelIndex &parent) const
+{
+    if (!parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0 && column < 1) {
+        return createIndex(row, column, (quintptr)row);
+    }
+    return QModelIndex();
+}
+
+QModelIndex Log::parent(const QModelIndex &) const
+{
+    return QModelIndex();
+}
+
+bool Log::canFetchMore(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : log_can_fetch_more(m_d);
+}
+
+void Log::fetchMore(const QModelIndex &parent)
+{
+    if (!parent.isValid()) {
+        log_fetch_more(m_d);
+    }
+}
+void Log::updatePersistentIndexes() {}
+
+void Log::sort(int column, Qt::SortOrder order)
+{
+    log_sort(m_d, column, order);
+}
+Qt::ItemFlags Log::flags(const QModelIndex &i) const
+{
+    auto flags = QAbstractItemModel::flags(i);
+    return flags;
+}
+
+QString Log::author(int row) const
 {
     QString s;
-    history_data_message(m_d, row, &s, set_qstring);
+    log_data_author(m_d, row, &s, set_qstring);
     return s;
 }
 
-QString History::oid(int row) const
+QString Log::message(int row) const
 {
     QString s;
-    history_data_oid(m_d, row, &s, set_qstring);
+    log_data_message(m_d, row, &s, set_qstring);
     return s;
 }
 
-QString History::time(int row) const
+QString Log::oid(int row) const
 {
     QString s;
-    history_data_time(m_d, row, &s, set_qstring);
+    log_data_oid(m_d, row, &s, set_qstring);
     return s;
 }
 
-QVariant History::data(const QModelIndex &index, int role) const
+QString Log::time(int row) const
+{
+    QString s;
+    log_data_time(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QVariant Log::data(const QModelIndex &index, int role) const
 {
     Q_ASSERT(rowCount(index.parent()) > index.row());
     switch (index.column()) {
@@ -155,7 +324,7 @@ QVariant History::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-int History::role(const char* name) const {
+int Log::role(const char* name) const {
     auto names = roleNames();
     auto i = names.constBegin();
     while (i != names.constEnd()) {
@@ -166,7 +335,7 @@ int History::role(const char* name) const {
     }
     return -1;
 }
-QHash<int, QByteArray> History::roleNames() const {
+QHash<int, QByteArray> Log::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
     names.insert(Qt::UserRole + 0, "author");
     names.insert(Qt::UserRole + 1, "message");
@@ -174,7 +343,7 @@ QHash<int, QByteArray> History::roleNames() const {
     names.insert(Qt::UserRole + 3, "time");
     return names;
 }
-QVariant History::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant Log::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (orientation != Qt::Horizontal) {
         return QVariant();
@@ -182,7 +351,7 @@ QVariant History::headerData(int section, Qt::Orientation orientation, int role)
     return m_headerData.value(qMakePair(section, (Qt::ItemDataRole)role), role == Qt::DisplayRole ?QString::number(section + 1) :QVariant());
 }
 
-bool History::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+bool Log::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
 {
     if (orientation != Qt::Horizontal) {
         return false;
@@ -192,21 +361,22 @@ bool History::setHeaderData(int section, Qt::Orientation orientation, const QVar
 }
 
 extern "C" {
-    History::Private* history_new(History*,
-        void (*)(const History*),
-        void (*)(History*),
-        void (*)(History*),
-        void (*)(History*, quintptr, quintptr),
-        void (*)(History*),
-        void (*)(History*),
-        void (*)(History*, int, int),
-        void (*)(History*),
-        void (*)(History*, int, int, int),
-        void (*)(History*),
-        void (*)(History*, int, int),
-        void (*)(History*));
-    void history_free(History::Private*);
-    void history_load(History::Private*, const ushort*, int);
+    Log::Private* log_new(Log*,
+        void (*)(const Log*),
+        void (*)(Log*),
+        void (*)(Log*),
+        void (*)(Log*, quintptr, quintptr),
+        void (*)(Log*),
+        void (*)(Log*),
+        void (*)(Log*, int, int),
+        void (*)(Log*),
+        void (*)(Log*, int, int, int),
+        void (*)(Log*),
+        void (*)(Log*, int, int),
+        void (*)(Log*));
+    void log_free(Log::Private*);
+    void log_filter(Log::Private*, const ushort*, int);
+    void log_load(Log::Private*, const ushort*, int);
 };
 
 extern "C" {
@@ -375,7 +545,7 @@ extern "C" {
     void repositories_set_current(Repositories::Private*, qint64);
 };
 
-History::History(bool /*owned*/, QObject *parent):
+Branches::Branches(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),
     m_d(nullptr),
     m_ownsPrivate(false)
@@ -383,66 +553,207 @@ History::History(bool /*owned*/, QObject *parent):
     initHeaderData();
 }
 
-History::History(QObject *parent):
+Branches::Branches(QObject *parent):
     QAbstractItemModel(parent),
-    m_d(history_new(this,
-        [](const History* o) {
+    m_d(branches_new(this,
+        [](const Branches* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
-        [](History* o) {
+        [](Branches* o) {
             Q_EMIT o->layoutAboutToBeChanged();
         },
-        [](History* o) {
+        [](Branches* o) {
             o->updatePersistentIndexes();
             Q_EMIT o->layoutChanged();
         },
-        [](History* o, quintptr first, quintptr last) {
+        [](Branches* o, quintptr first, quintptr last) {
             o->dataChanged(o->createIndex(first, 0, first),
                        o->createIndex(last, 0, last));
         },
-        [](History* o) {
+        [](Branches* o) {
             o->beginResetModel();
         },
-        [](History* o) {
+        [](Branches* o) {
             o->endResetModel();
         },
-        [](History* o, int first, int last) {
+        [](Branches* o, int first, int last) {
             o->beginInsertRows(QModelIndex(), first, last);
         },
-        [](History* o) {
+        [](Branches* o) {
             o->endInsertRows();
         },
-        [](History* o, int first, int last, int destination) {
+        [](Branches* o, int first, int last, int destination) {
             o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
         },
-        [](History* o) {
+        [](Branches* o) {
             o->endMoveRows();
         },
-        [](History* o, int first, int last) {
+        [](Branches* o, int first, int last) {
             o->beginRemoveRows(QModelIndex(), first, last);
         },
-        [](History* o) {
+        [](Branches* o) {
             o->endRemoveRows();
         }
 )),
     m_ownsPrivate(true)
 {
-    connect(this, &History::newDataReady, this, [this](const QModelIndex& i) {
+    connect(this, &Branches::newDataReady, this, [this](const QModelIndex& i) {
         this->fetchMore(i);
     }, Qt::QueuedConnection);
     initHeaderData();
 }
 
-History::~History() {
+Branches::~Branches() {
     if (m_ownsPrivate) {
-        history_free(m_d);
+        branches_free(m_d);
     }
 }
-void History::initHeaderData() {
+void Branches::initHeaderData() {
 }
-void History::load(const QString& path)
+Git::Git(bool /*owned*/, QObject *parent):
+    QObject(parent),
+    m_branches(new Branches(false, this)),
+    m_d(nullptr),
+    m_ownsPrivate(false)
 {
-    return history_load(m_d, path.utf16(), path.size());
+}
+
+Git::Git(QObject *parent):
+    QObject(parent),
+    m_branches(new Branches(false, this)),
+    m_d(git_new(this, m_branches,
+        [](const Branches* o) {
+            Q_EMIT o->newDataReady(QModelIndex());
+        },
+        [](Branches* o) {
+            Q_EMIT o->layoutAboutToBeChanged();
+        },
+        [](Branches* o) {
+            o->updatePersistentIndexes();
+            Q_EMIT o->layoutChanged();
+        },
+        [](Branches* o, quintptr first, quintptr last) {
+            o->dataChanged(o->createIndex(first, 0, first),
+                       o->createIndex(last, 0, last));
+        },
+        [](Branches* o) {
+            o->beginResetModel();
+        },
+        [](Branches* o) {
+            o->endResetModel();
+        },
+        [](Branches* o, int first, int last) {
+            o->beginInsertRows(QModelIndex(), first, last);
+        },
+        [](Branches* o) {
+            o->endInsertRows();
+        },
+        [](Branches* o, int first, int last, int destination) {
+            o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
+        },
+        [](Branches* o) {
+            o->endMoveRows();
+        },
+        [](Branches* o, int first, int last) {
+            o->beginRemoveRows(QModelIndex(), first, last);
+        },
+        [](Branches* o) {
+            o->endRemoveRows();
+        }
+)),
+    m_ownsPrivate(true)
+{
+    m_branches->m_d = git_branches_get(m_d);
+    connect(this->m_branches, &Branches::newDataReady, this->m_branches, [this](const QModelIndex& i) {
+        this->m_branches->fetchMore(i);
+    }, Qt::QueuedConnection);
+}
+
+Git::~Git() {
+    if (m_ownsPrivate) {
+        git_free(m_d);
+    }
+}
+const Branches* Git::branches() const
+{
+    return m_branches;
+}
+Branches* Git::branches()
+{
+    return m_branches;
+}
+Log::Log(bool /*owned*/, QObject *parent):
+    QAbstractItemModel(parent),
+    m_d(nullptr),
+    m_ownsPrivate(false)
+{
+    initHeaderData();
+}
+
+Log::Log(QObject *parent):
+    QAbstractItemModel(parent),
+    m_d(log_new(this,
+        [](const Log* o) {
+            Q_EMIT o->newDataReady(QModelIndex());
+        },
+        [](Log* o) {
+            Q_EMIT o->layoutAboutToBeChanged();
+        },
+        [](Log* o) {
+            o->updatePersistentIndexes();
+            Q_EMIT o->layoutChanged();
+        },
+        [](Log* o, quintptr first, quintptr last) {
+            o->dataChanged(o->createIndex(first, 0, first),
+                       o->createIndex(last, 0, last));
+        },
+        [](Log* o) {
+            o->beginResetModel();
+        },
+        [](Log* o) {
+            o->endResetModel();
+        },
+        [](Log* o, int first, int last) {
+            o->beginInsertRows(QModelIndex(), first, last);
+        },
+        [](Log* o) {
+            o->endInsertRows();
+        },
+        [](Log* o, int first, int last, int destination) {
+            o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
+        },
+        [](Log* o) {
+            o->endMoveRows();
+        },
+        [](Log* o, int first, int last) {
+            o->beginRemoveRows(QModelIndex(), first, last);
+        },
+        [](Log* o) {
+            o->endRemoveRows();
+        }
+)),
+    m_ownsPrivate(true)
+{
+    connect(this, &Log::newDataReady, this, [this](const QModelIndex& i) {
+        this->fetchMore(i);
+    }, Qt::QueuedConnection);
+    initHeaderData();
+}
+
+Log::~Log() {
+    if (m_ownsPrivate) {
+        log_free(m_d);
+    }
+}
+void Log::initHeaderData() {
+}
+void Log::filter(const QString& filter)
+{
+    return log_filter(m_d, filter.utf16(), filter.size());
+}
+void Log::load(const QString& path)
+{
+    return log_load(m_d, path.utf16(), path.size());
 }
 Repositories::Repositories(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),

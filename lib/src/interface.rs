@@ -89,31 +89,31 @@ fn to_c_int(n: usize) -> c_int {
 }
 
 
-pub struct HistoryQObject {}
+pub struct BranchesQObject {}
 
-pub struct HistoryEmitter {
-    qobject: Arc<AtomicPtr<HistoryQObject>>,
-    new_data_ready: fn(*mut HistoryQObject),
+pub struct BranchesEmitter {
+    qobject: Arc<AtomicPtr<BranchesQObject>>,
+    new_data_ready: fn(*mut BranchesQObject),
 }
 
-unsafe impl Send for HistoryEmitter {}
+unsafe impl Send for BranchesEmitter {}
 
-impl HistoryEmitter {
+impl BranchesEmitter {
     /// Clone the emitter
     ///
     /// The emitter can only be cloned when it is mutable. The emitter calls
     /// into C++ code which may call into Rust again. If emmitting is possible
     /// from immutable structures, that might lead to access to a mutable
     /// reference. That is undefined behaviour and forbidden.
-    pub fn clone(&mut self) -> HistoryEmitter {
-        HistoryEmitter {
+    pub fn clone(&mut self) -> BranchesEmitter {
+        BranchesEmitter {
             qobject: self.qobject.clone(),
             new_data_ready: self.new_data_ready,
         }
     }
     fn clear(&self) {
-        let n: *const HistoryQObject = null();
-        self.qobject.store(n as *mut HistoryQObject, Ordering::SeqCst);
+        let n: *const BranchesQObject = null();
+        self.qobject.store(n as *mut BranchesQObject, Ordering::SeqCst);
     }
     pub fn new_data_ready(&mut self) {
         let ptr = self.qobject.load(Ordering::SeqCst);
@@ -124,22 +124,22 @@ impl HistoryEmitter {
 }
 
 #[derive(Clone)]
-pub struct HistoryList {
-    qobject: *mut HistoryQObject,
-    layout_about_to_be_changed: fn(*mut HistoryQObject),
-    layout_changed: fn(*mut HistoryQObject),
-    data_changed: fn(*mut HistoryQObject, usize, usize),
-    begin_reset_model: fn(*mut HistoryQObject),
-    end_reset_model: fn(*mut HistoryQObject),
-    begin_insert_rows: fn(*mut HistoryQObject, usize, usize),
-    end_insert_rows: fn(*mut HistoryQObject),
-    begin_move_rows: fn(*mut HistoryQObject, usize, usize, usize),
-    end_move_rows: fn(*mut HistoryQObject),
-    begin_remove_rows: fn(*mut HistoryQObject, usize, usize),
-    end_remove_rows: fn(*mut HistoryQObject),
+pub struct BranchesList {
+    qobject: *mut BranchesQObject,
+    layout_about_to_be_changed: fn(*mut BranchesQObject),
+    layout_changed: fn(*mut BranchesQObject),
+    data_changed: fn(*mut BranchesQObject, usize, usize),
+    begin_reset_model: fn(*mut BranchesQObject),
+    end_reset_model: fn(*mut BranchesQObject),
+    begin_insert_rows: fn(*mut BranchesQObject, usize, usize),
+    end_insert_rows: fn(*mut BranchesQObject),
+    begin_move_rows: fn(*mut BranchesQObject, usize, usize, usize),
+    end_move_rows: fn(*mut BranchesQObject),
+    begin_remove_rows: fn(*mut BranchesQObject, usize, usize),
+    end_remove_rows: fn(*mut BranchesQObject),
 }
 
-impl HistoryList {
+impl BranchesList {
     pub fn layout_about_to_be_changed(&mut self) {
         (self.layout_about_to_be_changed)(self.qobject);
     }
@@ -175,9 +175,289 @@ impl HistoryList {
     }
 }
 
-pub trait HistoryTrait {
-    fn new(emit: HistoryEmitter, model: HistoryList) -> Self;
-    fn emit(&mut self) -> &mut HistoryEmitter;
+pub trait BranchesTrait {
+    fn new(emit: BranchesEmitter, model: BranchesList) -> Self;
+    fn emit(&mut self) -> &mut BranchesEmitter;
+    fn row_count(&self) -> usize;
+    fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
+    fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
+    fn can_fetch_more(&self) -> bool {
+        false
+    }
+    fn fetch_more(&mut self) {}
+    fn sort(&mut self, u8, SortOrder) {}
+    fn checkedout(&self, index: usize) -> bool;
+    fn name(&self, index: usize) -> &str;
+}
+
+#[no_mangle]
+pub extern "C" fn branches_new(
+    branches: *mut BranchesQObject,
+    branches_new_data_ready: fn(*mut BranchesQObject),
+    branches_layout_about_to_be_changed: fn(*mut BranchesQObject),
+    branches_layout_changed: fn(*mut BranchesQObject),
+    branches_data_changed: fn(*mut BranchesQObject, usize, usize),
+    branches_begin_reset_model: fn(*mut BranchesQObject),
+    branches_end_reset_model: fn(*mut BranchesQObject),
+    branches_begin_insert_rows: fn(*mut BranchesQObject, usize, usize),
+    branches_end_insert_rows: fn(*mut BranchesQObject),
+    branches_begin_move_rows: fn(*mut BranchesQObject, usize, usize, usize),
+    branches_end_move_rows: fn(*mut BranchesQObject),
+    branches_begin_remove_rows: fn(*mut BranchesQObject, usize, usize),
+    branches_end_remove_rows: fn(*mut BranchesQObject),
+) -> *mut Branches {
+    let branches_emit = BranchesEmitter {
+        qobject: Arc::new(AtomicPtr::new(branches)),
+        new_data_ready: branches_new_data_ready,
+    };
+    let model = BranchesList {
+        qobject: branches,
+        layout_about_to_be_changed: branches_layout_about_to_be_changed,
+        layout_changed: branches_layout_changed,
+        data_changed: branches_data_changed,
+        begin_reset_model: branches_begin_reset_model,
+        end_reset_model: branches_end_reset_model,
+        begin_insert_rows: branches_begin_insert_rows,
+        end_insert_rows: branches_end_insert_rows,
+        begin_move_rows: branches_begin_move_rows,
+        end_move_rows: branches_end_move_rows,
+        begin_remove_rows: branches_begin_remove_rows,
+        end_remove_rows: branches_end_remove_rows,
+    };
+    let d_branches = Branches::new(branches_emit, model);
+    Box::into_raw(Box::new(d_branches))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn branches_free(ptr: *mut Branches) {
+    Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn branches_row_count(ptr: *const Branches) -> c_int {
+    to_c_int((&*ptr).row_count())
+}
+#[no_mangle]
+pub unsafe extern "C" fn branches_insert_rows(ptr: *mut Branches, row: c_int, count: c_int) -> bool {
+    (&mut *ptr).insert_rows(to_usize(row), to_usize(count))
+}
+#[no_mangle]
+pub unsafe extern "C" fn branches_remove_rows(ptr: *mut Branches, row: c_int, count: c_int) -> bool {
+    (&mut *ptr).remove_rows(to_usize(row), to_usize(count))
+}
+#[no_mangle]
+pub unsafe extern "C" fn branches_can_fetch_more(ptr: *const Branches) -> bool {
+    (&*ptr).can_fetch_more()
+}
+#[no_mangle]
+pub unsafe extern "C" fn branches_fetch_more(ptr: *mut Branches) {
+    (&mut *ptr).fetch_more()
+}
+#[no_mangle]
+pub unsafe extern "C" fn branches_sort(
+    ptr: *mut Branches,
+    column: u8,
+    order: SortOrder,
+) {
+    (&mut *ptr).sort(column, order)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn branches_data_checkedout(ptr: *const Branches, row: c_int) -> bool {
+    let o = &*ptr;
+    o.checkedout(to_usize(row)).into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn branches_data_name(
+    ptr: *const Branches, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.name(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+pub struct GitQObject {}
+
+pub struct GitEmitter {
+    qobject: Arc<AtomicPtr<GitQObject>>,
+}
+
+unsafe impl Send for GitEmitter {}
+
+impl GitEmitter {
+    /// Clone the emitter
+    ///
+    /// The emitter can only be cloned when it is mutable. The emitter calls
+    /// into C++ code which may call into Rust again. If emmitting is possible
+    /// from immutable structures, that might lead to access to a mutable
+    /// reference. That is undefined behaviour and forbidden.
+    pub fn clone(&mut self) -> GitEmitter {
+        GitEmitter {
+            qobject: self.qobject.clone(),
+        }
+    }
+    fn clear(&self) {
+        let n: *const GitQObject = null();
+        self.qobject.store(n as *mut GitQObject, Ordering::SeqCst);
+    }
+}
+
+pub trait GitTrait {
+    fn new(emit: GitEmitter,
+        branches: Branches) -> Self;
+    fn emit(&mut self) -> &mut GitEmitter;
+    fn branches(&self) -> &Branches;
+    fn branches_mut(&mut self) -> &mut Branches;
+}
+
+#[no_mangle]
+pub extern "C" fn git_new(
+    git: *mut GitQObject,
+    branches: *mut BranchesQObject,
+    branches_new_data_ready: fn(*mut BranchesQObject),
+    branches_layout_about_to_be_changed: fn(*mut BranchesQObject),
+    branches_layout_changed: fn(*mut BranchesQObject),
+    branches_data_changed: fn(*mut BranchesQObject, usize, usize),
+    branches_begin_reset_model: fn(*mut BranchesQObject),
+    branches_end_reset_model: fn(*mut BranchesQObject),
+    branches_begin_insert_rows: fn(*mut BranchesQObject, usize, usize),
+    branches_end_insert_rows: fn(*mut BranchesQObject),
+    branches_begin_move_rows: fn(*mut BranchesQObject, usize, usize, usize),
+    branches_end_move_rows: fn(*mut BranchesQObject),
+    branches_begin_remove_rows: fn(*mut BranchesQObject, usize, usize),
+    branches_end_remove_rows: fn(*mut BranchesQObject),
+) -> *mut Git {
+    let branches_emit = BranchesEmitter {
+        qobject: Arc::new(AtomicPtr::new(branches)),
+        new_data_ready: branches_new_data_ready,
+    };
+    let model = BranchesList {
+        qobject: branches,
+        layout_about_to_be_changed: branches_layout_about_to_be_changed,
+        layout_changed: branches_layout_changed,
+        data_changed: branches_data_changed,
+        begin_reset_model: branches_begin_reset_model,
+        end_reset_model: branches_end_reset_model,
+        begin_insert_rows: branches_begin_insert_rows,
+        end_insert_rows: branches_end_insert_rows,
+        begin_move_rows: branches_begin_move_rows,
+        end_move_rows: branches_end_move_rows,
+        begin_remove_rows: branches_begin_remove_rows,
+        end_remove_rows: branches_end_remove_rows,
+    };
+    let d_branches = Branches::new(branches_emit, model);
+    let git_emit = GitEmitter {
+        qobject: Arc::new(AtomicPtr::new(git)),
+    };
+    let d_git = Git::new(git_emit,
+        d_branches);
+    Box::into_raw(Box::new(d_git))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn git_free(ptr: *mut Git) {
+    Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn git_branches_get(ptr: *mut Git) -> *mut Branches {
+    (&mut *ptr).branches_mut()
+}
+
+pub struct LogQObject {}
+
+pub struct LogEmitter {
+    qobject: Arc<AtomicPtr<LogQObject>>,
+    new_data_ready: fn(*mut LogQObject),
+}
+
+unsafe impl Send for LogEmitter {}
+
+impl LogEmitter {
+    /// Clone the emitter
+    ///
+    /// The emitter can only be cloned when it is mutable. The emitter calls
+    /// into C++ code which may call into Rust again. If emmitting is possible
+    /// from immutable structures, that might lead to access to a mutable
+    /// reference. That is undefined behaviour and forbidden.
+    pub fn clone(&mut self) -> LogEmitter {
+        LogEmitter {
+            qobject: self.qobject.clone(),
+            new_data_ready: self.new_data_ready,
+        }
+    }
+    fn clear(&self) {
+        let n: *const LogQObject = null();
+        self.qobject.store(n as *mut LogQObject, Ordering::SeqCst);
+    }
+    pub fn new_data_ready(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.new_data_ready)(ptr);
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct LogList {
+    qobject: *mut LogQObject,
+    layout_about_to_be_changed: fn(*mut LogQObject),
+    layout_changed: fn(*mut LogQObject),
+    data_changed: fn(*mut LogQObject, usize, usize),
+    begin_reset_model: fn(*mut LogQObject),
+    end_reset_model: fn(*mut LogQObject),
+    begin_insert_rows: fn(*mut LogQObject, usize, usize),
+    end_insert_rows: fn(*mut LogQObject),
+    begin_move_rows: fn(*mut LogQObject, usize, usize, usize),
+    end_move_rows: fn(*mut LogQObject),
+    begin_remove_rows: fn(*mut LogQObject, usize, usize),
+    end_remove_rows: fn(*mut LogQObject),
+}
+
+impl LogList {
+    pub fn layout_about_to_be_changed(&mut self) {
+        (self.layout_about_to_be_changed)(self.qobject);
+    }
+    pub fn layout_changed(&mut self) {
+        (self.layout_changed)(self.qobject);
+    }
+    pub fn data_changed(&mut self, first: usize, last: usize) {
+        (self.data_changed)(self.qobject, first, last);
+    }
+    pub fn begin_reset_model(&mut self) {
+        (self.begin_reset_model)(self.qobject);
+    }
+    pub fn end_reset_model(&mut self) {
+        (self.end_reset_model)(self.qobject);
+    }
+    pub fn begin_insert_rows(&mut self, first: usize, last: usize) {
+        (self.begin_insert_rows)(self.qobject, first, last);
+    }
+    pub fn end_insert_rows(&mut self) {
+        (self.end_insert_rows)(self.qobject);
+    }
+    pub fn begin_move_rows(&mut self, first: usize, last: usize, destination: usize) {
+        (self.begin_move_rows)(self.qobject, first, last, destination);
+    }
+    pub fn end_move_rows(&mut self) {
+        (self.end_move_rows)(self.qobject);
+    }
+    pub fn begin_remove_rows(&mut self, first: usize, last: usize) {
+        (self.begin_remove_rows)(self.qobject, first, last);
+    }
+    pub fn end_remove_rows(&mut self) {
+        (self.end_remove_rows)(self.qobject);
+    }
+}
+
+pub trait LogTrait {
+    fn new(emit: LogEmitter, model: LogList) -> Self;
+    fn emit(&mut self) -> &mut LogEmitter;
+    fn filter(&mut self, filter: String) -> ();
     fn load(&mut self, path: String) -> ();
     fn row_count(&self) -> usize;
     fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
@@ -194,50 +474,59 @@ pub trait HistoryTrait {
 }
 
 #[no_mangle]
-pub extern "C" fn history_new(
-    history: *mut HistoryQObject,
-    history_new_data_ready: fn(*mut HistoryQObject),
-    history_layout_about_to_be_changed: fn(*mut HistoryQObject),
-    history_layout_changed: fn(*mut HistoryQObject),
-    history_data_changed: fn(*mut HistoryQObject, usize, usize),
-    history_begin_reset_model: fn(*mut HistoryQObject),
-    history_end_reset_model: fn(*mut HistoryQObject),
-    history_begin_insert_rows: fn(*mut HistoryQObject, usize, usize),
-    history_end_insert_rows: fn(*mut HistoryQObject),
-    history_begin_move_rows: fn(*mut HistoryQObject, usize, usize, usize),
-    history_end_move_rows: fn(*mut HistoryQObject),
-    history_begin_remove_rows: fn(*mut HistoryQObject, usize, usize),
-    history_end_remove_rows: fn(*mut HistoryQObject),
-) -> *mut History {
-    let history_emit = HistoryEmitter {
-        qobject: Arc::new(AtomicPtr::new(history)),
-        new_data_ready: history_new_data_ready,
+pub extern "C" fn log_new(
+    log: *mut LogQObject,
+    log_new_data_ready: fn(*mut LogQObject),
+    log_layout_about_to_be_changed: fn(*mut LogQObject),
+    log_layout_changed: fn(*mut LogQObject),
+    log_data_changed: fn(*mut LogQObject, usize, usize),
+    log_begin_reset_model: fn(*mut LogQObject),
+    log_end_reset_model: fn(*mut LogQObject),
+    log_begin_insert_rows: fn(*mut LogQObject, usize, usize),
+    log_end_insert_rows: fn(*mut LogQObject),
+    log_begin_move_rows: fn(*mut LogQObject, usize, usize, usize),
+    log_end_move_rows: fn(*mut LogQObject),
+    log_begin_remove_rows: fn(*mut LogQObject, usize, usize),
+    log_end_remove_rows: fn(*mut LogQObject),
+) -> *mut Log {
+    let log_emit = LogEmitter {
+        qobject: Arc::new(AtomicPtr::new(log)),
+        new_data_ready: log_new_data_ready,
     };
-    let model = HistoryList {
-        qobject: history,
-        layout_about_to_be_changed: history_layout_about_to_be_changed,
-        layout_changed: history_layout_changed,
-        data_changed: history_data_changed,
-        begin_reset_model: history_begin_reset_model,
-        end_reset_model: history_end_reset_model,
-        begin_insert_rows: history_begin_insert_rows,
-        end_insert_rows: history_end_insert_rows,
-        begin_move_rows: history_begin_move_rows,
-        end_move_rows: history_end_move_rows,
-        begin_remove_rows: history_begin_remove_rows,
-        end_remove_rows: history_end_remove_rows,
+    let model = LogList {
+        qobject: log,
+        layout_about_to_be_changed: log_layout_about_to_be_changed,
+        layout_changed: log_layout_changed,
+        data_changed: log_data_changed,
+        begin_reset_model: log_begin_reset_model,
+        end_reset_model: log_end_reset_model,
+        begin_insert_rows: log_begin_insert_rows,
+        end_insert_rows: log_end_insert_rows,
+        begin_move_rows: log_begin_move_rows,
+        end_move_rows: log_end_move_rows,
+        begin_remove_rows: log_begin_remove_rows,
+        end_remove_rows: log_end_remove_rows,
     };
-    let d_history = History::new(history_emit, model);
-    Box::into_raw(Box::new(d_history))
+    let d_log = Log::new(log_emit, model);
+    Box::into_raw(Box::new(d_log))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn history_free(ptr: *mut History) {
+pub unsafe extern "C" fn log_free(ptr: *mut Log) {
     Box::from_raw(ptr).emit().clear();
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn history_load(ptr: *mut History, path_str: *const c_ushort, path_len: c_int) -> () {
+pub unsafe extern "C" fn log_filter(ptr: *mut Log, filter_str: *const c_ushort, filter_len: c_int) -> () {
+    let mut filter = String::new();
+    set_string_from_utf16(&mut filter, filter_str, filter_len);
+    let o = &mut *ptr;
+    let r = o.filter(filter);
+    r
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn log_load(ptr: *mut Log, path_str: *const c_ushort, path_len: c_int) -> () {
     let mut path = String::new();
     set_string_from_utf16(&mut path, path_str, path_len);
     let o = &mut *ptr;
@@ -246,28 +535,28 @@ pub unsafe extern "C" fn history_load(ptr: *mut History, path_str: *const c_usho
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn history_row_count(ptr: *const History) -> c_int {
+pub unsafe extern "C" fn log_row_count(ptr: *const Log) -> c_int {
     to_c_int((&*ptr).row_count())
 }
 #[no_mangle]
-pub unsafe extern "C" fn history_insert_rows(ptr: *mut History, row: c_int, count: c_int) -> bool {
+pub unsafe extern "C" fn log_insert_rows(ptr: *mut Log, row: c_int, count: c_int) -> bool {
     (&mut *ptr).insert_rows(to_usize(row), to_usize(count))
 }
 #[no_mangle]
-pub unsafe extern "C" fn history_remove_rows(ptr: *mut History, row: c_int, count: c_int) -> bool {
+pub unsafe extern "C" fn log_remove_rows(ptr: *mut Log, row: c_int, count: c_int) -> bool {
     (&mut *ptr).remove_rows(to_usize(row), to_usize(count))
 }
 #[no_mangle]
-pub unsafe extern "C" fn history_can_fetch_more(ptr: *const History) -> bool {
+pub unsafe extern "C" fn log_can_fetch_more(ptr: *const Log) -> bool {
     (&*ptr).can_fetch_more()
 }
 #[no_mangle]
-pub unsafe extern "C" fn history_fetch_more(ptr: *mut History) {
+pub unsafe extern "C" fn log_fetch_more(ptr: *mut Log) {
     (&mut *ptr).fetch_more()
 }
 #[no_mangle]
-pub unsafe extern "C" fn history_sort(
-    ptr: *mut History,
+pub unsafe extern "C" fn log_sort(
+    ptr: *mut Log,
     column: u8,
     order: SortOrder,
 ) {
@@ -275,8 +564,8 @@ pub unsafe extern "C" fn history_sort(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn history_data_author(
-    ptr: *const History, row: c_int,
+pub unsafe extern "C" fn log_data_author(
+    ptr: *const Log, row: c_int,
     d: *mut QString,
     set: fn(*mut QString, *const c_char, len: c_int),
 ) {
@@ -287,8 +576,8 @@ pub unsafe extern "C" fn history_data_author(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn history_data_message(
-    ptr: *const History, row: c_int,
+pub unsafe extern "C" fn log_data_message(
+    ptr: *const Log, row: c_int,
     d: *mut QString,
     set: fn(*mut QString, *const c_char, len: c_int),
 ) {
@@ -299,8 +588,8 @@ pub unsafe extern "C" fn history_data_message(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn history_data_oid(
-    ptr: *const History, row: c_int,
+pub unsafe extern "C" fn log_data_oid(
+    ptr: *const Log, row: c_int,
     d: *mut QString,
     set: fn(*mut QString, *const c_char, len: c_int),
 ) {
@@ -311,8 +600,8 @@ pub unsafe extern "C" fn history_data_oid(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn history_data_time(
-    ptr: *const History, row: c_int,
+pub unsafe extern "C" fn log_data_time(
+    ptr: *const Log, row: c_int,
     d: *mut QString,
     set: fn(*mut QString, *const c_char, len: c_int),
 ) {

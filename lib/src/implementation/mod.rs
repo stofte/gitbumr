@@ -1,5 +1,9 @@
 mod repositories;
-mod history;
+mod log;
+mod branches;
+mod git;
 
 pub use self::repositories::*;
-pub use self::history::*;
+pub use self::log::*;
+pub use self::branches::*;
+pub use self::git::*;
