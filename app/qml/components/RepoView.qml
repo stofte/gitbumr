@@ -62,7 +62,7 @@ Pane {
                                     text: displayName
                                     verticalAlignment: Text.AlignVCenter
                                     font.pointSize: Style.fontPointSize
-                                    font.family: mainFont.name
+                                    font.family: Style.fontName
                                     font.bold: current
                                 }
                             }
@@ -94,7 +94,7 @@ Pane {
                 anchors.centerIn: parent
                 text: "Add"
                 font.pointSize: Style.fontPointSize
-                font.family: mainFont.name
+                font.family: Style.fontName
             }
             onClicked: {
                 fileDialog.open()

@@ -12,7 +12,6 @@ ApplicationWindow {
     visible: true
     width: 1000
     height: 600
-    FontLoader { id: mainFont; name: "Segoe UI" }
 
     property variant repoMgr;
 
@@ -44,9 +43,13 @@ ApplicationWindow {
     Page {
         anchors.fill: parent
         header: ToolBar {
+            topPadding: 5
+            bottomPadding: 5
             RowLayout {
                 anchors.fill: parent
                 ToolButton {
+                    font.family: Style.fontName
+                    font.pointSize: Style.fontPointSize
                     text: qsTr("Repositories")
                     Layout.fillWidth: false
                     onClicked: {

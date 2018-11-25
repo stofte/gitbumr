@@ -2,6 +2,8 @@ pragma Singleton
 import QtQuick 2.9
 
 Item {
+
+    FontLoader { id: mainFont; name: "Segoe UI" }
     SystemPalette { id: pallete; colorGroup: SystemPalette.Active }
 
     readonly property int fontPointSize: 9
@@ -9,4 +11,5 @@ Item {
 
     readonly property string dark: pallete.dark
     readonly property string window: pallete.window
+    readonly property string fontName: mainFont.name
 }
