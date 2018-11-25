@@ -8,20 +8,42 @@ import "base"
 import "style"
 
 ApplicationWindow {
+    id: root
     visible: true
-    width: 450
-    height: 580
+    width: 1000
+    height: 600
     FontLoader { id: mainFont; name: "Segoe UI" }
+
+    property variant repoMgr;
+
+    Repositories {
+        id: repositoriesModel
+        onActiveRepositoryChanged: {
+            branchView.gitPath = activeRepository;
+        }
+    }
+
+    Component.onCompleted: {
+        // to actually cause repositoriesModel to be created on windows load,
+        // the window using the model must be created on load.
+        if (!repoMgr) {
+            var component = Qt.createComponent("components/RepositoryManager.qml");
+            repoMgr = component.createObject(root);
+        }
+    }
+
     Page {
         anchors.fill: parent
         header: ToolBar {
-            TextItem {
+            RowLayout {
                 anchors.fill: parent
-                text: qsTr("gitbumr")
-                font.pointSize: Style.fontPointSize
-                font.family: mainFont.name
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+                ToolButton {
+                    text: qsTr("Repositories")
+                    Layout.fillWidth: false
+                    onClicked: {
+                        repoMgr.show();
+                    }
+                }
             }
         }
         QQC14.SplitView {
@@ -31,15 +53,14 @@ ApplicationWindow {
                 color: Style.dark
                 width: 1
             }
-            RepoView {
-                id: repoView
+            BranchView {
+                id: branchView
                 Layout.fillHeight: true
+                Layout.minimumWidth: 100
                 Layout.preferredWidth: 200
             }
-
             History {
                 Layout.fillHeight: true
-                Layout.fillWidth: true
             }
         }
     }

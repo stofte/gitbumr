@@ -54,7 +54,7 @@
                     "return": "void",
                     "mut": true,
                     "arguments": [
-                        { "name": "index", "type": "quint64" }
+                        { "name": "id", "type": "qint64" }
                     ]
                 }
             }

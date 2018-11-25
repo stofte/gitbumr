@@ -372,7 +372,7 @@ extern "C" {
     void repositories_add_last_error(const Repositories::Private*, QString*, qstring_set);
     void repositories_init(Repositories::Private*, const ushort*, int);
     bool repositories_remove(Repositories::Private*, quint64);
-    void repositories_set_current(Repositories::Private*, quint64);
+    void repositories_set_current(Repositories::Private*, qint64);
 };
 
 History::History(bool /*owned*/, QObject *parent):
@@ -534,7 +534,7 @@ bool Repositories::remove(quint64 index)
 {
     return repositories_remove(m_d, index);
 }
-void Repositories::setCurrent(quint64 index)
+void Repositories::setCurrent(qint64 id)
 {
-    return repositories_set_current(m_d, index);
+    return repositories_set_current(m_d, id);
 }

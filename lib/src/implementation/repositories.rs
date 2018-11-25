@@ -20,6 +20,7 @@ pub struct Repositories {
     model: RepositoriesList,
     list: Vec<RepositoriesItem>,
     conn: Option<Connection>,
+    active_repository_idx: usize,
     add_last_error_text: String,
 }
 
@@ -30,6 +31,7 @@ impl RepositoriesTrait for Repositories {
             model,
             list: vec![],
             conn: None,
+            active_repository_idx: 0,
             add_last_error_text: "".to_string()
         }
     }
@@ -39,14 +41,20 @@ impl RepositoriesTrait for Repositories {
         self.conn = Some(sqlite_conn);
         init_sqlite(&self);
         let repos = get_repositories(&self);
-        println!("repo count from db => {}", repos.len());
         // insert_rows takes start and end indexes of inserted items,
         // so insert one item is 0,0, and two items is 0,1.
-        if repos.len() > 0
-        {
+        if repos.len() > 0 {
             self.model.begin_insert_rows(0, repos.len() - 1);
             self.list = repos;
             self.model.end_insert_rows();
+            for idx in 0..self.list.len() {
+                let e = &self.list[idx];
+                if e.current {
+                    self.active_repository_idx = idx;
+                    self.emit.active_repository_changed();
+                    break;
+                }
+            }
         }
     }
     fn emit(&mut self) -> &mut RepositoriesEmitter {
@@ -58,11 +66,22 @@ impl RepositoriesTrait for Repositories {
     fn current(&self, index: usize) -> bool {
         self.list[index].current
     }
-    fn set_current(&mut self, index: u64) {
+    fn set_current(&mut self, id: i64) {
+        set_open_repository(self, id);
+        let mut idx = 0;
+        let mut i = 0;
+        self.model.begin_reset_model();
         for elm in &mut self.list {
             elm.current = false;
+            if elm.id == id && idx == 0 {
+                idx = i
+            }
+            i += 1;
         }
-        self.list[index as usize].current = true;
+        self.list[idx].current = true;
+        self.model.end_reset_model();
+        self.active_repository_idx = idx;
+        self.emit.active_repository_changed();
     }
     fn display_name(&self, index: usize) -> &str {
         &self.list[index].display_name
@@ -81,13 +100,17 @@ impl RepositoriesTrait for Repositories {
             },
             Ok(..) => ()
         };
-        match add_repository(self, &p) {
+        let rowid = match add_repository(self, &p) {
             Err(txt) => {
                 self.add_last_error_text = txt.to_string();
                 return false
             }
-            Ok(..) => ()
+            Ok(id) => id
         };
+        // mark others as inactive
+        for mut e in &mut self.list {
+            e.current = false;
+        }
         let item = RepositoriesItem {
             current: true,
             display_name: p.clone(),
@@ -98,16 +121,17 @@ impl RepositoriesTrait for Repositories {
         self.model.begin_insert_rows(idx, idx);
         self.list.insert(idx, item);
         self.model.end_insert_rows();
+        self.active_repository_idx = 0;
+        self.emit.active_repository_changed();
         true
     }
     fn remove(&mut self, id: u64) -> bool {
         false
     }
     fn active_repository(&self) -> &str {
-        "C:\\src\\CLEVER"
+        &self.list[self.active_repository_idx].display_name
     }
     fn add_last_error(&self) -> String {
-        println!("add_last_error retunring {}", self.add_last_error_text);
         self.add_last_error_text.clone()
     }
 }
@@ -166,23 +190,49 @@ fn get_repositories(repos: &Repositories) -> Vec<RepositoriesItem> {
     }
 }
 
-fn add_repository(repos: &mut Repositories, path: &str) -> Result<(), &'static str> {
+fn add_repository(repos: &mut Repositories, path: &str) -> Result<i64, &'static str> {
     match &mut repos.conn {
         Some(conn) => {
-            // todo use try! macro https://docs.rs/rusqlite/0.14.0/rusqlite/struct.Transaction.html#example
+            let mut res = Err("err");
+            {
+                // todo use try! macro https://docs.rs/rusqlite/0.14.0/rusqlite/struct.Transaction.html#example
+                let tx = conn.transaction().unwrap();
+                tx.execute("UPDATE repos SET open=0 WHERE 1=1", NO_PARAMS).unwrap();
+                // this works for now
+                res = match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&path]) {
+                    Err(..) => {
+                        tx.rollback().unwrap();
+                        Err("Repository already added")
+                    }
+                    _ => {
+                        tx.commit().unwrap();
+                        Ok(())
+                    }
+                }
+            }
+            match res {
+                Err(txt) => Err(txt),
+                Ok(()) => Ok(conn.last_insert_rowid())
+            }
+        }
+        None => panic!("expected connection")
+    }
+}
+
+fn set_open_repository(repos: &mut Repositories, id: i64) {
+    match &mut repos.conn {
+        Some(conn) => {
             let tx = conn.transaction().unwrap();
             tx.execute("UPDATE repos SET open=0 WHERE 1=1", NO_PARAMS).unwrap();
-            // this works for now
-            match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&path]) {
+            match tx.execute("UPDATE repos SET open=1 WHERE rowid=?1", &[&id]) {
                 Err(..) => {
                     tx.rollback().unwrap();
-                    Err("Repository already added")
+                    panic!("set_open_repository received unknown id")
                 }
                 _ => {
                     tx.commit().unwrap();
-                    Ok(())
                 }
-            }
+            };
         }
         None => panic!("expected connection")
     }

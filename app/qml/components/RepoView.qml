@@ -7,9 +7,8 @@ import "../base"
 import "../style"
 
 Pane {
-    Repositories {
-        id: repositoriesModel
-    }
+    anchors.fill: parent
+
     Component.onCompleted: {
         repositoriesModel.init(DatabaseFileName);
         console.log("repo started up")
@@ -64,6 +63,7 @@ Pane {
                                     verticalAlignment: Text.AlignVCenter
                                     font.pointSize: Style.fontPointSize
                                     font.family: mainFont.name
+                                    font.bold: current
                                 }
                             }
                         }
@@ -78,7 +78,7 @@ Pane {
                                 labelBackground.border.color = "#F0F0F0";
                             }
                             onDoubleClicked: {
-                                console.log('clicked: ', displayName);
+                                repositoriesModel.setCurrent(id);
                             }
                         }
                     }

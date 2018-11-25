@@ -424,7 +424,7 @@ pub trait RepositoriesTrait {
     fn add_last_error(&self) -> String;
     fn init(&mut self, db_file_name: String) -> ();
     fn remove(&mut self, index: u64) -> bool;
-    fn set_current(&mut self, index: u64) -> ();
+    fn set_current(&mut self, id: i64) -> ();
     fn row_count(&self) -> usize;
     fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
     fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
@@ -529,9 +529,9 @@ pub unsafe extern "C" fn repositories_remove(ptr: *mut Repositories, index: u64)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn repositories_set_current(ptr: *mut Repositories, index: u64) -> () {
+pub unsafe extern "C" fn repositories_set_current(ptr: *mut Repositories, id: i64) -> () {
     let o = &mut *ptr;
-    let r = o.set_current(index);
+    let r = o.set_current(id);
     r
 }
 

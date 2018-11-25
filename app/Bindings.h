@@ -71,7 +71,7 @@ public:
     Q_INVOKABLE QString addLastError() const;
     Q_INVOKABLE void init(const QString& db_file_name);
     Q_INVOKABLE bool remove(quint64 index);
-    Q_INVOKABLE void setCurrent(quint64 index);
+    Q_INVOKABLE void setCurrent(qint64 id);
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
