@@ -72,7 +72,7 @@ ApplicationWindow {
                 Layout.minimumWidth: 100
                 Layout.preferredWidth: 200
             }
-            History {
+            HistoryView {
                 Layout.fillHeight: true
             }
         }
