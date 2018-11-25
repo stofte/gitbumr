@@ -15,7 +15,7 @@ CONFIG(release, release|debug) {
     CARGO_FLAG=--release
     win32:CCRS_CFLAGS = cd & set CFLAGS=/MD
 }
-message("Builde mode: $$BUILD_MODE")
+message("Build configuration: $$BUILD_MODE")
 
 QT += qml quick opengl quickcontrols2
 CONFIG += c++14
