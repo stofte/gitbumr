@@ -1,4 +1,3 @@
-#![allow(unused_assignments)]
 use std::{path::Path, println};
 use rusqlite::{Connection, NO_PARAMS};
 use url::Url;

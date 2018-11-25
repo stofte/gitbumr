@@ -1,4 +1,3 @@
-#![allow(unused_variables)]
 use interface::{ GitTrait, GitEmitter };
 use super::Branches;
 
