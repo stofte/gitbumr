@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 use std::{path::Path, println};
 use rusqlite::{Connection, NO_PARAMS};
+use url::Url;
 use git::is_git_repo;
 use interface::*;
 
@@ -70,12 +71,22 @@ impl RepositoriesTrait for Repositories {
         self.list[index].id
     }
     fn add(&mut self, path: String) -> bool {
-        match is_git_repo(&path) {
+        // path strings suck in rust
+        let os_path = Url::parse(&path).unwrap().to_file_path().unwrap().into_os_string();
+        let p = os_path.to_string_lossy();
+        match is_git_repo(&p) {
             Err(txt) => {
                 self.add_last_error_text = txt.to_string();
                 return false
             },
-            _ => ()
+            Ok(..) => ()
+        };
+        match add_repository(self, &p) {
+            Err(txt) => {
+                self.add_last_error_text = txt.to_string();
+                return false
+            }
+            Ok(..) => ()
         };
         let item = RepositoriesItem {
             current: true,
@@ -96,7 +107,8 @@ impl RepositoriesTrait for Repositories {
         "C:\\src\\CLEVER"
     }
     fn add_last_error(&self) -> String {
-        "".to_string()
+        println!("add_last_error retunring {}", self.add_last_error_text);
+        self.add_last_error_text.clone()
     }
 }
 
@@ -141,13 +153,39 @@ fn get_repositories(repos: &Repositories) -> Vec<RepositoriesItem> {
                     id: row.get(0),
                     path: row.get(1),
                     current: row.get(2),
-                    display_name: "".to_string()
+                    display_name: row.get(1),
                 }
             }).unwrap();
+
             for r in rows {
-                res.push(r.unwrap());
+                let z = r.unwrap();
+                let zz = z.clone();
+                println!("get_repositories: {}", zz.path);
+                res.push(z);
             }
             res
+        }
+        None => panic!("expected connection")
+    }
+}
+
+fn add_repository(repos: &mut Repositories, path: &str) -> Result<(), &'static str> {
+    match &mut repos.conn {
+        Some(conn) => {
+            // todo use try! macro https://docs.rs/rusqlite/0.14.0/rusqlite/struct.Transaction.html#example
+            let tx = conn.transaction().unwrap();
+            tx.execute("UPDATE repos SET open=0 WHERE 1=1", NO_PARAMS).unwrap();
+            // this works for now
+            match tx.execute("INSERT INTO repos(path, open) VALUES(?1, 1)", &[&path]) {
+                Err(..) => {
+                    tx.rollback().unwrap();
+                    Err("already in list")
+                }
+                _ => {
+                    tx.commit().unwrap();
+                    Ok(())
+                }
+            }
         }
         None => panic!("expected connection")
     }
