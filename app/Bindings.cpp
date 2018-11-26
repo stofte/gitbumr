@@ -28,6 +28,10 @@ namespace {
     inline QVariant cleanNullQVariant(const QVariant& v) {
         return (v.isNull()) ?QVariant() :v;
     }
+    inline void gitRevwalkFilterChanged(Git* o)
+    {
+        Q_EMIT o->revwalkFilterChanged();
+    }
     inline void repositoriesActiveRepositoryChanged(Repositories* o)
     {
         Q_EMIT o->activeRepositoryChanged();
@@ -197,9 +201,10 @@ extern "C" {
         void (*)(Branches*, int, int, int),
         void (*)(Branches*),
         void (*)(Branches*, int, int),
-        void (*)(Branches*));
+        void (*)(Branches*), void (*)(Git*));
     void git_free(Git::Private*);
     Branches::Private* git_branches_get(const Git::Private*);
+    void git_revwalk_filter_get(const Git::Private*, QString*, qstring_set);
     void git_load(Git::Private*, const ushort*, int);
 };
 
@@ -661,7 +666,8 @@ Git::Git(QObject *parent):
         [](Branches* o) {
             o->endRemoveRows();
         }
-)),
+,
+        gitRevwalkFilterChanged)),
     m_ownsPrivate(true)
 {
     m_branches->m_d = git_branches_get(m_d);
@@ -682,6 +688,12 @@ const Branches* Git::branches() const
 Branches* Git::branches()
 {
     return m_branches;
+}
+QString Git::revwalkFilter() const
+{
+    QString v;
+    git_revwalk_filter_get(m_d, &v, set_qstring);
+    return v;
 }
 void Git::load(const QString& path)
 {

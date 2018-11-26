@@ -284,6 +284,7 @@ pub struct GitQObject {}
 
 pub struct GitEmitter {
     qobject: Arc<AtomicPtr<GitQObject>>,
+    revwalk_filter_changed: fn(*mut GitQObject),
 }
 
 unsafe impl Send for GitEmitter {}
@@ -298,11 +299,18 @@ impl GitEmitter {
     pub fn clone(&mut self) -> GitEmitter {
         GitEmitter {
             qobject: self.qobject.clone(),
+            revwalk_filter_changed: self.revwalk_filter_changed,
         }
     }
     fn clear(&self) {
         let n: *const GitQObject = null();
         self.qobject.store(n as *mut GitQObject, Ordering::SeqCst);
+    }
+    pub fn revwalk_filter_changed(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.revwalk_filter_changed)(ptr);
+        }
     }
 }
 
@@ -312,6 +320,7 @@ pub trait GitTrait {
     fn emit(&mut self) -> &mut GitEmitter;
     fn branches(&self) -> &Branches;
     fn branches_mut(&mut self) -> &mut Branches;
+    fn revwalk_filter(&self) -> &str;
     fn load(&mut self, path: String) -> ();
 }
 
@@ -331,6 +340,7 @@ pub extern "C" fn git_new(
     branches_end_move_rows: fn(*mut BranchesQObject),
     branches_begin_remove_rows: fn(*mut BranchesQObject, usize, usize),
     branches_end_remove_rows: fn(*mut BranchesQObject),
+    git_revwalk_filter_changed: fn(*mut GitQObject),
 ) -> *mut Git {
     let branches_emit = BranchesEmitter {
         qobject: Arc::new(AtomicPtr::new(branches)),
@@ -353,6 +363,7 @@ pub extern "C" fn git_new(
     let d_branches = Branches::new(branches_emit, model);
     let git_emit = GitEmitter {
         qobject: Arc::new(AtomicPtr::new(git)),
+        revwalk_filter_changed: git_revwalk_filter_changed,
     };
     let d_git = Git::new(git_emit,
         d_branches);
@@ -367,6 +378,18 @@ pub unsafe extern "C" fn git_free(ptr: *mut Git) {
 #[no_mangle]
 pub unsafe extern "C" fn git_branches_get(ptr: *mut Git) -> *mut Branches {
     (&mut *ptr).branches_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn git_revwalk_filter_get(
+    ptr: *const Git,
+    p: *mut QString,
+    set: fn(*mut QString, *const c_char, c_int),
+) {
+    let o = &*ptr;
+    let v = o.revwalk_filter();
+    let s: *const c_char = v.as_ptr() as (*const c_char);
+    set(p, s, to_c_int(v.len()));
 }
 
 #[no_mangle]

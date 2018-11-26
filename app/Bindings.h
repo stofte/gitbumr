@@ -63,15 +63,18 @@ private:
     Private * m_d;
     bool m_ownsPrivate;
     Q_PROPERTY(Branches* branches READ branches NOTIFY branchesChanged FINAL)
+    Q_PROPERTY(QString revwalkFilter READ revwalkFilter NOTIFY revwalkFilterChanged FINAL)
     explicit Git(bool owned, QObject *parent);
 public:
     explicit Git(QObject *parent = nullptr);
     ~Git();
     const Branches* branches() const;
     Branches* branches();
+    QString revwalkFilter() const;
     Q_INVOKABLE void load(const QString& path);
 Q_SIGNALS:
     void branchesChanged();
+    void revwalkFilterChanged();
 };
 
 class Log : public QAbstractItemModel

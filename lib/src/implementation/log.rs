@@ -48,27 +48,20 @@ impl LogTrait for Log {
         &self.list[index].time
     }
     fn load(&mut self, path: String) {
-        match Repository::open(path) {
-            Ok(repo) => {
-                {
-                    let mut rv = repo.revwalk().unwrap();
-                    // get the revwalk for the current head
-                    rv.push_head();
-                    self.revwalk.clear();
-                    let mut i = 0;
-                    for e in rv {
-                        self.revwalk.push(e.unwrap());
-                        i += 1;
-                    }
-                    println!("revwalk count was {}", i);
-                }
-                self.git = Some(repo);
-            }
-            Err(..) => return,
-        };
-
+        self.git= Some(Repository::open(&path).unwrap());
     }
     fn filter(&mut self, filter: String) {
-
+        let oid = Oid::from_str(&filter).unwrap();
+        match &self.git {
+            Some(git) => {
+                let mut rv = git.revwalk().unwrap();
+                rv.push(oid).unwrap();
+                self.revwalk.clear();
+                for e in rv {
+                    self.revwalk.push(e.unwrap());
+                }
+            },
+            None => panic!("no git found on log element")
+        }
     }
 }

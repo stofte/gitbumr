@@ -6,17 +6,7 @@ import "../base"
 import "../style"
 
 Pane {
-    height: 400
-    // move git stuff to a proper parent GitView and with children History/BranchView
-    property string gitPath;
-    onGitPathChanged: {
-        gitModel.load(gitPath);
-    }
-    Git {
-        id: gitModel
-    }
     ListView {
-        property alias branches: gitModel.branches
         anchors.fill: parent
         Component {
             id: gitDelegate
@@ -61,7 +51,7 @@ Pane {
         clip: true
         ScrollBar.vertical: ScrollBar {}
         boundsBehavior: Flickable.StopAtBounds
-        model: branches
+        model: gitModel.branches
         delegate: gitDelegate
     }
 }

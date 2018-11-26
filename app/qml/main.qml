@@ -18,7 +18,7 @@ ApplicationWindow {
     Repositories {
         id: repositoriesModel
         onActiveRepositoryChanged: {
-            branchView.gitPath = activeRepository;
+            gitView.gitPath = activeRepository;
             if (activeRepository) { // x = !!y doesnt seem to work to convert to boolean?
                 noRepoView.visible = false;
             } else {
@@ -58,23 +58,7 @@ ApplicationWindow {
             }
         }
 
-        QQC14.SplitView {
-            orientation: Qt.Horizontal
-            anchors.fill: parent
-            handleDelegate: Rectangle {
-                color: Style.dark
-                width: 1
-            }
-            BranchView {
-                id: branchView
-                Layout.fillHeight: true
-                Layout.minimumWidth: 100
-                Layout.preferredWidth: 200
-            }
-            HistoryView {
-                Layout.fillHeight: true
-            }
-        }
+        GitView { id: gitView }
 
         Pane {
             id: noRepoView

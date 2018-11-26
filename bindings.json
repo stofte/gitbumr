@@ -62,7 +62,8 @@
         "Git": {
             "type": "Object",
             "properties": {
-                "branches": { "type": "Branches" }
+                "branches": { "type": "Branches" },
+                "revwalkFilter": { "type": "QString" }
             },
             "functions": {
                 "load": {
@@ -87,6 +88,7 @@
                 "author": { "type": "QString" },
                 "message": { "type": "QString" }
             },
+            
             "functions": {
                 "load": {
                     "return": "void",
