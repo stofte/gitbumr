@@ -1,4 +1,4 @@
-use std::{thread};
+use std::{thread, cmp::min};
 use git2::{Repository, Oid};
 use interface::{
     LogList, LogEmitter, LogTrait
@@ -74,19 +74,28 @@ impl LogTrait for Log {
         has_more
     }
     fn fetch_more(&mut self) {
-
-        let mut oid_idx = 0;
-        if self.list.len() > 0 {
-            oid_idx = self.list.len() - 1;
-        }
-        let max_count = self.revwalk.len() - 1 - oid_idx;
-        println!("fetch_more: {}..{}", oid_idx, max_count);
-        for i in oid_idx..max_count {
-
+        match self.git {
+            Some(ref git) => {
+                let mut oid_idx = 0;
+                if self.list.len() > 0 {
+                    oid_idx = self.list.len() - 1;
+                }
+                let max_count = min(1000, self.revwalk.len() - 1 - oid_idx);
+                println!("fetch_more: {}..{}", oid_idx, max_count);
+                self.model.begin_insert_rows(oid_idx, max_count);
+                for i in oid_idx..max_count {
+                    let oid = self.revwalk[i];
+                    let e = get_log_item(&oid, git);
+                    println!("fetch_more {} => {}", i, e.oid);
+                    self.list.push(e);
+                }
+                self.model.end_insert_rows();
+            }
+            _ => panic!("fetch_more unexpected case")
         }
     }
 }
 
 fn get_log_item(oid: &Oid, git: &Repository) -> LogItem {
-    LogItem { oid: "".to_string(), time: "".to_string(), author: "".to_string(), message: "".to_string() }
+    LogItem { oid: oid.to_string(), time: "".to_string(), author: "".to_string(), message: "".to_string() }
 }
