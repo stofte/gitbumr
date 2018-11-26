@@ -1,6 +1,7 @@
 use std::path::{PathBuf};
-use git2::{Repository, BranchType};
-use implementation::branches::BranchesItem;
+use git2::{Repository, BranchType, Oid};
+use chrono::prelude::*;
+use implementation::{branches::BranchesItem, log::LogItem};
 
 pub fn pathbuf_filename_to_string(pb: &PathBuf) -> String {
     pb.file_name().unwrap().to_string_lossy().to_string()
@@ -40,4 +41,20 @@ pub fn local_branches(repo: &Repository) -> Vec<BranchesItem> {
     }
     vec.sort_by(|a, b| a.name.cmp(&b.name));
     vec
+}
+
+pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
+    let c = repo.find_commit(oid).unwrap();
+    let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), FixedOffset::east(tz_offset_sec));
+    let m = c.message().unwrap();
+    let a = c.author();
+    let n = a.name().unwrap();
+    let idstr = format!("{:?}", oid).to_string();
+    let author_abbrev: String = n.split(" ").filter(|s| s.len() > 0).map(|s| s.chars().next().unwrap()).collect();
+    LogItem {
+        oid: idstr.chars().take(8).collect(),
+        time: dt.to_string(),
+        author: n.to_string(),
+        message: m.to_string(),
+    }
 }

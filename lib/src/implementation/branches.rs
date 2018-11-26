@@ -41,8 +41,6 @@ pub fn fill_branches(b: &mut Branches, items: Vec<BranchesItem>) {
         return
     }
     b.model.begin_reset_model();
-    // b.model.begin_insert_rows(0, items.len() - 1);
     b.list = items;
-    // b.model.end_insert_rows();
     b.model.end_reset_model();
 }

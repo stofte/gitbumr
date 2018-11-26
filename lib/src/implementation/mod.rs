@@ -1,5 +1,5 @@
 mod repositories;
-mod log;
+pub mod log;
 pub mod branches;
 mod git;
 
