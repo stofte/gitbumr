@@ -10,10 +10,9 @@ QQC14.SplitView {
     height: 400
     property string gitPath;
     onGitPathChanged: {
-        console.log("onGitPathChanged", gitPath)
-        // when we update the git mode, the revwalk filter will update, firing
-        // onRevwalkFilterChanged. to avoid being called before the git ref is set,
-        // we call load on the logModel as the first thing.
+        // when we update the git model, the revwalk filter will update, firing
+        // onRevwalkFilterChanged. to avoid being called before the git ref is set
+        // in logModel, we call load on the logModel as the first thing.
         logModel.load(gitPath);
         gitModel.load(gitPath);
     }
@@ -21,10 +20,7 @@ QQC14.SplitView {
     Git {
         id: gitModel
         onRevwalkFilterChanged: {
-            console.log("onRevwalkFilterChanged", revwalkFilter);
-            if (revwalkFilter) {
-                logModel.filter(revwalkFilter);
-            }
+            logModel.filter(revwalkFilter);
         }
     }
 
