@@ -11,6 +11,12 @@ pub fn pathbuf_to_string(pb: PathBuf) -> String {
     pb.into_os_string().to_string_lossy().to_string()
 }
 
+pub fn get_timesize_offset_secs() -> i32 {
+    let ldt = Local::now();
+    let z = ldt.offset().local_minus_utc();
+    z
+}
+
 pub fn is_git_repo(path: &str) -> Result<(), &'static str> {
 	match Repository::open(path) {
         Ok(..) => Ok(()),

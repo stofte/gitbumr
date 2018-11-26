@@ -1,5 +1,6 @@
 use std::{thread, cmp::min};
 use git2::{Repository, Oid};
+use utils::{get_commit, get_timesize_offset_secs};
 use interface::{
     LogList, LogEmitter, LogTrait
 };
@@ -18,6 +19,7 @@ pub struct Log {
     list: Vec<LogItem>,
     revwalk: Vec<Oid>,
     git: Option<Repository>,
+    tz_offset_sec: i32,
 }
 
 impl LogTrait for Log {
@@ -28,6 +30,7 @@ impl LogTrait for Log {
             list: vec![],
             revwalk: vec![],
             git: None,
+            tz_offset_sec: get_timesize_offset_secs(),
         }
     }
     fn emit(&mut self) -> &mut LogEmitter {
@@ -59,10 +62,10 @@ impl LogTrait for Log {
                 let mut rv = git.revwalk().unwrap();
                 rv.push(oid).unwrap();
                 self.revwalk.clear();
+                // this takes a long ass time
                 for e in rv {
                     self.revwalk.push(e.unwrap());
                 }
-                println!("log.filter, revwalk n is {}", self.revwalk.len());
             },
             None => panic!("no git found on log element")
         }
@@ -70,23 +73,17 @@ impl LogTrait for Log {
     }
     fn can_fetch_more(&self) -> bool {
         let has_more = self.list.len() < self.revwalk.len();
-        println!("can_fetch_more {}", has_more);
         has_more
     }
     fn fetch_more(&mut self) {
         match self.git {
             Some(ref git) => {
-                let mut oid_idx = 0;
-                if self.list.len() > 0 {
-                    oid_idx = self.list.len() - 1;
-                }
-                let max_count = min(1000, self.revwalk.len() - 1 - oid_idx);
-                println!("fetch_more: {}..{}", oid_idx, max_count);
-                self.model.begin_insert_rows(oid_idx, max_count);
-                for i in oid_idx..max_count {
+                let oid_idx = self.list.len();
+                let max_idx = oid_idx + min(10000, self.revwalk.len() - oid_idx);
+                self.model.begin_insert_rows(oid_idx, max_idx - 1);
+                for i in oid_idx..max_idx {
                     let oid = self.revwalk[i];
-                    let e = get_log_item(&oid, git);
-                    println!("fetch_more {} => {}", i, e.oid);
+                    let e = get_commit(oid, self.tz_offset_sec, git);
                     self.list.push(e);
                 }
                 self.model.end_insert_rows();
@@ -94,8 +91,4 @@ impl LogTrait for Log {
             _ => panic!("fetch_more unexpected case")
         }
     }
-}
-
-fn get_log_item(oid: &Oid, git: &Repository) -> LogItem {
-    LogItem { oid: oid.to_string(), time: "".to_string(), author: "".to_string(), message: "".to_string() }
 }
