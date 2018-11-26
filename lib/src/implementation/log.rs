@@ -1,3 +1,4 @@
+use std::{thread};
 use git2::{Repository, Oid};
 use interface::{
     LogList, LogEmitter, LogTrait
@@ -51,6 +52,7 @@ impl LogTrait for Log {
         self.git= Some(Repository::open(&path).unwrap());
     }
     fn filter(&mut self, filter: String) {
+        self.model.begin_reset_model();
         let oid = Oid::from_str(&filter).unwrap();
         match &self.git {
             Some(git) => {
@@ -60,8 +62,31 @@ impl LogTrait for Log {
                 for e in rv {
                     self.revwalk.push(e.unwrap());
                 }
+                println!("log.filter, revwalk n is {}", self.revwalk.len());
             },
             None => panic!("no git found on log element")
         }
+        self.model.end_reset_model();
     }
+    fn can_fetch_more(&self) -> bool {
+        let has_more = self.list.len() < self.revwalk.len();
+        println!("can_fetch_more {}", has_more);
+        has_more
+    }
+    fn fetch_more(&mut self) {
+
+        let mut oid_idx = 0;
+        if self.list.len() > 0 {
+            oid_idx = self.list.len() - 1;
+        }
+        let max_count = self.revwalk.len() - 1 - oid_idx;
+        println!("fetch_more: {}..{}", oid_idx, max_count);
+        for i in oid_idx..max_count {
+
+        }
+    }
+}
+
+fn get_log_item(oid: &Oid, git: &Repository) -> LogItem {
+    LogItem { oid: "".to_string(), time: "".to_string(), author: "".to_string(), message: "".to_string() }
 }
