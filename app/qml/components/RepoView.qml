@@ -57,8 +57,6 @@ Pane {
                                 TextItem {
                                     text: displayName
                                     verticalAlignment: Text.AlignVCenter
-                                    font.pointSize: Style.fontPointSize
-                                    font.family: Style.fontName
                                     font.bold: current
                                 }
                             }
@@ -89,8 +87,6 @@ Pane {
             TextItem {
                 anchors.centerIn: parent
                 text: "Add"
-                font.pointSize: Style.fontPointSize
-                font.family: Style.fontName
             }
             onClicked: {
                 fileDialog.open()

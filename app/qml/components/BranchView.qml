@@ -27,8 +27,6 @@ Pane {
                         TextItem {
                             text: name
                             verticalAlignment: Text.AlignVCenter
-                            font.pointSize: Style.fontPointSize
-                            font.family: Style.fontName
                             font.bold: checkedout
                         }
                     }
