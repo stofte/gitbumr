@@ -17,6 +17,10 @@ pub fn get_timesize_offset_secs() -> i32 {
     z
 }
 
+pub fn strip_whitespace(str: &str) -> String {
+    str.replace("\r\n", " ").replace("\n", " ")
+}
+
 pub fn is_git_repo(path: &str) -> Result<(), &'static str> {
 	match Repository::open(path) {
         Ok(..) => Ok(()),
@@ -52,7 +56,7 @@ pub fn local_branches(repo: &Repository) -> Vec<BranchesItem> {
 pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
     let c = repo.find_commit(oid).unwrap();
     let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), FixedOffset::east(tz_offset_sec));
-    let m = c.message().unwrap();
+    let m = strip_whitespace(c.message().unwrap());
     let a = c.author();
     let n = a.name().unwrap();
     let idstr = format!("{:?}", oid).to_string();
