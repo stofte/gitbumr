@@ -62,6 +62,9 @@ impl LogTrait for Log {
                 let mut rv = git.revwalk().unwrap();
                 rv.push(oid).unwrap();
                 self.revwalk.clear();
+                self.model.begin_reset_model();
+                self.list.clear();
+                self.model.end_reset_model();
                 // this takes a long ass time
                 for e in rv {
                     self.revwalk.push(e.unwrap());
