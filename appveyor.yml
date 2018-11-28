@@ -16,12 +16,10 @@ build_script:
   - nmake
   - pushd bin & del *.exp,*.lib & popd # files for development only
   - windeployqt --verbose 0 --qmldir app bin\gitbumr.exe
-
-test: off
-
-after_test:
   - move bin gitbumr
   - cd gitbumr & 7z a ..\app.zip .
+
+test: off
 
 artifacts:
   - path: app.zip
