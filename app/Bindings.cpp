@@ -40,6 +40,7 @@ namespace {
 extern "C" {
     bool branches_data_checkedout(const Branches::Private*, int);
     void branches_data_name(const Branches::Private*, int, QString*, qstring_set);
+    void branches_data_oid(const Branches::Private*, int, QString*, qstring_set);
     void branches_sort(Branches::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
 
     int branches_row_count(const Branches::Private*);
@@ -121,6 +122,13 @@ QString Branches::name(int row) const
     return s;
 }
 
+QString Branches::oid(int row) const
+{
+    QString s;
+    branches_data_oid(m_d, row, &s, set_qstring);
+    return s;
+}
+
 QVariant Branches::data(const QModelIndex &index, int role) const
 {
     Q_ASSERT(rowCount(index.parent()) > index.row());
@@ -131,6 +139,8 @@ QVariant Branches::data(const QModelIndex &index, int role) const
             return QVariant::fromValue(checkedout(index.row()));
         case Qt::UserRole + 1:
             return QVariant::fromValue(name(index.row()));
+        case Qt::UserRole + 2:
+            return QVariant::fromValue(oid(index.row()));
         }
         break;
     }
@@ -152,6 +162,7 @@ QHash<int, QByteArray> Branches::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
     names.insert(Qt::UserRole + 0, "checkedout");
     names.insert(Qt::UserRole + 1, "name");
+    names.insert(Qt::UserRole + 2, "oid");
     return names;
 }
 QVariant Branches::headerData(int section, Qt::Orientation orientation, int role) const

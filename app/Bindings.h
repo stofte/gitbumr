@@ -42,6 +42,7 @@ public:
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Q_INVOKABLE bool checkedout(int row) const;
     Q_INVOKABLE QString name(int row) const;
+    Q_INVOKABLE QString oid(int row) const;
 
 Q_SIGNALS:
     // new data is ready to be made available to the model with fetchMore()

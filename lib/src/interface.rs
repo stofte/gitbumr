@@ -188,6 +188,7 @@ pub trait BranchesTrait {
     fn sort(&mut self, u8, SortOrder) {}
     fn checkedout(&self, index: usize) -> bool;
     fn name(&self, index: usize) -> &str;
+    fn oid(&self, index: usize) -> &str;
 }
 
 #[no_mangle]
@@ -276,6 +277,18 @@ pub unsafe extern "C" fn branches_data_name(
 ) {
     let o = &*ptr;
     let data = o.name(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn branches_data_oid(
+    ptr: *const Branches, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.oid(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
 }

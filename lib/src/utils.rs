@@ -42,12 +42,14 @@ pub fn local_branches(repo: &Repository) -> Vec<BranchesItem> {
     let head_name = get_head(&repo);
     for b in bs {
         let bb = b.unwrap().0;
+        let b_ref = &*bb.get();
         let name = bb.name().unwrap().unwrap().to_owned();
         let mut chkout = false;
         if head_name == name {
             chkout = true;
         }
-        vec.push(BranchesItem{ name: name, checkedout: chkout });
+        let oid_str = b_ref.target().unwrap().to_string();
+        vec.push(BranchesItem{ name: name, checkedout: chkout, oid: oid_str });
     }
     vec.sort_by(|a, b| a.name.cmp(&b.name));
     vec
@@ -55,12 +57,12 @@ pub fn local_branches(repo: &Repository) -> Vec<BranchesItem> {
 
 pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
     let c = repo.find_commit(oid).unwrap();
-    let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), FixedOffset::east(tz_offset_sec));
+    let fo = FixedOffset::east(tz_offset_sec);
+    let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), fo);
     let m = strip_whitespace(c.message().unwrap());
     let a = c.author();
     let n = a.name().unwrap();
     let idstr = format!("{:?}", oid).to_string();
-    let author_abbrev: String = n.split(" ").filter(|s| s.len() > 0).map(|s| s.chars().next().unwrap()).collect();
     LogItem {
         oid: idstr.chars().take(8).collect(),
         time: dt.to_string(),

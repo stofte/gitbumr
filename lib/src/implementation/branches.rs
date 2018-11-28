@@ -6,6 +6,7 @@ use interface::{
 pub struct BranchesItem {
     pub name: String,
     pub checkedout: bool,
+    pub oid: String,
 }
 
 pub struct Branches {
@@ -33,6 +34,9 @@ impl BranchesTrait for Branches {
     }
     fn checkedout(&self, index: usize) -> bool {
         self.list[index].checkedout
+    }
+    fn oid(&self, index: usize) -> &str {
+        &self.list[index].oid
     }
 }
 

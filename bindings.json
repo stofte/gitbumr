@@ -77,7 +77,8 @@
             "type": "List",
             "itemProperties": {
                 "name": { "type": "QString" },
-                "checkedout": { "type": "bool" }
+                "checkedout": { "type": "bool" },
+                "oid": { "type": "QString" }
             }
         },
         "Log": {
