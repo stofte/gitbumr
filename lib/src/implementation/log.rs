@@ -1,4 +1,4 @@
-use std::{thread, cmp::min};
+use std::{cmp::min};
 use git2::{Repository, Oid};
 use utils::{get_commit, get_timesize_offset_secs};
 use interface::{

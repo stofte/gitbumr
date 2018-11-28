@@ -1,6 +1,6 @@
-use git2::{Repository, Oid};
+use git2::{Repository};
 use interface::{ GitTrait, GitEmitter };
-use super::{ Branches, BranchesItem, fill_branches };
+use super::{ Branches, fill_branches };
 use utils::local_branches;
 
 pub struct Git {
