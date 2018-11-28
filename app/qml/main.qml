@@ -1,6 +1,5 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.3
-import QtQuick.Controls 1.4 as QQC14
 import QtQuick.Layouts 1.3
 import RustCode 1.0
 import "components"
@@ -43,16 +42,24 @@ ApplicationWindow {
         anchors.fill: parent
         header: ToolBar {
             topPadding: 5
+            rightPadding: 5
             bottomPadding: 5
+            leftPadding: 5
             RowLayout {
                 anchors.fill: parent
                 ToolButton {
                     font.family: Style.fontName
                     font.pointSize: Style.fontPointSize
-                    text: qsTr("Repositories")
-                    Layout.fillWidth: false
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: repoTextLabel.width + 10
+                    Layout.preferredHeight: repoTextLabel.height + 10
                     onClicked: {
                         repoMgr.show();
+                    }
+                    TextItem {
+                        anchors.centerIn: parent
+                        id: repoTextLabel
+                        text: qsTr("Repositories")
                     }
                 }
             }
