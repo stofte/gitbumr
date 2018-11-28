@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/base/TextItem.qml</file>
+        <file>qml/style/Style.qml</file>
+        <file>qml/style/qmldir</file>
+        <file>qml/components/RepositoryManager.qml</file>
+        <file>qml/components/RepoView.qml</file>
+        <file>qml/components/BranchView.qml</file>
+        <file>qml/components/HistoryView.qml</file>
+        <file>qml/components/GitView.qml</file>
+    </qresource>
+</RCC>

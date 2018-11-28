@@ -1,0 +1,27 @@
+{
+    "folders":
+    [
+        {
+            "path": "app",
+            "file_exclude_patterns": ["app.ico"],
+            "name": "app"
+        },
+        {
+            "path": "lib",
+            "folder_exclude_patterns": ["target"],
+            "file_exclude_patterns": ["Cargo.lock"],
+            "name": "lib"
+        },
+        {
+            "file_include_patterns": ["bindings.json", "*.sublime-project", "readme.md", "appveyor.yml", "*.pro"],
+            "folder_exclude_patterns": ["*"],
+            "name": "project",
+            "path": "."
+        }
+    ],
+    "settings":
+    {
+        "translate_tabs_to_spaces": false,
+        "tab_size": 4
+    }
+}

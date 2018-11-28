@@ -1,0 +1,107 @@
+{
+    "cppFile": "app/Bindings.cpp",
+    "rust": {
+        "dir": "lib",
+        "interfaceModule": "interface",
+        "implementationModule": "implementation"
+    },
+    "objects": {
+        "Repositories": {
+            "type": "List",
+            "itemProperties": {
+                "id": {
+                    "type": "qint64",
+                    "write": false
+                },
+                "displayName": {
+                    "type": "QString",
+                    "write": false
+                },
+                "current": {
+                    "type": "bool",
+                    "write": false
+                }
+            },
+            "properties": {
+                "activeRepository": { "type": "QString" }
+            },
+            "functions": {
+                "init": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "db_file_name", "type": "QString" }
+                    ]
+                },
+                "add": {
+                    "return": "bool",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "path", "type": "QString" }
+                    ]
+                },
+                "addLastError": {
+                    "return": "QString"
+                },
+                "remove": {
+                    "return": "bool",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "index", "type": "quint64" }
+                    ]
+                },
+                "setCurrent": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "id", "type": "qint64" }
+                    ]
+                }
+            }
+        },
+        "Git": {
+            "type": "Object",
+            "properties": {
+                "branches": { "type": "Branches" },
+                "revwalkFilter": { "type": "QString" }
+            },
+            "functions": {
+                "load": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [{ "name": "path", "type": "QString" }]
+                }
+            }
+        },
+        "Branches": {
+            "type": "List",
+            "itemProperties": {
+                "name": { "type": "QString" },
+                "checkedout": { "type": "bool" },
+                "oid": { "type": "QString" }
+            }
+        },
+        "Log": {
+            "type": "List",
+            "itemProperties": {
+                "oid": { "type": "QString" },
+                "time": { "type": "QString" },
+                "author": { "type": "QString" },
+                "message": { "type": "QString" }
+            },
+            
+            "functions": {
+                "load": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [{ "name": "path", "type": "QString" }]
+                },
+                "filter": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [{ "name": "filter", "type": "QString" }]
+                }
+            }
+        }
+    }
+}
