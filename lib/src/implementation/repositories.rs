@@ -102,14 +102,11 @@ impl RepositoriesTrait for Repositories {
         let rowid = match add_repository(self, &p, &dir_name) {
             Err(txt) => {
                 self.add_last_error_text = txt.to_string();
-                println!("insert failed: {}", txt);
                 return false
             }
-            Ok(id) => {
-                println!("insert went ok {}", id);
-                id
-            }
+            Ok(id) => id
         };
+
         // mark others as inactive
         self.model.begin_reset_model();
         for mut e in &mut self.list {
@@ -119,7 +116,7 @@ impl RepositoriesTrait for Repositories {
             current: true,
             display_name: dir_name,
             path: p,
-            id: 0
+            id: rowid
         };
         let idx = 0; // inserts at the top
         self.list.insert(idx, item);
