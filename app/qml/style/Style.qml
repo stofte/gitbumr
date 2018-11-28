@@ -3,11 +3,11 @@ import QtQuick 2.9
 
 Item {
 
-    FontLoader { id: mainFont; name: "Segoe UI" }
+    FontLoader { id: mainFont; name: "Roboto" }
     FontLoader { id: fixedWidthFont; name: "Consolas" }
     SystemPalette { id: palette; colorGroup: SystemPalette.Active }
 
-    readonly property int fontPointSize: 9
+    readonly property int fontPointSize: 10
     readonly property int borderSize: 4
 
     readonly property string dark: palette.dark
