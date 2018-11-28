@@ -19,6 +19,15 @@ build_script:
 
 test: off
 
+after_test:
+  - move bin gitbumr
+  - cd gitbumr & 7z a ..\app.zip .
+
+artifacts:
+  - path: app.zip
+
 # rustup takes minutes to install
 cache:
   - '%USERPROFILE%\.rustup -> appveyor.yml'
+
+
