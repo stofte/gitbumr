@@ -41,7 +41,7 @@ Pane {
                         labelBackground.border.color = "#F0F0F0";
                     }
                     onDoubleClicked: {
-                        console.log("branch clicked", name, "=>", oid)
+                        logModel.filter(oid);
                     }
                 }
             }

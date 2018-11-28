@@ -31,11 +31,13 @@ Rectangle {
                             height: rootItem.height
                             Layout.fillWidth: true
                             Rectangle {
-                                Layout.preferredWidth: 38
+                                Layout.preferredWidth: oidTextLabel.width + 2
                                 Layout.fillHeight: true
                                 color: "transparent"
                                 TextItem {
+                                    id: oidTextLabel
                                     anchors.verticalCenter: parent.verticalCenter
+                                    font.family: Style.fontNameFixedWidth
                                     color: Style.mid
                                     text: oid
                                 }

@@ -4,6 +4,7 @@ import QtQuick 2.9
 Item {
 
     FontLoader { id: mainFont; name: "Segoe UI" }
+    FontLoader { id: fixedWidthFont; name: "Consolas" }
     SystemPalette { id: palette; colorGroup: SystemPalette.Active }
 
     readonly property int fontPointSize: 9
@@ -15,4 +16,6 @@ Item {
     readonly property string window: palette.window
 
     readonly property string fontName: mainFont.name
+
+    readonly property string fontNameFixedWidth: fixedWidthFont.name
 }
