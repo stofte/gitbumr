@@ -1,5 +1,5 @@
 use std::{cmp::min};
-use git2::{Repository, Oid};
+use git2::{Sort, Repository, Oid};
 use utils::{get_commit, get_timesize_offset_secs};
 use interface::{
     LogList, LogEmitter, LogTrait
@@ -60,12 +60,18 @@ impl LogTrait for Log {
         match &self.git {
             Some(git) => {
                 let mut rv = git.revwalk().unwrap();
+                // to view the specific branch log, push the head's oid of the branch.
+                // following code should show a combined history for entire repo.
+                // rv.push_glob("refs/remotes/origin/*").unwrap();
+                // rv.push_glob("refs/heads/*").unwrap();
+                // see https://git-scm.com/book/id/v2/Git-Internals-The-Refspec
                 rv.push(oid).unwrap();
+                rv.set_sorting(Sort::TIME);
                 self.revwalk.clear();
                 self.model.begin_reset_model();
                 self.list.clear();
                 self.model.end_reset_model();
-                // this takes a long ass time
+                // this can take a long ass time (eg linux kernel repo)
                 for e in rv {
                     self.revwalk.push(e.unwrap());
                 }
