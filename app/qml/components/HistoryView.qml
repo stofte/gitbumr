@@ -31,15 +31,15 @@ Rectangle {
                             height: rootItem.height
                             Layout.fillWidth: true
                             Rectangle {
-                                Layout.preferredWidth: oidTextLabel.width + 2
+                                Layout.preferredWidth: cidTextLabel.width + 2
                                 Layout.fillHeight: true
                                 color: "transparent"
                                 TextItem {
-                                    id: oidTextLabel
+                                    id: cidTextLabel
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: Style.fontNameFixedWidth
                                     color: Style.mid
-                                    text: oid
+                                    text: cid_short
                                 }
                             }
                             Rectangle {
