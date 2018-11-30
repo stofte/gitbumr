@@ -514,8 +514,8 @@ pub trait LogTrait {
     fn fetch_more(&mut self) {}
     fn sort(&mut self, u8, SortOrder) {}
     fn author(&self, index: usize) -> &str;
+    fn cid_short(&self, index: usize) -> &str;
     fn message(&self, index: usize) -> &str;
-    fn oid(&self, index: usize) -> &str;
     fn time(&self, index: usize) -> &str;
 }
 
@@ -622,6 +622,18 @@ pub unsafe extern "C" fn log_data_author(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn log_data_cid_short(
+    ptr: *const Log, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.cid_short(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn log_data_message(
     ptr: *const Log, row: c_int,
     d: *mut QString,
@@ -629,18 +641,6 @@ pub unsafe extern "C" fn log_data_message(
 ) {
     let o = &*ptr;
     let data = o.message(to_usize(row));
-    let s: *const c_char = data.as_ptr() as (*const c_char);
-    set(d, s, to_c_int(data.len()));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn log_data_oid(
-    ptr: *const Log, row: c_int,
-    d: *mut QString,
-    set: fn(*mut QString, *const c_char, len: c_int),
-) {
-    let o = &*ptr;
-    let data = o.oid(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
 }

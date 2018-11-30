@@ -7,7 +7,7 @@ use interface::{
 
 #[derive(Default, Clone)]
 pub struct LogItem {
-    pub oid: String,
+    pub cid_short: String,
     pub time: String,
     pub author: String,
     pub message: String,
@@ -45,8 +45,8 @@ impl LogTrait for Log {
     fn message(&self, index: usize) -> &str {
         &self.list[index].message
     }
-    fn oid(&self, index: usize) -> &str {
-        &self.list[index].oid
+    fn cid_short(&self, index: usize) -> &str {
+        &self.list[index].cid_short
     }
     fn time(&self, index: usize) -> &str {
         &self.list[index].time

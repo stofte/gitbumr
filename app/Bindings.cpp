@@ -221,8 +221,8 @@ extern "C" {
 
 extern "C" {
     void log_data_author(const Log::Private*, int, QString*, qstring_set);
+    void log_data_cid_short(const Log::Private*, int, QString*, qstring_set);
     void log_data_message(const Log::Private*, int, QString*, qstring_set);
-    void log_data_oid(const Log::Private*, int, QString*, qstring_set);
     void log_data_time(const Log::Private*, int, QString*, qstring_set);
     void log_sort(Log::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
 
@@ -300,17 +300,17 @@ QString Log::author(int row) const
     return s;
 }
 
+QString Log::cid_short(int row) const
+{
+    QString s;
+    log_data_cid_short(m_d, row, &s, set_qstring);
+    return s;
+}
+
 QString Log::message(int row) const
 {
     QString s;
     log_data_message(m_d, row, &s, set_qstring);
-    return s;
-}
-
-QString Log::oid(int row) const
-{
-    QString s;
-    log_data_oid(m_d, row, &s, set_qstring);
     return s;
 }
 
@@ -330,9 +330,9 @@ QVariant Log::data(const QModelIndex &index, int role) const
         case Qt::UserRole + 0:
             return QVariant::fromValue(author(index.row()));
         case Qt::UserRole + 1:
-            return QVariant::fromValue(message(index.row()));
+            return QVariant::fromValue(cid_short(index.row()));
         case Qt::UserRole + 2:
-            return QVariant::fromValue(oid(index.row()));
+            return QVariant::fromValue(message(index.row()));
         case Qt::UserRole + 3:
             return QVariant::fromValue(time(index.row()));
         }
@@ -355,8 +355,8 @@ int Log::role(const char* name) const {
 QHash<int, QByteArray> Log::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
     names.insert(Qt::UserRole + 0, "author");
-    names.insert(Qt::UserRole + 1, "message");
-    names.insert(Qt::UserRole + 2, "oid");
+    names.insert(Qt::UserRole + 1, "cid_short");
+    names.insert(Qt::UserRole + 2, "message");
     names.insert(Qt::UserRole + 3, "time");
     return names;
 }

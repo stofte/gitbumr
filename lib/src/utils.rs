@@ -66,7 +66,7 @@ pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
     let n = a.name().unwrap();
     let idstr = format!("{:?}", oid).to_string();
     LogItem {
-        oid: idstr.chars().take(8).collect(),
+        cid_short: idstr.chars().take(8).collect(),
         time: format!("{}", ht).to_string(),
         author: n.to_string(),
         message: m.to_string(),
