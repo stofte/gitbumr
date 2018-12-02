@@ -1,6 +1,6 @@
-use std::{cmp::min};
-use git2::{Sort, Repository, Oid};
-use utils::{get_commit, get_timesize_offset_secs};
+use git2::{Repository, Oid};
+use crossbeam::channel::Receiver;
+use utils::{get_commit, get_timesize_offset_secs, get_chan_revwalker};
 use interface::{
     LogList, LogEmitter, LogTrait
 };
@@ -17,9 +17,40 @@ pub struct Log {
     emit: LogEmitter,
     model: LogList,
     list: Vec<LogItem>,
-    revwalk: Vec<Oid>,
     git: Option<Repository>,
+    git_path: String,
     tz_offset_sec: i32,
+    revwalker: Option<Receiver<(Vec<Oid>, bool)>>,
+    revwalker_has_more: bool,
+}
+
+impl Log {
+    fn load_from_channel(&mut self) {
+        // loading from the revwalk is kinda bitchy since the revwalk is owned by the repo is belongs to.
+        // to get around this, and get a "simple" way to resume the revwalk, we hide it away in a thread,
+        // which simply walks the revwalk and pushes vectors of fixed sizes to the main thread.
+        // as the ui requires more rows, the ui must block on receiving from the revwalking thread.
+        // the ui then does the actual work of creating the commit and inserting it into the ui.
+        match self.git {
+            Some(ref mut r) => {
+                match self.revwalker {
+                    Some(ref mut rc) => {
+                        let (data, has_more) = rc.recv().unwrap();
+                        let ins_idx = self.list.len();
+                        self.model.begin_insert_rows(ins_idx, ins_idx + data.len() - 1);
+                        for oid in data {
+                            let e = get_commit(oid, self.tz_offset_sec, &r);
+                            self.list.push(e);
+                        }
+                        self.model.end_insert_rows();
+                        self.revwalker_has_more = has_more;
+                    },
+                    None => panic!("load_from_channel unexpected case")
+                }
+            },
+            None => panic!("load_from_channel unexpected case")
+        }
+    }
 }
 
 impl LogTrait for Log {
@@ -28,8 +59,10 @@ impl LogTrait for Log {
             emit,
             model,
             list: vec![],
-            revwalk: vec![],
             git: None,
+            git_path: "".to_string(),
+            revwalker: None,
+            revwalker_has_more: false,
             tz_offset_sec: get_timesize_offset_secs(),
         }
     }
@@ -52,52 +85,23 @@ impl LogTrait for Log {
         &self.list[index].time
     }
     fn load(&mut self, path: String) {
-        self.git= Some(Repository::open(&path).unwrap());
+        self.git = Some(Repository::open(&path).unwrap());
+        self.git_path = path;
     }
     fn filter(&mut self, filter: String) {
+        let c = get_chan_revwalker(self.git_path.clone(), filter, 10000);
+        self.revwalker = Some(c);
         self.model.begin_reset_model();
-        let oid = Oid::from_str(&filter).unwrap();
-        match &self.git {
-            Some(git) => {
-                let mut rv = git.revwalk().unwrap();
-                // to view the specific branch log, push the head's oid of the branch.
-                // following code should show a combined history for entire repo.
-                // rv.push_glob("refs/remotes/origin/*").unwrap();
-                // rv.push_glob("refs/heads/*").unwrap();
-                // see https://git-scm.com/book/id/v2/Git-Internals-The-Refspec
-                rv.push(oid).unwrap();
-                rv.set_sorting(Sort::TIME);
-                self.revwalk.clear();
-                self.model.begin_reset_model();
-                self.list.clear();
-                self.model.end_reset_model();
-                // this can take a long ass time (eg linux kernel repo)
-                for e in rv {
-                    self.revwalk.push(e.unwrap());
-                }
-            },
-            None => panic!("no git found on log element")
-        }
+        self.list.clear();
         self.model.end_reset_model();
+        self.load_from_channel();
     }
     fn can_fetch_more(&self) -> bool {
-        let has_more = self.list.len() < self.revwalk.len();
-        has_more
+        self.revwalker_has_more
     }
     fn fetch_more(&mut self) {
-        match self.git {
-            Some(ref git) => {
-                let oid_idx = self.list.len();
-                let max_idx = oid_idx + min(10000, self.revwalk.len() - oid_idx);
-                self.model.begin_insert_rows(oid_idx, max_idx - 1);
-                for i in oid_idx..max_idx {
-                    let oid = self.revwalk[i];
-                    let e = get_commit(oid, self.tz_offset_sec, git);
-                    self.list.push(e);
-                }
-                self.model.end_insert_rows();
-            }
-            _ => panic!("fetch_more unexpected case")
-        }
+        self.load_from_channel();
     }
 }
+
+

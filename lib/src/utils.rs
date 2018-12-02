@@ -1,7 +1,8 @@
-use std::path::{PathBuf};
-use git2::{Repository, BranchType, Oid};
+use std::{path::{PathBuf}, thread};
+use git2::{Repository, BranchType, Oid, Sort};
 use chrono::prelude::*;
 use chrono_humanize::HumanTime;
+use crossbeam::{channel::Receiver, channel};
 use implementation::{branches::BranchesItem, log::LogItem};
 
 pub fn pathbuf_filename_to_string(pb: &PathBuf) -> String {
@@ -71,4 +72,35 @@ pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
         author: n.to_string(),
         message: m.to_string(),
     }
+}
+
+// filter is assumed to be a branch head oid str. see also implementation/log.rs
+pub fn get_chan_revwalker(path: String, filter: String, max_count: usize) -> Receiver<(Vec<Oid>, bool)> {
+    let (oids_s, oids_r) = channel::bounded(0);
+    thread::spawn(move || {
+        let oid = Oid::from_str(&filter).unwrap();
+        let git = Repository::open(&path).unwrap();
+        let mut rv = git.revwalk().unwrap();
+        rv.push(oid).unwrap();
+        rv.set_sorting(Sort::TIME | Sort::TOPOLOGICAL);
+        let mut prv = rv.peekable();
+        let mut data = vec![];
+        let mut is_empty = false;
+        loop {
+            if data.len() >= max_count || is_empty {
+                let has_more = prv.peek().is_some();
+                oids_s.send((data, has_more)).unwrap();
+                if is_empty {
+                    break;
+                }
+                data = vec![];
+            } else {
+                match prv.next() {
+                    Some(r) => data.push(r.unwrap()),
+                    None => is_empty = true
+                }
+            }
+        }
+    });
+    oids_r
 }

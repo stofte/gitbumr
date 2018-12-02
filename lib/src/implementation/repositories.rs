@@ -1,4 +1,4 @@
-use std::{path::Path, println};
+use std::{path::Path};
 use rusqlite::{Connection, NO_PARAMS};
 use url::Url;
 use utils::{is_git_repo, pathbuf_filename_to_string, pathbuf_to_string};
