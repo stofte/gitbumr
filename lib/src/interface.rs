@@ -59,6 +59,9 @@ fn set_string_from_utf16(s: &mut String, str: *const c_ushort, len: c_int) {
 
 
 
+pub enum QByteArray {}
+
+
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug)]
 pub enum SortOrder {
@@ -515,6 +518,7 @@ pub trait LogTrait {
     fn sort(&mut self, u8, SortOrder) {}
     fn author(&self, index: usize) -> &str;
     fn cid_short(&self, index: usize) -> &str;
+    fn graph(&self, index: usize) -> &[u8];
     fn message(&self, index: usize) -> &str;
     fn time(&self, index: usize) -> &str;
 }
@@ -629,6 +633,18 @@ pub unsafe extern "C" fn log_data_cid_short(
 ) {
     let o = &*ptr;
     let data = o.cid_short(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn log_data_graph(
+    ptr: *const Log, row: c_int,
+    d: *mut QByteArray,
+    set: fn(*mut QByteArray, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.graph(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
 }

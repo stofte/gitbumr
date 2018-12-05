@@ -111,7 +111,8 @@ public:
     Q_INVOKABLE bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Q_INVOKABLE QString author(int row) const;
-    Q_INVOKABLE QString cid_short(int row) const;
+    Q_INVOKABLE QString cidShort(int row) const;
+    Q_INVOKABLE QByteArray graph(int row) const;
     Q_INVOKABLE QString message(int row) const;
     Q_INVOKABLE QString time(int row) const;
 

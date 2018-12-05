@@ -21,6 +21,16 @@ namespace {
         *val = QString::fromUtf8(utf8, nbytes);
     }
 
+    typedef void (*qbytearray_set)(QByteArray* val, const char* bytes, int nbytes);
+    void set_qbytearray(QByteArray* v, const char* bytes, int nbytes) {
+        if (v->isNull() && nbytes == 0) {
+            *v = QByteArray(bytes, nbytes);
+        } else {
+            v->truncate(0);
+            v->append(bytes, nbytes);
+        }
+    }
+
     struct qmodelindex_t {
         int row;
         quintptr id;
@@ -222,6 +232,7 @@ extern "C" {
 extern "C" {
     void log_data_author(const Log::Private*, int, QString*, qstring_set);
     void log_data_cid_short(const Log::Private*, int, QString*, qstring_set);
+    void log_data_graph(const Log::Private*, int, QByteArray*, qbytearray_set);
     void log_data_message(const Log::Private*, int, QString*, qstring_set);
     void log_data_time(const Log::Private*, int, QString*, qstring_set);
     void log_sort(Log::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
@@ -300,11 +311,18 @@ QString Log::author(int row) const
     return s;
 }
 
-QString Log::cid_short(int row) const
+QString Log::cidShort(int row) const
 {
     QString s;
     log_data_cid_short(m_d, row, &s, set_qstring);
     return s;
+}
+
+QByteArray Log::graph(int row) const
+{
+    QByteArray b;
+    log_data_graph(m_d, row, &b, set_qbytearray);
+    return b;
 }
 
 QString Log::message(int row) const
@@ -330,10 +348,12 @@ QVariant Log::data(const QModelIndex &index, int role) const
         case Qt::UserRole + 0:
             return QVariant::fromValue(author(index.row()));
         case Qt::UserRole + 1:
-            return QVariant::fromValue(cid_short(index.row()));
+            return QVariant::fromValue(cidShort(index.row()));
         case Qt::UserRole + 2:
-            return QVariant::fromValue(message(index.row()));
+            return QVariant::fromValue(graph(index.row()));
         case Qt::UserRole + 3:
+            return QVariant::fromValue(message(index.row()));
+        case Qt::UserRole + 4:
             return QVariant::fromValue(time(index.row()));
         }
         break;
@@ -355,9 +375,10 @@ int Log::role(const char* name) const {
 QHash<int, QByteArray> Log::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
     names.insert(Qt::UserRole + 0, "author");
-    names.insert(Qt::UserRole + 1, "cid_short");
-    names.insert(Qt::UserRole + 2, "message");
-    names.insert(Qt::UserRole + 3, "time");
+    names.insert(Qt::UserRole + 1, "cidShort");
+    names.insert(Qt::UserRole + 2, "graph");
+    names.insert(Qt::UserRole + 3, "message");
+    names.insert(Qt::UserRole + 4, "time");
     return names;
 }
 QVariant Log::headerData(int section, Qt::Orientation orientation, int role) const

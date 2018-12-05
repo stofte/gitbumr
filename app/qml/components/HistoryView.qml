@@ -30,18 +30,7 @@ Rectangle {
                         RowLayout {
                             height: rootItem.height
                             Layout.fillWidth: true
-                            Rectangle {
-                                Layout.preferredWidth: cidTextLabel.width + 2
-                                Layout.fillHeight: true
-                                color: "transparent"
-                                TextItem {
-                                    id: cidTextLabel
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    font.family: Style.fontNameFixedWidth
-                                    color: Style.mid
-                                    text: cid_short
-                                }
-                            }
+                            GraphView { graphHeight: rootItem.height }
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true

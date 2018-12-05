@@ -66,11 +66,17 @@ pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
     let a = c.author();
     let n = a.name().unwrap();
     let idstr = format!("{:?}", oid).to_string();
+    let ps: Vec<Oid> = c.parents().map(|x| x.id()).collect();
     LogItem {
+        id: oid,
         cid_short: idstr.chars().take(8).collect(),
         time: format!("{}", ht).to_string(),
         author: n.to_string(),
         message: m.to_string(),
+        parents: ps,
+        graph_lane: 0,
+        graph: vec![],
+        is_leaf: false // set by loggraph when parsing revwalk
     }
 }
 

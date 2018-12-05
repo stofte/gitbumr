@@ -84,12 +84,12 @@
         "Log": {
             "type": "List",
             "itemProperties": {
-                "cid_short": { "type": "QString" },
+                "cidShort": { "type": "QString" },
                 "time": { "type": "QString" },
                 "author": { "type": "QString" },
-                "message": { "type": "QString" }
+                "message": { "type": "QString" },
+                "graph": { "type": "QByteArray" }
             },
-            
             "functions": {
                 "load": {
                     "return": "void",
