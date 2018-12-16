@@ -47,49 +47,58 @@ Item {
         anchors.fill: parent
         contextType: "2d"
 
+        function paintPaths(ctx, laneFlags, offW, rowOffW) {
+            if (laneFlags.isVisible) {
+                // flags are merged, so we might both have a line through,
+                // and it might also have been merged into the commit node
+                linePath.startX = offW;
+                linePath.pathElements[0].x = offW;
+                ctx.beginPath();
+                ctx.path = linePath;
+                ctx.stroke();
+            }
+            if (laneFlags.isMerge) {
+                lineDownPath.startX = rowOffW;
+                lineDownPath.pathElements[0].x = offW;
+                lineDownPath.pathElements[1].x = offW;
+                ctx.beginPath();
+                ctx.path = lineDownPath;
+                ctx.stroke();
+            }
+            if (laneFlags.isBranch) {
+                lineUpPath.startX = rowOffW;
+                lineUpPath.pathElements[0].x = offW;
+                lineUpPath.pathElements[1].x = offW;
+                ctx.beginPath();
+                ctx.path = lineUpPath;
+                ctx.stroke();
+            }
+            if (laneFlags.isLeaf) {
+                leafPath.startX = offW;
+                leafPath.pathElements[0].x = offW;
+                ctx.beginPath();
+                ctx.path = leafPath;
+                ctx.stroke();
+            }
+            if (laneFlags.isRoot) {
+                rootPath.startX = offW;
+                rootPath.pathElements[0].x = offW;
+                ctx.beginPath();
+                ctx.path = rootPath;
+                ctx.stroke();
+            }
+        }
+
         onPaint: {
             var halfG = graphHeight / 2;
             context.lineWidth = 1.5;
             context.strokeStyle = Qt.rgba(0,0,1);
             context.fillStyle = Qt.rgba(1,1,1);
             for(var i = 0; i < graphModel.model.count; i++) {
-                context.beginPath();
                 var elm = graphModel.model.get(i);
                 var offW = halfG + i * graphHeight;
                 var rowOffW = halfG + elm.rowCommitIndex * graphHeight;
-                if (elm.isVisible) {
-                    // flags are merged, so we might both have a line through,
-                    // and it might also have been merged into the commit node
-                    if (elm.isMerge) {
-                        lineDownPath.startX = rowOffW;
-                        lineDownPath.pathElements[0].x = offW;
-                        lineDownPath.pathElements[1].x = offW;
-                        context.path = lineDownPath;
-                        context.stroke();
-                    }
-                    linePath.startX = offW;
-                    linePath.pathElements[0].x = offW;
-                    context.path = linePath;
-                } else if (elm.isMerge) {
-                    lineDownPath.startX = rowOffW;
-                    lineDownPath.pathElements[0].x = offW;
-                    lineDownPath.pathElements[1].x = offW;
-                    context.path = lineDownPath;
-                } else if (elm.isBranch) {
-                    lineUpPath.startX = rowOffW;
-                    lineUpPath.pathElements[0].x = offW;
-                    lineUpPath.pathElements[1].x = offW;
-                    context.path = lineUpPath;
-                } else if (elm.isLeaf) {
-                    leafPath.startX = offW;
-                    leafPath.pathElements[0].x = offW;
-                    context.path = leafPath;
-                } else if (elm.isRoot) {
-                    rootPath.startX = offW;
-                    rootPath.pathElements[0].x = offW;
-                    context.path = rootPath;
-                }
-                context.stroke();
+                paintPaths(context, elm, offW, rowOffW);
             }
             context.beginPath();
             var cOffW = halfG + graphModel.commitIndex * graphHeight;
