@@ -1,6 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import QtQuick.Controls 1.4 as QQC14
 import "../base"
 import "../style"
 
@@ -30,7 +31,10 @@ Rectangle {
                         RowLayout {
                             height: rootItem.height
                             Layout.fillWidth: true
-                            GraphView { graphHeight: rootItem.height }
+                            GraphView {
+                                graphHeight: rootItem.height
+                                graphWidth: graphViewSplitter.width
+                            }
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -84,6 +88,27 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    QQC14.SplitView {
+        height: 400
+        orientation: Qt.Horizontal
+        anchors.fill: parent
+
+        handleDelegate: Rectangle {
+            color: Style.dark
+            width: 1
+        }
+
+        Rectangle {
+            id: graphViewSplitter
+            width: 150
+            color: "transparent"
+        }
+
+        Rectangle {
+            color: "transparent"
         }
     }
 }

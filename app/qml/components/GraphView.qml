@@ -6,9 +6,10 @@ import "../style"
 
 Item {
     property int graphHeight: 100
+    property int graphWidth: 150
     property int lanes
     Layout.fillHeight: true
-    Layout.preferredWidth: 160
+    Layout.preferredWidth: graphWidth
 
     JsonListModel {
         id: graphModel
@@ -53,6 +54,7 @@ Item {
         }
 
         anchors.fill: parent
+        anchors.rightMargin: 10
         contextType: "2d"
 
         function paintPaths(ctx, laneFlags, offW, rowOffW, shiftOffW) {
