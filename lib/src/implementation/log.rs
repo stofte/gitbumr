@@ -11,6 +11,7 @@ const GRAPH_LEAF: u8 = 4;
 const GRAPH_ROOT: u8 = 8;
 const GRAPH_MERGE: u8 = 16;
 const GRAPH_BRANCH: u8 = 32;
+const GRAPH_SHIFT: u8 = 64;
 
 pub struct LogGraph {
     lanes: Vec<Oid>,
@@ -83,12 +84,29 @@ impl LogGraph {
                 }
             }
             // clone any lanes branched from here
+            let mut removed_cnt = 0;
+            if is_debug {
+                println!("branched_lanes: {:?}", branched_lanes);
+                println!("graph_vals before: {:?}", graph_vals);
+            }
             while reused_branched_idx < branched_lanes.len() {
-                let last_idx = self.lanes.len() - 1;
-                self.lanes.remove(last_idx);
+                let idx = branched_lanes[reused_branched_idx];
+                // only patch lanes that keep going straight. this needs to be lanes after the
+                // branch (closed lane). so we go from one past the branch idx, to the next 
+                // branch idx if any, otherwise, check all entries to the end of graph_vals.
+                for cidx in (idx + 1)..graph_vals.len() {
+                    if graph_vals[cidx] != GRAPH_LANE {
+                        break;
+                    }
+                    graph_vals[cidx] = GRAPH_SHIFT;
+                }
+                //println!("idx {}, {}, self.lanes.len: {}", idx, graph_vals.len(), self.lanes.len());
+                self.lanes.remove(idx + removed_cnt);
                 reused_branched_idx += 1;
+                removed_cnt -= 1;
             }
         }
+        if is_debug {println!("lanes after: {:?}", self.lanes);}
         if is_debug {println!("graph_vals {:?}", graph_vals);}
         graph_vals.insert(0, c_idx as u8);
         graph_vals

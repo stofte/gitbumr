@@ -44,10 +44,18 @@ Item {
             PathLine { x: 10; y: 0 }
         }
 
+        Path {
+            id: lineShiftPath
+            startX: 10; startY: 0
+            PathLine { x: 10; y: 2 }
+            PathLine { x: 10; y: 18 }
+            PathLine { x: 10; y: 20 }
+        }
+
         anchors.fill: parent
         contextType: "2d"
 
-        function paintPaths(ctx, laneFlags, offW, rowOffW) {
+        function paintPaths(ctx, laneFlags, offW, rowOffW, shiftOffW) {
             if (laneFlags.isVisible) {
                 // flags are merged, so we might both have a line through,
                 // and it might also have been merged into the commit node
@@ -87,6 +95,15 @@ Item {
                 ctx.path = rootPath;
                 ctx.stroke();
             }
+            if (laneFlags.isShift) {
+                lineShiftPath.startX = offW;
+                lineShiftPath.pathElements[0].x = offW;
+                lineShiftPath.pathElements[1].x = shiftOffW;
+                lineShiftPath.pathElements[2].x = shiftOffW;
+                ctx.beginPath();
+                ctx.path = lineShiftPath;
+                ctx.stroke();
+            }
         }
 
         onPaint: {
@@ -98,7 +115,8 @@ Item {
                 var elm = graphModel.model.get(i);
                 var offW = halfG + i * graphHeight;
                 var rowOffW = halfG + elm.rowCommitIndex * graphHeight;
-                paintPaths(context, elm, offW, rowOffW);
+                var shiftOffW = offW + elm.rowShiftOffset * graphHeight;
+                paintPaths(context, elm, offW, rowOffW, shiftOffW);
             }
             context.beginPath();
             var cOffW = halfG + graphModel.commitIndex * graphHeight;
