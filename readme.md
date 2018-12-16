@@ -12,7 +12,7 @@ Checking out the project, and build a release executable `cargo build --release`
 to your path. Run `rust_qt_binding_generator binding.json` in this project root folder, to regenerate the
 binding code.
 
-## Developing
+## Windows requirements
 
 The project has a QtCreator project, which doubles as a project file and a makefile for [qmake](http://doc.qt.io/qt-5/qmake-manual.html).
 
@@ -29,4 +29,16 @@ QtCreator has some gotchas:
 
 Other notes
 
- - `app/res/gitbumr.rc` should be 8859-1 encoded
+ - `app/res/gitbumr.rc` should be windows-1252 encoded
+
+## Ubuntu requirements
+
+These are still incomplete.
+
+ - For Ubuntu 18 the following packages should be installed `build-essential libgl1-mesa-dev libxrender1 libfontconfig1 qt5-qmake`
+ - rust also requires `libssl-dev pkg-config`
+
+Data/viz stuffs
+https://sourcerer.io/stofte
+https://github.com/erikbern/git-of-theseus
+https://i.stack.imgur.com/AbOjQ.png
