@@ -30,10 +30,8 @@ Item {
                 isShift: ival & 0x40,
             };
             // for each lane that was closed, before we came to this column,
-            // matches the number of lanes an eventual shift must use. a lane
-            // is "closed" if there's no continuation "merge" that matches
-            // the lane of the branch.
-            if (elm.isBranch && !elm.isMerge) {
+            // matches the number of lanes an eventual shift must use.
+            if (elm.isBranch) {
                 closedLanes -= 1
             }
             jsonModel.append(elm);

@@ -38,7 +38,7 @@ impl LogGraph {
         } else {
             let mut branched_lanes: Vec<usize> = vec![]; // branced from here
             let mut first_matched = false;
-            // determine what lane the commit belongs to, and what if any might be closed here
+            // determine what lane the commit belongs to, and what if any lanes might be closed here
             for i in 0..self.lanes.len() {
                 let lane = &mut self.lanes[i];
                 if lane == &commit.id && !first_matched {
@@ -55,7 +55,35 @@ impl LogGraph {
                     branched_lanes.push(i);
                 }
             }
+            // knowing how many lanes were closed (due to branching), we shift any unclosed lanes in,
+            // so that any new lanes created here goes to the end of the lane vector. take care when
+            // writing to graph_vals as it will be the length of lanes as they were initially.
+            let mut cb_idx = 0;
+            if is_debug {
+                println!("branched_lanes: {:?}", branched_lanes);
+                println!("graph_vals before: {:?}", graph_vals);
+            }
+            while cb_idx < branched_lanes.len() {
+                let idx = branched_lanes[cb_idx];
+                // only patch lanes that keep going straight. this needs to be lanes after the
+                // branch (closed lane). so we go from one past the branch idx, to the next 
+                // branch idx if any, otherwise, check all entries to the end of graph_vals.
+                for cidx in (idx + 1)..graph_vals.len() {
+                    if graph_vals[cidx] != GRAPH_LANE {
+                        break;
+                    }
+                    graph_vals[cidx] = GRAPH_SHIFT;
+                }
+                self.lanes.remove(idx - cb_idx);
+                cb_idx += 1;
+            }
+            // indincates that the lane being used by the merge path (new lane), 
+            // has an above branch lane, so graph_vals should be modified in place.
+            // only if a new lane goes beyond the initial length of self.lanes, should
+            // values be pushed to graph_vals. since we removed any closed lanes just before,
+            // self.lanes should always be pushed, unless we already had the parent in the list.
             let mut reused_branched_idx = 0;
+            // skip first parent, since that should have been placed in the first loop above.
             for i in 1..commit.parents.len() {
                 let parent = &commit.parents[i];
                 if self.lanes.contains(parent) {
@@ -71,10 +99,8 @@ impl LogGraph {
                     graph_vals[p_idx as usize] |= GRAPH_MERGE;
                 } else {
                     if reused_branched_idx < branched_lanes.len() {
-                        // reuse lane that was to be cloned
-                        let lane_idx = branched_lanes[reused_branched_idx];
-                        self.lanes[lane_idx] = *parent;
-                        graph_vals[lane_idx] |= GRAPH_MERGE;
+                        self.lanes.push(*parent);
+                        graph_vals[self.lanes.len() - 1] |= GRAPH_MERGE;
                         reused_branched_idx += 1;
                     } else {
                         // add new lane (that was merged to here)
@@ -83,28 +109,7 @@ impl LogGraph {
                     }
                 }
             }
-            // clone any lanes branched from here
-            let mut removed_cnt = 0;
-            if is_debug {
-                println!("branched_lanes: {:?}", branched_lanes);
-                println!("graph_vals before: {:?}", graph_vals);
-            }
-            while reused_branched_idx < branched_lanes.len() {
-                let idx = branched_lanes[reused_branched_idx];
-                // only patch lanes that keep going straight. this needs to be lanes after the
-                // branch (closed lane). so we go from one past the branch idx, to the next 
-                // branch idx if any, otherwise, check all entries to the end of graph_vals.
-                for cidx in (idx + 1)..graph_vals.len() {
-                    if graph_vals[cidx] != GRAPH_LANE {
-                        break;
-                    }
-                    graph_vals[cidx] = GRAPH_SHIFT;
-                }
-                //println!("idx {}, {}, self.lanes.len: {}", idx, graph_vals.len(), self.lanes.len());
-                self.lanes.remove(idx + removed_cnt);
-                reused_branched_idx += 1;
-                removed_cnt -= 1;
-            }
+
         }
         if is_debug {println!("lanes after: {:?}", self.lanes);}
         if is_debug {println!("graph_vals {:?}", graph_vals);}
