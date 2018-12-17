@@ -13,7 +13,8 @@ Item {
     readonly property string dark: palette.dark
     readonly property string mid: palette.mid
     readonly property string light: palette.light
-    readonly property string window: "#FAFAFA" // palette.window
+    readonly property string window: "#FAFAFA"
+    readonly property string selection: "#0078D7"
 
     readonly property string fontName: mainFont.name
 
