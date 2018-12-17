@@ -8,6 +8,9 @@ import "../style"
 
 Pane {
     anchors.fill: parent
+    background: Rectangle {
+        color: "transparent"
+    }
     Component.onCompleted: {
         repositoriesModel.init(DatabaseFileName);
     }

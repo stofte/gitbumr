@@ -11,7 +11,7 @@ ApplicationWindow {
     visible: true
     width: 1000
     height: 600
-
+    color: Style.window
     property variant repoMgr;
 
     Repositories {
@@ -37,14 +37,18 @@ ApplicationWindow {
             }
         }
     }
-
     Page {
+        background: Rectangle {
+            color: "transparent"
+        }
+
         anchors.fill: parent
         header: ToolBar {
             topPadding: 5
             rightPadding: 5
             bottomPadding: 5
             leftPadding: 5
+
             RowLayout {
                 anchors.fill: parent
                 ToolButton {

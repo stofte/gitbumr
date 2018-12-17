@@ -6,6 +6,9 @@ import "../base"
 import "../style"
 
 Pane {
+    background: Rectangle{
+        color: "transparent"
+    }
     ListView {
         anchors.fill: parent
         Component {

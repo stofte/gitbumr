@@ -13,10 +13,18 @@ Rectangle {
         spacing: 1
         ScrollBar.vertical: ScrollBar {
             minimumSize: 0.05
+            width: 15
+            policy: ScrollBar.AlwaysOn
+            topPadding: 15
+            bottomPadding: 15
+            background: Rectangle{
+                color: Style.window
+            }
         }
         boundsBehavior: Flickable.StopAtBounds
         delegate: Component {
             Item {
+                anchors.rightMargin: 15
                 id: rootItem
                 height: 20
                 anchors.left: parent.left
