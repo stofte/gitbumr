@@ -213,11 +213,11 @@ impl LogTrait for Log {
         &self.list[index].time
     }
     fn load(&mut self, path: String) {
-        self.graph.reset();
         self.git = Some(Repository::open(&path).unwrap());
         self.git_path = path;
     }
     fn filter(&mut self, filter: String) {
+        self.graph.reset();
         let c = get_chan_revwalker(self.git_path.clone(), filter, 10000);
         self.revwalker = Some(c);
         self.model.begin_reset_model();
