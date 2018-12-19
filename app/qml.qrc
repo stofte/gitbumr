@@ -11,5 +11,6 @@
         <file>qml/components/GitView.qml</file>
         <file>qml/components/GraphView.qml</file>
         <file>qml/base/JsonListModel.qml</file>
+        <file>qml/components/Commit.qml</file>
     </qresource>
 </RCC>

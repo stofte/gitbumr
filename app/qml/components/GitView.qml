@@ -40,7 +40,22 @@ QQC14.SplitView {
         Layout.minimumWidth: 100
         Layout.preferredWidth: 200
     }
-    HistoryView {
-        Layout.fillHeight: true
+
+    QQC14.SplitView {
+        orientation: Qt.Horizontal
+        handleDelegate: Rectangle {
+            color: Style.dark
+            width: 1
+        }
+        HistoryView {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            clip: true
+        }
+        Commit {
+            Layout.fillHeight: true
+            Layout.minimumWidth: 100
+            Layout.preferredWidth: 200
+        }
     }
 }
