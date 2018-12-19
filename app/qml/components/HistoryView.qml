@@ -7,8 +7,9 @@ import "../base"
 import "../style"
 
 Rectangle {
-    color: Style.dark
     property int rowHeight: 18
+    property string selected: ""
+    color: Style.dark
     ListView {
         id: historyListView
         anchors.fill: parent
@@ -23,6 +24,9 @@ Rectangle {
             background: Rectangle{
                 color: Style.window
             }
+        }
+        onCurrentIndexChanged: {
+            selected = currentItem.commitId;
         }
         highlightMoveDuration: 1
         highlightMoveVelocity: 1
@@ -47,6 +51,7 @@ Rectangle {
         }
         delegate: Component {
             Item {
+                property variant commitId: cid
                 focus: true
                 anchors.rightMargin: 15
                 id: rootItem

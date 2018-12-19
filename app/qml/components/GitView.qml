@@ -48,11 +48,16 @@ QQC14.SplitView {
             width: 1
         }
         HistoryView {
+            id: historyViewRef
             Layout.fillHeight: true
             Layout.fillWidth: true
             clip: true
+            onSelectedChanged: {
+                commitRef.commitId = selected;
+            }
         }
         Commit {
+            id: commitRef
             Layout.fillHeight: true
             Layout.minimumWidth: 100
             Layout.preferredWidth: 200

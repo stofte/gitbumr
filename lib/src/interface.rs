@@ -517,7 +517,7 @@ pub trait LogTrait {
     fn fetch_more(&mut self) {}
     fn sort(&mut self, u8, SortOrder) {}
     fn author(&self, index: usize) -> &str;
-    fn cid_short(&self, index: usize) -> &str;
+    fn cid(&self, index: usize) -> &str;
     fn graph(&self, index: usize) -> &[u8];
     fn message(&self, index: usize) -> &str;
     fn time(&self, index: usize) -> &str;
@@ -626,13 +626,13 @@ pub unsafe extern "C" fn log_data_author(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn log_data_cid_short(
+pub unsafe extern "C" fn log_data_cid(
     ptr: *const Log, row: c_int,
     d: *mut QString,
     set: fn(*mut QString, *const c_char, len: c_int),
 ) {
     let o = &*ptr;
-    let data = o.cid_short(to_usize(row));
+    let data = o.cid(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
 }

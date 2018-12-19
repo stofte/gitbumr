@@ -231,7 +231,7 @@ extern "C" {
 
 extern "C" {
     void log_data_author(const Log::Private*, int, QString*, qstring_set);
-    void log_data_cid_short(const Log::Private*, int, QString*, qstring_set);
+    void log_data_cid(const Log::Private*, int, QString*, qstring_set);
     void log_data_graph(const Log::Private*, int, QByteArray*, qbytearray_set);
     void log_data_message(const Log::Private*, int, QString*, qstring_set);
     void log_data_time(const Log::Private*, int, QString*, qstring_set);
@@ -311,10 +311,10 @@ QString Log::author(int row) const
     return s;
 }
 
-QString Log::cidShort(int row) const
+QString Log::cid(int row) const
 {
     QString s;
-    log_data_cid_short(m_d, row, &s, set_qstring);
+    log_data_cid(m_d, row, &s, set_qstring);
     return s;
 }
 
@@ -348,7 +348,7 @@ QVariant Log::data(const QModelIndex &index, int role) const
         case Qt::UserRole + 0:
             return QVariant::fromValue(author(index.row()));
         case Qt::UserRole + 1:
-            return QVariant::fromValue(cidShort(index.row()));
+            return QVariant::fromValue(cid(index.row()));
         case Qt::UserRole + 2:
             return QVariant::fromValue(graph(index.row()));
         case Qt::UserRole + 3:
@@ -375,7 +375,7 @@ int Log::role(const char* name) const {
 QHash<int, QByteArray> Log::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
     names.insert(Qt::UserRole + 0, "author");
-    names.insert(Qt::UserRole + 1, "cidShort");
+    names.insert(Qt::UserRole + 1, "cid");
     names.insert(Qt::UserRole + 2, "graph");
     names.insert(Qt::UserRole + 3, "message");
     names.insert(Qt::UserRole + 4, "time");

@@ -69,7 +69,7 @@ pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
     let ps: Vec<Oid> = c.parents().map(|x| x.id()).collect();
     LogItem {
         id: oid,
-        cid_short: idstr.chars().take(8).collect(),
+        cid: idstr.chars().collect(),
         time: format!("{}", ht).to_string(),
         author: n.to_string(),
         message: m.to_string(),

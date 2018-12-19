@@ -84,7 +84,7 @@
         "Log": {
             "type": "List",
             "itemProperties": {
-                "cidShort": { "type": "QString" },
+                "cid": { "type": "QString" },
                 "time": { "type": "QString" },
                 "author": { "type": "QString" },
                 "message": { "type": "QString" },
