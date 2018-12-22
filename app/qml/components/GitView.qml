@@ -38,7 +38,7 @@ QQC14.SplitView {
         id: branchView
         Layout.fillHeight: true
         Layout.minimumWidth: 100
-        Layout.preferredWidth: 200
+        Layout.preferredWidth: parent.width * 0.5
     }
 
     QQC14.SplitView {
@@ -49,8 +49,7 @@ QQC14.SplitView {
         }
         HistoryView {
             id: historyViewRef
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+            width: parent.width * 0.5
             clip: true
             onSelectedChanged: {
                 commitRef.commitId = selected;
@@ -58,9 +57,7 @@ QQC14.SplitView {
         }
         Commit {
             id: commitRef
-            Layout.fillHeight: true
-            Layout.minimumWidth: 100
-            Layout.preferredWidth: 200
+            width: parent.width * 0.5
         }
     }
 }

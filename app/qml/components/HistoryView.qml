@@ -3,6 +3,7 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 1.4 as QQC14
 import QtGraphicalEffects 1.0
+import QtQml 2.11
 import "../base"
 import "../style"
 
@@ -25,8 +26,15 @@ Rectangle {
                 color: Style.window
             }
         }
+        Timer {
+            id: timerRef
+            property string commitId: ""
+            interval: 100; running: true; repeat: true
+            onTriggered: selected = commitId
+        }
         onCurrentIndexChanged: {
-            selected = currentItem.commitId;
+            timerRef.restart()
+            timerRef.commitId = currentItem.commitId;
         }
         highlightMoveDuration: 1
         highlightMoveVelocity: 1
