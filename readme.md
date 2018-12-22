@@ -42,3 +42,9 @@ Data/viz stuffs
 https://sourcerer.io/stofte
 https://github.com/erikbern/git-of-theseus
 https://i.stack.imgur.com/AbOjQ.png
+
+# Qt
+
+- https://github.com/Mokolea/SimpleQtLogger
+- https://github.com/martinrotter/qt5-minimalistic-builds
+- https://github.com/mfreiholz/Qt-Advanced-Docking-System
