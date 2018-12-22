@@ -160,17 +160,20 @@ impl Log {
             Some(ref mut r) => {
                 match self.revwalker {
                     Some(ref mut rc) => {
-                        let (data, has_more) = rc.recv().unwrap();
-                        let ins_idx = self.list.len();
-                        self.model.begin_insert_rows(ins_idx, ins_idx + data.len() - 1);
-                        for oid in data {
-                            let mut e = get_commit(oid, self.tz_offset_sec, &r);
-                            e.graph = self.graph.add_commit(&e);
-                            //e.graph = "[{\"isCommit\": true},{},{}]".to_string();
-                            self.list.push(e);
+                        match rc.recv() {
+                            Ok((data, has_more)) => {
+                                let ins_idx = self.list.len();
+                                self.model.begin_insert_rows(ins_idx, ins_idx + data.len() - 1);
+                                for oid in data {
+                                    let mut e = get_commit(oid, self.tz_offset_sec, &r);
+                                    e.graph = self.graph.add_commit(&e);
+                                    self.list.push(e);
+                                }
+                                self.model.end_insert_rows();
+                                self.revwalker_has_more = has_more;
+                            }
+                            Err(..) => return
                         }
-                        self.model.end_insert_rows();
-                        self.revwalker_has_more = has_more;
                     },
                     None => panic!("load_from_channel unexpected case")
                 }

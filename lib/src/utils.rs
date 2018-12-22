@@ -95,11 +95,16 @@ pub fn get_chan_revwalker(path: String, filter: String, max_count: usize) -> Rec
         loop {
             if data.len() >= max_count || is_empty {
                 let has_more = prv.peek().is_some();
-                oids_s.send((data, has_more)).unwrap();
-                if is_empty {
-                    break;
+                match oids_s.send((data, has_more)) {
+                    Ok(..) => {
+                        if is_empty {
+                            break;
+                        }
+                        data = vec![];
+                    },
+                    // if we couldnt send the channel is broken and we just exit
+                    Err(..) => break
                 }
-                data = vec![];
             } else {
                 match prv.next() {
                     Some(r) => data.push(r.unwrap()),
