@@ -52,12 +52,22 @@ QQC14.SplitView {
             width: parent.width * 0.5
             clip: true
             onSelectedChanged: {
-                commitRef.commitId = selected;
+                gitModel.loadCommit(selected);
             }
         }
-        Commit {
-            id: commitRef
+        QQC14.SplitView {
+            orientation: Qt.Vertical
             width: parent.width * 0.5
+            handleDelegate: Rectangle {
+                color: Style.dark
+                height: 1
+            }
+            Commit {
+                height: 100
+            }
+            TreeView {
+                height: parent.height - 100
+            }
         }
     }
 }

@@ -6,9 +6,11 @@
 #include <QtCore/QAbstractItemModel>
 
 class Branches;
+class CommitModel;
 class Git;
 class Log;
 class Repositories;
+class TreeModel;
 
 class Branches : public QAbstractItemModel
 {
@@ -54,6 +56,40 @@ private:
 Q_SIGNALS:
 };
 
+class CommitModel : public QObject
+{
+    Q_OBJECT
+    friend class Git;
+public:
+    class Private;
+private:
+    Private * m_d;
+    bool m_ownsPrivate;
+    Q_PROPERTY(QString author READ author NOTIFY authorChanged FINAL)
+    Q_PROPERTY(QString cid READ cid NOTIFY cidChanged FINAL)
+    Q_PROPERTY(QString committer READ committer NOTIFY committerChanged FINAL)
+    Q_PROPERTY(QString message READ message NOTIFY messageChanged FINAL)
+    Q_PROPERTY(QString time READ time NOTIFY timeChanged FINAL)
+    Q_PROPERTY(QString tree READ tree NOTIFY treeChanged FINAL)
+    explicit CommitModel(bool owned, QObject *parent);
+public:
+    explicit CommitModel(QObject *parent = nullptr);
+    ~CommitModel();
+    QString author() const;
+    QString cid() const;
+    QString committer() const;
+    QString message() const;
+    QString time() const;
+    QString tree() const;
+Q_SIGNALS:
+    void authorChanged();
+    void cidChanged();
+    void committerChanged();
+    void messageChanged();
+    void timeChanged();
+    void treeChanged();
+};
+
 class Git : public QObject
 {
     Q_OBJECT
@@ -61,21 +97,32 @@ public:
     class Private;
 private:
     Branches* const m_branches;
+    CommitModel* const m_commit;
+    TreeModel* const m_tree;
     Private * m_d;
     bool m_ownsPrivate;
     Q_PROPERTY(Branches* branches READ branches NOTIFY branchesChanged FINAL)
+    Q_PROPERTY(CommitModel* commit READ commit NOTIFY commitChanged FINAL)
     Q_PROPERTY(QString revwalkFilter READ revwalkFilter NOTIFY revwalkFilterChanged FINAL)
+    Q_PROPERTY(TreeModel* tree READ tree NOTIFY treeChanged FINAL)
     explicit Git(bool owned, QObject *parent);
 public:
     explicit Git(QObject *parent = nullptr);
     ~Git();
     const Branches* branches() const;
     Branches* branches();
+    const CommitModel* commit() const;
+    CommitModel* commit();
     QString revwalkFilter() const;
+    const TreeModel* tree() const;
+    TreeModel* tree();
     Q_INVOKABLE void load(const QString& path);
+    Q_INVOKABLE void loadCommit(const QString& oid);
 Q_SIGNALS:
     void branchesChanged();
+    void commitChanged();
     void revwalkFilterChanged();
+    void treeChanged();
 };
 
 class Log : public QAbstractItemModel
@@ -176,5 +223,48 @@ private:
     void updatePersistentIndexes();
 Q_SIGNALS:
     void activeRepositoryChanged();
+};
+
+class TreeModel : public QAbstractItemModel
+{
+    Q_OBJECT
+    friend class Git;
+public:
+    class Private;
+private:
+    Private * m_d;
+    bool m_ownsPrivate;
+    explicit TreeModel(bool owned, QObject *parent);
+public:
+    explicit TreeModel(QObject *parent = nullptr);
+    ~TreeModel();
+
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex &index) const override;
+    bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    bool canFetchMore(const QModelIndex &parent) const override;
+    void fetchMore(const QModelIndex &parent) override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+    int role(const char* name) const;
+    QHash<int, QByteArray> roleNames() const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
+    Q_INVOKABLE bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    Q_INVOKABLE QString filename(int row) const;
+    Q_INVOKABLE QString patch(int row) const;
+
+Q_SIGNALS:
+    // new data is ready to be made available to the model with fetchMore()
+    void newDataReady(const QModelIndex &parent) const;
+private:
+    QHash<QPair<int,Qt::ItemDataRole>, QVariant> m_headerData;
+    void initHeaderData();
+    void updatePersistentIndexes();
+Q_SIGNALS:
 };
 #endif // BINDINGS_H

@@ -38,6 +38,30 @@ namespace {
     inline QVariant cleanNullQVariant(const QVariant& v) {
         return (v.isNull()) ?QVariant() :v;
     }
+    inline void commitModelAuthorChanged(CommitModel* o)
+    {
+        Q_EMIT o->authorChanged();
+    }
+    inline void commitModelCidChanged(CommitModel* o)
+    {
+        Q_EMIT o->cidChanged();
+    }
+    inline void commitModelCommitterChanged(CommitModel* o)
+    {
+        Q_EMIT o->committerChanged();
+    }
+    inline void commitModelMessageChanged(CommitModel* o)
+    {
+        Q_EMIT o->messageChanged();
+    }
+    inline void commitModelTimeChanged(CommitModel* o)
+    {
+        Q_EMIT o->timeChanged();
+    }
+    inline void commitModelTreeChanged(CommitModel* o)
+    {
+        Q_EMIT o->treeChanged();
+    }
     inline void gitRevwalkFilterChanged(Git* o)
     {
         Q_EMIT o->revwalkFilterChanged();
@@ -210,6 +234,17 @@ extern "C" {
 };
 
 extern "C" {
+    CommitModel::Private* commit_model_new(CommitModel*, void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*));
+    void commit_model_free(CommitModel::Private*);
+    void commit_model_author_get(const CommitModel::Private*, QString*, qstring_set);
+    void commit_model_cid_get(const CommitModel::Private*, QString*, qstring_set);
+    void commit_model_committer_get(const CommitModel::Private*, QString*, qstring_set);
+    void commit_model_message_get(const CommitModel::Private*, QString*, qstring_set);
+    void commit_model_time_get(const CommitModel::Private*, QString*, qstring_set);
+    void commit_model_tree_get(const CommitModel::Private*, QString*, qstring_set);
+};
+
+extern "C" {
     Git::Private* git_new(Git*, Branches*,
         void (*)(const Branches*),
         void (*)(Branches*),
@@ -222,11 +257,26 @@ extern "C" {
         void (*)(Branches*, int, int, int),
         void (*)(Branches*),
         void (*)(Branches*, int, int),
-        void (*)(Branches*), void (*)(Git*));
+        void (*)(Branches*), CommitModel*, void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(Git*), TreeModel*,
+        void (*)(const TreeModel*),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*, quintptr, quintptr),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*, int, int),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*, int, int, int),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*, int, int),
+        void (*)(TreeModel*));
     void git_free(Git::Private*);
     Branches::Private* git_branches_get(const Git::Private*);
+    CommitModel::Private* git_commit_get(const Git::Private*);
     void git_revwalk_filter_get(const Git::Private*, QString*, qstring_set);
+    TreeModel::Private* git_tree_get(const Git::Private*);
     void git_load(Git::Private*, const ushort*, int);
+    void git_load_commit(Git::Private*, const ushort*, int);
 };
 
 extern "C" {
@@ -583,6 +633,159 @@ extern "C" {
     void repositories_set_current(Repositories::Private*, qint64);
 };
 
+extern "C" {
+    void tree_model_data_filename(const TreeModel::Private*, int, QString*, qstring_set);
+    void tree_model_data_patch(const TreeModel::Private*, int, QString*, qstring_set);
+    void tree_model_sort(TreeModel::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
+
+    int tree_model_row_count(const TreeModel::Private*);
+    bool tree_model_insert_rows(TreeModel::Private*, int, int);
+    bool tree_model_remove_rows(TreeModel::Private*, int, int);
+    bool tree_model_can_fetch_more(const TreeModel::Private*);
+    void tree_model_fetch_more(TreeModel::Private*);
+}
+int TreeModel::columnCount(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : 1;
+}
+
+bool TreeModel::hasChildren(const QModelIndex &parent) const
+{
+    return rowCount(parent) > 0;
+}
+
+int TreeModel::rowCount(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : tree_model_row_count(m_d);
+}
+
+bool TreeModel::insertRows(int row, int count, const QModelIndex &)
+{
+    return tree_model_insert_rows(m_d, row, count);
+}
+
+bool TreeModel::removeRows(int row, int count, const QModelIndex &)
+{
+    return tree_model_remove_rows(m_d, row, count);
+}
+
+QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) const
+{
+    if (!parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0 && column < 1) {
+        return createIndex(row, column, (quintptr)row);
+    }
+    return QModelIndex();
+}
+
+QModelIndex TreeModel::parent(const QModelIndex &) const
+{
+    return QModelIndex();
+}
+
+bool TreeModel::canFetchMore(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : tree_model_can_fetch_more(m_d);
+}
+
+void TreeModel::fetchMore(const QModelIndex &parent)
+{
+    if (!parent.isValid()) {
+        tree_model_fetch_more(m_d);
+    }
+}
+void TreeModel::updatePersistentIndexes() {}
+
+void TreeModel::sort(int column, Qt::SortOrder order)
+{
+    tree_model_sort(m_d, column, order);
+}
+Qt::ItemFlags TreeModel::flags(const QModelIndex &i) const
+{
+    auto flags = QAbstractItemModel::flags(i);
+    return flags;
+}
+
+QString TreeModel::filename(int row) const
+{
+    QString s;
+    tree_model_data_filename(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QString TreeModel::patch(int row) const
+{
+    QString s;
+    tree_model_data_patch(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QVariant TreeModel::data(const QModelIndex &index, int role) const
+{
+    Q_ASSERT(rowCount(index.parent()) > index.row());
+    switch (index.column()) {
+    case 0:
+        switch (role) {
+        case Qt::UserRole + 0:
+            return QVariant::fromValue(filename(index.row()));
+        case Qt::UserRole + 1:
+            return QVariant::fromValue(patch(index.row()));
+        }
+        break;
+    }
+    return QVariant();
+}
+
+int TreeModel::role(const char* name) const {
+    auto names = roleNames();
+    auto i = names.constBegin();
+    while (i != names.constEnd()) {
+        if (i.value() == name) {
+            return i.key();
+        }
+        ++i;
+    }
+    return -1;
+}
+QHash<int, QByteArray> TreeModel::roleNames() const {
+    QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
+    names.insert(Qt::UserRole + 0, "filename");
+    names.insert(Qt::UserRole + 1, "patch");
+    return names;
+}
+QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation != Qt::Horizontal) {
+        return QVariant();
+    }
+    return m_headerData.value(qMakePair(section, (Qt::ItemDataRole)role), role == Qt::DisplayRole ?QString::number(section + 1) :QVariant());
+}
+
+bool TreeModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+{
+    if (orientation != Qt::Horizontal) {
+        return false;
+    }
+    m_headerData.insert(qMakePair(section, (Qt::ItemDataRole)role), value);
+    return true;
+}
+
+extern "C" {
+    TreeModel::Private* tree_model_new(TreeModel*,
+        void (*)(const TreeModel*),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*, quintptr, quintptr),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*, int, int),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*, int, int, int),
+        void (*)(TreeModel*),
+        void (*)(TreeModel*, int, int),
+        void (*)(TreeModel*));
+    void tree_model_free(TreeModel::Private*);
+};
+
 Branches::Branches(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),
     m_d(nullptr),
@@ -648,9 +851,72 @@ Branches::~Branches() {
 }
 void Branches::initHeaderData() {
 }
+CommitModel::CommitModel(bool /*owned*/, QObject *parent):
+    QObject(parent),
+    m_d(nullptr),
+    m_ownsPrivate(false)
+{
+}
+
+CommitModel::CommitModel(QObject *parent):
+    QObject(parent),
+    m_d(commit_model_new(this,
+        commitModelAuthorChanged,
+        commitModelCidChanged,
+        commitModelCommitterChanged,
+        commitModelMessageChanged,
+        commitModelTimeChanged,
+        commitModelTreeChanged)),
+    m_ownsPrivate(true)
+{
+}
+
+CommitModel::~CommitModel() {
+    if (m_ownsPrivate) {
+        commit_model_free(m_d);
+    }
+}
+QString CommitModel::author() const
+{
+    QString v;
+    commit_model_author_get(m_d, &v, set_qstring);
+    return v;
+}
+QString CommitModel::cid() const
+{
+    QString v;
+    commit_model_cid_get(m_d, &v, set_qstring);
+    return v;
+}
+QString CommitModel::committer() const
+{
+    QString v;
+    commit_model_committer_get(m_d, &v, set_qstring);
+    return v;
+}
+QString CommitModel::message() const
+{
+    QString v;
+    commit_model_message_get(m_d, &v, set_qstring);
+    return v;
+}
+QString CommitModel::time() const
+{
+    QString v;
+    commit_model_time_get(m_d, &v, set_qstring);
+    return v;
+}
+QString CommitModel::tree() const
+{
+    QString v;
+    commit_model_tree_get(m_d, &v, set_qstring);
+    return v;
+}
 Git::Git(bool /*owned*/, QObject *parent):
     QObject(parent),
     m_branches(new Branches(false, this)),
+    m_commit(new CommitModel(false, this)),
+    m_tree(new TreeModel(false, this)),
     m_d(nullptr),
     m_ownsPrivate(false)
 {
@@ -659,6 +925,8 @@ Git::Git(bool /*owned*/, QObject *parent):
 Git::Git(QObject *parent):
     QObject(parent),
     m_branches(new Branches(false, this)),
+    m_commit(new CommitModel(false, this)),
+    m_tree(new TreeModel(false, this)),
     m_d(git_new(this, m_branches,
         [](const Branches* o) {
             Q_EMIT o->newDataReady(QModelIndex());
@@ -698,13 +966,63 @@ Git::Git(QObject *parent):
         [](Branches* o) {
             o->endRemoveRows();
         }
-,
-        gitRevwalkFilterChanged)),
+, m_commit,
+        commitModelAuthorChanged,
+        commitModelCidChanged,
+        commitModelCommitterChanged,
+        commitModelMessageChanged,
+        commitModelTimeChanged,
+        commitModelTreeChanged,
+        gitRevwalkFilterChanged, m_tree,
+        [](const TreeModel* o) {
+            Q_EMIT o->newDataReady(QModelIndex());
+        },
+        [](TreeModel* o) {
+            Q_EMIT o->layoutAboutToBeChanged();
+        },
+        [](TreeModel* o) {
+            o->updatePersistentIndexes();
+            Q_EMIT o->layoutChanged();
+        },
+        [](TreeModel* o, quintptr first, quintptr last) {
+            o->dataChanged(o->createIndex(first, 0, first),
+                       o->createIndex(last, 0, last));
+        },
+        [](TreeModel* o) {
+            o->beginResetModel();
+        },
+        [](TreeModel* o) {
+            o->endResetModel();
+        },
+        [](TreeModel* o, int first, int last) {
+            o->beginInsertRows(QModelIndex(), first, last);
+        },
+        [](TreeModel* o) {
+            o->endInsertRows();
+        },
+        [](TreeModel* o, int first, int last, int destination) {
+            o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
+        },
+        [](TreeModel* o) {
+            o->endMoveRows();
+        },
+        [](TreeModel* o, int first, int last) {
+            o->beginRemoveRows(QModelIndex(), first, last);
+        },
+        [](TreeModel* o) {
+            o->endRemoveRows();
+        }
+)),
     m_ownsPrivate(true)
 {
     m_branches->m_d = git_branches_get(m_d);
+    m_commit->m_d = git_commit_get(m_d);
+    m_tree->m_d = git_tree_get(m_d);
     connect(this->m_branches, &Branches::newDataReady, this->m_branches, [this](const QModelIndex& i) {
         this->m_branches->fetchMore(i);
+    }, Qt::QueuedConnection);
+    connect(this->m_tree, &TreeModel::newDataReady, this->m_tree, [this](const QModelIndex& i) {
+        this->m_tree->fetchMore(i);
     }, Qt::QueuedConnection);
 }
 
@@ -721,15 +1039,35 @@ Branches* Git::branches()
 {
     return m_branches;
 }
+const CommitModel* Git::commit() const
+{
+    return m_commit;
+}
+CommitModel* Git::commit()
+{
+    return m_commit;
+}
 QString Git::revwalkFilter() const
 {
     QString v;
     git_revwalk_filter_get(m_d, &v, set_qstring);
     return v;
 }
+const TreeModel* Git::tree() const
+{
+    return m_tree;
+}
+TreeModel* Git::tree()
+{
+    return m_tree;
+}
 void Git::load(const QString& path)
 {
     return git_load(m_d, path.utf16(), path.size());
+}
+void Git::loadCommit(const QString& oid)
+{
+    return git_load_commit(m_d, oid.utf16(), oid.size());
 }
 Log::Log(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),
@@ -897,4 +1235,69 @@ bool Repositories::remove(quint64 index)
 void Repositories::setCurrent(qint64 id)
 {
     return repositories_set_current(m_d, id);
+}
+TreeModel::TreeModel(bool /*owned*/, QObject *parent):
+    QAbstractItemModel(parent),
+    m_d(nullptr),
+    m_ownsPrivate(false)
+{
+    initHeaderData();
+}
+
+TreeModel::TreeModel(QObject *parent):
+    QAbstractItemModel(parent),
+    m_d(tree_model_new(this,
+        [](const TreeModel* o) {
+            Q_EMIT o->newDataReady(QModelIndex());
+        },
+        [](TreeModel* o) {
+            Q_EMIT o->layoutAboutToBeChanged();
+        },
+        [](TreeModel* o) {
+            o->updatePersistentIndexes();
+            Q_EMIT o->layoutChanged();
+        },
+        [](TreeModel* o, quintptr first, quintptr last) {
+            o->dataChanged(o->createIndex(first, 0, first),
+                       o->createIndex(last, 0, last));
+        },
+        [](TreeModel* o) {
+            o->beginResetModel();
+        },
+        [](TreeModel* o) {
+            o->endResetModel();
+        },
+        [](TreeModel* o, int first, int last) {
+            o->beginInsertRows(QModelIndex(), first, last);
+        },
+        [](TreeModel* o) {
+            o->endInsertRows();
+        },
+        [](TreeModel* o, int first, int last, int destination) {
+            o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
+        },
+        [](TreeModel* o) {
+            o->endMoveRows();
+        },
+        [](TreeModel* o, int first, int last) {
+            o->beginRemoveRows(QModelIndex(), first, last);
+        },
+        [](TreeModel* o) {
+            o->endRemoveRows();
+        }
+)),
+    m_ownsPrivate(true)
+{
+    connect(this, &TreeModel::newDataReady, this, [this](const QModelIndex& i) {
+        this->fetchMore(i);
+    }, Qt::QueuedConnection);
+    initHeaderData();
+}
+
+TreeModel::~TreeModel() {
+    if (m_ownsPrivate) {
+        tree_model_free(m_d);
+    }
+}
+void TreeModel::initHeaderData() {
 }

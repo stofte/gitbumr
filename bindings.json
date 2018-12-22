@@ -63,6 +63,8 @@
             "type": "Object",
             "properties": {
                 "branches": { "type": "Branches" },
+                "commit": { "type": "CommitModel" },
+                "tree": { "type": "TreeModel" },
                 "revwalkFilter": { "type": "QString" }
             },
             "functions": {
@@ -70,7 +72,31 @@
                     "return": "void",
                     "mut": true,
                     "arguments": [{ "name": "path", "type": "QString" }]
+                },
+                "loadCommit": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [{ "name": "oid", "type": "QString" }]
                 }
+            }
+        },
+        "CommitModel": {
+            "type": "Object",
+            "properties": {
+                "cid": { "type": "QString" },
+                "time": { "type": "QString" },
+                "author": { "type": "QString" },
+                "committer": { "type": "QString" },
+                "message": { "type": "QString" },
+                "tree": { "type": "QString" }
+            }
+        },
+        "TreeModel": {
+            "type": "List",
+            "itemProperties": {
+                "filename": { "type": "QString" },
+                "status": { "type": "QString" },
+                "patch": { "type": "QString" }
             }
         },
         "Branches": {

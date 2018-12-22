@@ -1,6 +1,6 @@
 use std::{path::{PathBuf}, thread};
 use git2::{Repository, BranchType, Oid, Sort};
-use chrono::prelude::*;
+use chrono::{FixedOffset, DateTime, NaiveDateTime, Local};
 use chrono_humanize::HumanTime;
 use crossbeam::{channel::Receiver, channel};
 use implementation::{branches::BranchesItem, log::LogItem};
@@ -17,6 +17,12 @@ pub fn get_timesize_offset_secs() -> i32 {
     let ldt = Local::now();
     let z = ldt.offset().local_minus_utc();
     z
+}
+
+pub fn get_timesize_offset() -> FixedOffset {
+    let ldt = Local::now();
+    let z = ldt.offset().local_minus_utc();
+    FixedOffset::east(z)
 }
 
 pub fn strip_whitespace(str: &str) -> String {

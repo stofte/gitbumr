@@ -2,8 +2,12 @@ mod repositories;
 pub mod log;
 pub mod branches;
 mod git;
+mod commitmodel;
+mod treemodel;
 
 pub use self::repositories::*;
 pub use self::log::*;
 pub use self::branches::*;
 pub use self::git::*;
+pub use self::commitmodel::*;
+pub use self::treemodel::*;

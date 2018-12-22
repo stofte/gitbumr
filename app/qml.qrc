@@ -12,5 +12,6 @@
         <file>qml/components/GraphView.qml</file>
         <file>qml/base/JsonListModel.qml</file>
         <file>qml/components/Commit.qml</file>
+        <file>qml/components/TreeView.qml</file>
     </qresource>
 </RCC>
