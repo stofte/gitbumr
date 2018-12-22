@@ -39,6 +39,7 @@ Rectangle {
         highlightMoveDuration: 1
         highlightMoveVelocity: 1
         keyNavigationEnabled: true
+        interactive: false
         boundsBehavior: Flickable.StopAtBounds
         Keys.onPressed: {
             var isUp = event.key === Qt.Key_PageUp;
@@ -142,6 +143,11 @@ Rectangle {
                     onClicked: {
                         historyListView.currentIndex = index;
                         historyListView.forceActiveFocus();
+                    }
+                    onWheel: {
+                        var isDown = wheel.angleDelta.y < 0;
+                        var topIdx = Math.max(0, historyListView.indexAt(1, historyListView.contentY + 1) + 3 * (isDown ? 1 : -1));
+                        historyListView.positionViewAtIndex(topIdx, ListView.Beginning);
                     }
                 }
             }
