@@ -1,5 +1,7 @@
 import QtQuick 2.0
 import RustCode 1.0
+import "../base"
+import "../style"
 
 Item {
     ListView {
@@ -9,8 +11,9 @@ Item {
         delegate: Component {
             Item {
                 height: textRef.contentHeight
-                Text {
+                TextItem {
                     id: textRef
+                    font.family: Style.fontNameFixedWidth
                     width: parent.width
                     wrapMode: Text.NoWrap
                     text: patch

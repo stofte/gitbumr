@@ -1,22 +1,25 @@
 import QtQuick 2.0
 import RustCode 1.0
+import "../base"
+import "../style"
 
 Item {
+    clip: true
     Column {
-        Text {
+        TextItem {
             text: "Commit: " + gitModel.commit.cid
         }
-        Text {
+        TextItem {
             text: "Author: " + gitModel.commit.author
         }
-        Text {
+        TextItem {
             text: "Committer: " + gitModel.commit.comitter
         }
-        Text {
+        TextItem {
             text: "Time: " + gitModel.commit.time
         }
-        Text { text: " " }
-        Text {
+        TextItem { text: " " }
+        TextItem {
             text: gitModel.commit.message
         }
     }
