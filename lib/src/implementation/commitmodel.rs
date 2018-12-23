@@ -1,4 +1,4 @@
-use git2::{Repository, Oid, Commit};
+use git2::{Commit};
 use chrono::{FixedOffset, DateTime, NaiveDateTime};
 use interface::{CommitModelTrait, CommitModelEmitter};
 
@@ -10,10 +10,9 @@ pub struct CommitModel {
     message: Option<String>,
     time: Option<String>,
     tree: Option<String>,
-    oid: Oid
 }
 
-pub fn fill_commit(commit: &mut CommitModel, c: &Commit, repo: &Repository, tz_offset: FixedOffset) {
+pub fn fill_commit(commit: &mut CommitModel, c: &Commit, tz_offset: FixedOffset) {
     let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), tz_offset);
     let dt_str = dt.format("%c").to_string();
     let cid = format!("{:?}", c.id()).to_string();
@@ -40,7 +39,6 @@ pub fn fill_commit(commit: &mut CommitModel, c: &Commit, repo: &Repository, tz_o
 impl CommitModelTrait for CommitModel {
     fn new(emit: CommitModelEmitter) -> CommitModel {
         CommitModel {
-            oid: Oid::zero(),
             cid: None,
             author: None,
             committer: None,

@@ -66,7 +66,7 @@ impl GitTrait for Git {
             Some(r) => {
                 let oid = Oid::from_str(&oid).unwrap();
                 let commit = r.find_commit(oid).unwrap();
-                fill_commit(&mut self.commit, &commit, &r, self.tz_offset);
+                fill_commit(&mut self.commit, &commit, self.tz_offset);
                 fill_treemodel(&mut self.tree, &commit, &r);
             }
             None => panic!("expected git repo in load_commit")
