@@ -32,12 +32,16 @@ pub fn fill_treemodel(tree: &mut TreeModel, commit: &Commit, repo: &Repository) 
                 let delta = diff.get_delta(idx).unwrap();
                 let mut patch = Patch::from_diff(&diff, idx).unwrap().unwrap();
                 let patch_buf = patch.to_buf().unwrap();
-                let patch_raw = patch_buf.as_str().unwrap();
                 //println!("diff: {:?}, {:?}", d.status(), d.new_file().path());
+                let mut patch_str = "";
+                match patch_buf.as_str() {
+                    Some(pstr) => patch_str = pstr,
+                    None => ()
+                };
                 list.push(TreeModelItem {
                     filename: "".to_string(),
                     status: "".to_string(),
-                    patch: patch_raw.to_string(),
+                    patch: patch_str.to_string(),
                 });
             }
             tree.model.begin_reset_model();
