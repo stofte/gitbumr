@@ -56,7 +56,7 @@ RUST_FILES = \
     lib/src/implementation/git.rs \
     lib/src/implementation/repositories.rs \
     lib/src/implementation/log.rs \
-    lib/src/implementation/commitmodel.rs \
+    lib/src/implementation/commit.rs \
     lib/src/implementation/treemodel.rs
 rust_cargo.output = "$$PWD/lib/target/$$RUST_TARGET/$$BUILD_MODE/rust.lib"
 rust_cargo.commands = $$CCRS_CFLAGS & \

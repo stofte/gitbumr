@@ -62,7 +62,7 @@ QQC14.SplitView {
                 color: Style.dark
                 height: 1
             }
-            Commit {
+            CommitView {
                 height: 100
             }
             TreeView {

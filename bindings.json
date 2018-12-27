@@ -63,7 +63,7 @@
             "type": "Object",
             "properties": {
                 "branches": { "type": "Branches" },
-                "commit": { "type": "CommitModel" },
+                "commit": { "type": "Commit" },
                 "tree": { "type": "TreeModel" },
                 "revwalkFilter": { "type": "QString" }
             },
@@ -80,7 +80,7 @@
                 }
             }
         },
-        "CommitModel": {
+        "Commit": {
             "type": "Object",
             "properties": {
                 "cid": { "type": "QString" },

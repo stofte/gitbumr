@@ -296,29 +296,29 @@ pub unsafe extern "C" fn branches_data_oid(
     set(d, s, to_c_int(data.len()));
 }
 
-pub struct CommitModelQObject {}
+pub struct CommitQObject {}
 
-pub struct CommitModelEmitter {
-    qobject: Arc<AtomicPtr<CommitModelQObject>>,
-    author_changed: fn(*mut CommitModelQObject),
-    cid_changed: fn(*mut CommitModelQObject),
-    committer_changed: fn(*mut CommitModelQObject),
-    message_changed: fn(*mut CommitModelQObject),
-    time_changed: fn(*mut CommitModelQObject),
-    tree_changed: fn(*mut CommitModelQObject),
+pub struct CommitEmitter {
+    qobject: Arc<AtomicPtr<CommitQObject>>,
+    author_changed: fn(*mut CommitQObject),
+    cid_changed: fn(*mut CommitQObject),
+    committer_changed: fn(*mut CommitQObject),
+    message_changed: fn(*mut CommitQObject),
+    time_changed: fn(*mut CommitQObject),
+    tree_changed: fn(*mut CommitQObject),
 }
 
-unsafe impl Send for CommitModelEmitter {}
+unsafe impl Send for CommitEmitter {}
 
-impl CommitModelEmitter {
+impl CommitEmitter {
     /// Clone the emitter
     ///
     /// The emitter can only be cloned when it is mutable. The emitter calls
     /// into C++ code which may call into Rust again. If emmitting is possible
     /// from immutable structures, that might lead to access to a mutable
     /// reference. That is undefined behaviour and forbidden.
-    pub fn clone(&mut self) -> CommitModelEmitter {
-        CommitModelEmitter {
+    pub fn clone(&mut self) -> CommitEmitter {
+        CommitEmitter {
             qobject: self.qobject.clone(),
             author_changed: self.author_changed,
             cid_changed: self.cid_changed,
@@ -329,8 +329,8 @@ impl CommitModelEmitter {
         }
     }
     fn clear(&self) {
-        let n: *const CommitModelQObject = null();
-        self.qobject.store(n as *mut CommitModelQObject, Ordering::SeqCst);
+        let n: *const CommitQObject = null();
+        self.qobject.store(n as *mut CommitQObject, Ordering::SeqCst);
     }
     pub fn author_changed(&mut self) {
         let ptr = self.qobject.load(Ordering::SeqCst);
@@ -370,9 +370,9 @@ impl CommitModelEmitter {
     }
 }
 
-pub trait CommitModelTrait {
-    fn new(emit: CommitModelEmitter) -> Self;
-    fn emit(&mut self) -> &mut CommitModelEmitter;
+pub trait CommitTrait {
+    fn new(emit: CommitEmitter) -> Self;
+    fn emit(&mut self) -> &mut CommitEmitter;
     fn author(&self) -> &str;
     fn cid(&self) -> &str;
     fn committer(&self) -> &str;
@@ -382,36 +382,36 @@ pub trait CommitModelTrait {
 }
 
 #[no_mangle]
-pub extern "C" fn commit_model_new(
-    commit_model: *mut CommitModelQObject,
-    commit_model_author_changed: fn(*mut CommitModelQObject),
-    commit_model_cid_changed: fn(*mut CommitModelQObject),
-    commit_model_committer_changed: fn(*mut CommitModelQObject),
-    commit_model_message_changed: fn(*mut CommitModelQObject),
-    commit_model_time_changed: fn(*mut CommitModelQObject),
-    commit_model_tree_changed: fn(*mut CommitModelQObject),
-) -> *mut CommitModel {
-    let commit_model_emit = CommitModelEmitter {
-        qobject: Arc::new(AtomicPtr::new(commit_model)),
-        author_changed: commit_model_author_changed,
-        cid_changed: commit_model_cid_changed,
-        committer_changed: commit_model_committer_changed,
-        message_changed: commit_model_message_changed,
-        time_changed: commit_model_time_changed,
-        tree_changed: commit_model_tree_changed,
+pub extern "C" fn commit_new(
+    commit: *mut CommitQObject,
+    commit_author_changed: fn(*mut CommitQObject),
+    commit_cid_changed: fn(*mut CommitQObject),
+    commit_committer_changed: fn(*mut CommitQObject),
+    commit_message_changed: fn(*mut CommitQObject),
+    commit_time_changed: fn(*mut CommitQObject),
+    commit_tree_changed: fn(*mut CommitQObject),
+) -> *mut Commit {
+    let commit_emit = CommitEmitter {
+        qobject: Arc::new(AtomicPtr::new(commit)),
+        author_changed: commit_author_changed,
+        cid_changed: commit_cid_changed,
+        committer_changed: commit_committer_changed,
+        message_changed: commit_message_changed,
+        time_changed: commit_time_changed,
+        tree_changed: commit_tree_changed,
     };
-    let d_commit_model = CommitModel::new(commit_model_emit);
-    Box::into_raw(Box::new(d_commit_model))
+    let d_commit = Commit::new(commit_emit);
+    Box::into_raw(Box::new(d_commit))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn commit_model_free(ptr: *mut CommitModel) {
+pub unsafe extern "C" fn commit_free(ptr: *mut Commit) {
     Box::from_raw(ptr).emit().clear();
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn commit_model_author_get(
-    ptr: *const CommitModel,
+pub unsafe extern "C" fn commit_author_get(
+    ptr: *const Commit,
     p: *mut QString,
     set: fn(*mut QString, *const c_char, c_int),
 ) {
@@ -422,8 +422,8 @@ pub unsafe extern "C" fn commit_model_author_get(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn commit_model_cid_get(
-    ptr: *const CommitModel,
+pub unsafe extern "C" fn commit_cid_get(
+    ptr: *const Commit,
     p: *mut QString,
     set: fn(*mut QString, *const c_char, c_int),
 ) {
@@ -434,8 +434,8 @@ pub unsafe extern "C" fn commit_model_cid_get(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn commit_model_committer_get(
-    ptr: *const CommitModel,
+pub unsafe extern "C" fn commit_committer_get(
+    ptr: *const Commit,
     p: *mut QString,
     set: fn(*mut QString, *const c_char, c_int),
 ) {
@@ -446,8 +446,8 @@ pub unsafe extern "C" fn commit_model_committer_get(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn commit_model_message_get(
-    ptr: *const CommitModel,
+pub unsafe extern "C" fn commit_message_get(
+    ptr: *const Commit,
     p: *mut QString,
     set: fn(*mut QString, *const c_char, c_int),
 ) {
@@ -458,8 +458,8 @@ pub unsafe extern "C" fn commit_model_message_get(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn commit_model_time_get(
-    ptr: *const CommitModel,
+pub unsafe extern "C" fn commit_time_get(
+    ptr: *const Commit,
     p: *mut QString,
     set: fn(*mut QString, *const c_char, c_int),
 ) {
@@ -470,8 +470,8 @@ pub unsafe extern "C" fn commit_model_time_get(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn commit_model_tree_get(
-    ptr: *const CommitModel,
+pub unsafe extern "C" fn commit_tree_get(
+    ptr: *const Commit,
     p: *mut QString,
     set: fn(*mut QString, *const c_char, c_int),
 ) {
@@ -518,13 +518,13 @@ impl GitEmitter {
 pub trait GitTrait {
     fn new(emit: GitEmitter,
         branches: Branches,
-        commit: CommitModel,
+        commit: Commit,
         tree: TreeModel) -> Self;
     fn emit(&mut self) -> &mut GitEmitter;
     fn branches(&self) -> &Branches;
     fn branches_mut(&mut self) -> &mut Branches;
-    fn commit(&self) -> &CommitModel;
-    fn commit_mut(&mut self) -> &mut CommitModel;
+    fn commit(&self) -> &Commit;
+    fn commit_mut(&mut self) -> &mut Commit;
     fn revwalk_filter(&self) -> &str;
     fn tree(&self) -> &TreeModel;
     fn tree_mut(&mut self) -> &mut TreeModel;
@@ -548,13 +548,13 @@ pub extern "C" fn git_new(
     branches_end_move_rows: fn(*mut BranchesQObject),
     branches_begin_remove_rows: fn(*mut BranchesQObject, usize, usize),
     branches_end_remove_rows: fn(*mut BranchesQObject),
-    commit: *mut CommitModelQObject,
-    commit_author_changed: fn(*mut CommitModelQObject),
-    commit_cid_changed: fn(*mut CommitModelQObject),
-    commit_committer_changed: fn(*mut CommitModelQObject),
-    commit_message_changed: fn(*mut CommitModelQObject),
-    commit_time_changed: fn(*mut CommitModelQObject),
-    commit_tree_changed: fn(*mut CommitModelQObject),
+    commit: *mut CommitQObject,
+    commit_author_changed: fn(*mut CommitQObject),
+    commit_cid_changed: fn(*mut CommitQObject),
+    commit_committer_changed: fn(*mut CommitQObject),
+    commit_message_changed: fn(*mut CommitQObject),
+    commit_time_changed: fn(*mut CommitQObject),
+    commit_tree_changed: fn(*mut CommitQObject),
     git_revwalk_filter_changed: fn(*mut GitQObject),
     tree: *mut TreeModelQObject,
     tree_new_data_ready: fn(*mut TreeModelQObject),
@@ -589,7 +589,7 @@ pub extern "C" fn git_new(
         end_remove_rows: branches_end_remove_rows,
     };
     let d_branches = Branches::new(branches_emit, model);
-    let commit_emit = CommitModelEmitter {
+    let commit_emit = CommitEmitter {
         qobject: Arc::new(AtomicPtr::new(commit)),
         author_changed: commit_author_changed,
         cid_changed: commit_cid_changed,
@@ -598,7 +598,7 @@ pub extern "C" fn git_new(
         time_changed: commit_time_changed,
         tree_changed: commit_tree_changed,
     };
-    let d_commit = CommitModel::new(commit_emit);
+    let d_commit = Commit::new(commit_emit);
     let tree_emit = TreeModelEmitter {
         qobject: Arc::new(AtomicPtr::new(tree)),
         new_data_ready: tree_new_data_ready,
@@ -640,7 +640,7 @@ pub unsafe extern "C" fn git_branches_get(ptr: *mut Git) -> *mut Branches {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn git_commit_get(ptr: *mut Git) -> *mut CommitModel {
+pub unsafe extern "C" fn git_commit_get(ptr: *mut Git) -> *mut Commit {
     (&mut *ptr).commit_mut()
 }
 
@@ -1300,6 +1300,7 @@ pub trait TreeModelTrait {
     fn sort(&mut self, u8, SortOrder) {}
     fn filename(&self, index: usize) -> &str;
     fn patch(&self, index: usize) -> &str;
+    fn status(&self, index: usize) -> &str;
 }
 
 #[no_mangle]
@@ -1394,6 +1395,18 @@ pub unsafe extern "C" fn tree_model_data_patch(
 ) {
     let o = &*ptr;
     let data = o.patch(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tree_model_data_status(
+    ptr: *const TreeModel, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.status(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
 }

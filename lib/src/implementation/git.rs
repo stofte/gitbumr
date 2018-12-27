@@ -1,13 +1,13 @@
 use git2::{Repository, Oid};
 use chrono::FixedOffset;
 use interface::{ GitTrait, GitEmitter };
-use super::{ Branches, fill_branches, CommitModel, fill_commit, TreeModel, fill_treemodel };
+use super::{ Branches, fill_branches, Commit, fill_commit, TreeModel, fill_treemodel };
 use utils::{local_branches, get_timesize_offset};
 
 pub struct Git {
     emit: GitEmitter,
     branches: Branches,
-    commit: CommitModel,
+    commit: Commit,
     tree: TreeModel,
     git: Option<Repository>,
     revwalk_filter: String,
@@ -15,7 +15,7 @@ pub struct Git {
 }
 
 impl GitTrait for Git {
-    fn new(emit: GitEmitter, branches: Branches, commit: CommitModel, tree: TreeModel) -> Git {
+    fn new(emit: GitEmitter, branches: Branches, commit: Commit, tree: TreeModel) -> Git {
         Git {
             emit,
             branches,
@@ -35,10 +35,10 @@ impl GitTrait for Git {
     fn branches_mut(&mut self) -> &mut Branches {
         &mut self.branches
     }
-    fn commit(&self) -> &CommitModel {
+    fn commit(&self) -> &Commit {
         &self.commit
     }
-    fn commit_mut(&mut self) -> &mut CommitModel {
+    fn commit_mut(&mut self) -> &mut Commit {
         &mut self.commit
     }
     fn tree(&self) -> &TreeModel {

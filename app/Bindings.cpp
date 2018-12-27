@@ -38,27 +38,27 @@ namespace {
     inline QVariant cleanNullQVariant(const QVariant& v) {
         return (v.isNull()) ?QVariant() :v;
     }
-    inline void commitModelAuthorChanged(CommitModel* o)
+    inline void commitAuthorChanged(Commit* o)
     {
         Q_EMIT o->authorChanged();
     }
-    inline void commitModelCidChanged(CommitModel* o)
+    inline void commitCidChanged(Commit* o)
     {
         Q_EMIT o->cidChanged();
     }
-    inline void commitModelCommitterChanged(CommitModel* o)
+    inline void commitCommitterChanged(Commit* o)
     {
         Q_EMIT o->committerChanged();
     }
-    inline void commitModelMessageChanged(CommitModel* o)
+    inline void commitMessageChanged(Commit* o)
     {
         Q_EMIT o->messageChanged();
     }
-    inline void commitModelTimeChanged(CommitModel* o)
+    inline void commitTimeChanged(Commit* o)
     {
         Q_EMIT o->timeChanged();
     }
-    inline void commitModelTreeChanged(CommitModel* o)
+    inline void commitTreeChanged(Commit* o)
     {
         Q_EMIT o->treeChanged();
     }
@@ -234,14 +234,14 @@ extern "C" {
 };
 
 extern "C" {
-    CommitModel::Private* commit_model_new(CommitModel*, void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*));
-    void commit_model_free(CommitModel::Private*);
-    void commit_model_author_get(const CommitModel::Private*, QString*, qstring_set);
-    void commit_model_cid_get(const CommitModel::Private*, QString*, qstring_set);
-    void commit_model_committer_get(const CommitModel::Private*, QString*, qstring_set);
-    void commit_model_message_get(const CommitModel::Private*, QString*, qstring_set);
-    void commit_model_time_get(const CommitModel::Private*, QString*, qstring_set);
-    void commit_model_tree_get(const CommitModel::Private*, QString*, qstring_set);
+    Commit::Private* commit_new(Commit*, void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*));
+    void commit_free(Commit::Private*);
+    void commit_author_get(const Commit::Private*, QString*, qstring_set);
+    void commit_cid_get(const Commit::Private*, QString*, qstring_set);
+    void commit_committer_get(const Commit::Private*, QString*, qstring_set);
+    void commit_message_get(const Commit::Private*, QString*, qstring_set);
+    void commit_time_get(const Commit::Private*, QString*, qstring_set);
+    void commit_tree_get(const Commit::Private*, QString*, qstring_set);
 };
 
 extern "C" {
@@ -257,7 +257,7 @@ extern "C" {
         void (*)(Branches*, int, int, int),
         void (*)(Branches*),
         void (*)(Branches*, int, int),
-        void (*)(Branches*), CommitModel*, void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(CommitModel*), void (*)(Git*), TreeModel*,
+        void (*)(Branches*), Commit*, void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Git*), TreeModel*,
         void (*)(const TreeModel*),
         void (*)(TreeModel*),
         void (*)(TreeModel*),
@@ -272,7 +272,7 @@ extern "C" {
         void (*)(TreeModel*));
     void git_free(Git::Private*);
     Branches::Private* git_branches_get(const Git::Private*);
-    CommitModel::Private* git_commit_get(const Git::Private*);
+    Commit::Private* git_commit_get(const Git::Private*);
     void git_revwalk_filter_get(const Git::Private*, QString*, qstring_set);
     TreeModel::Private* git_tree_get(const Git::Private*);
     void git_load(Git::Private*, const ushort*, int);
@@ -636,6 +636,7 @@ extern "C" {
 extern "C" {
     void tree_model_data_filename(const TreeModel::Private*, int, QString*, qstring_set);
     void tree_model_data_patch(const TreeModel::Private*, int, QString*, qstring_set);
+    void tree_model_data_status(const TreeModel::Private*, int, QString*, qstring_set);
     void tree_model_sort(TreeModel::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
 
     int tree_model_row_count(const TreeModel::Private*);
@@ -719,6 +720,13 @@ QString TreeModel::patch(int row) const
     return s;
 }
 
+QString TreeModel::status(int row) const
+{
+    QString s;
+    tree_model_data_status(m_d, row, &s, set_qstring);
+    return s;
+}
+
 QVariant TreeModel::data(const QModelIndex &index, int role) const
 {
     Q_ASSERT(rowCount(index.parent()) > index.row());
@@ -729,6 +737,8 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
             return QVariant::fromValue(filename(index.row()));
         case Qt::UserRole + 1:
             return QVariant::fromValue(patch(index.row()));
+        case Qt::UserRole + 2:
+            return QVariant::fromValue(status(index.row()));
         }
         break;
     }
@@ -750,6 +760,7 @@ QHash<int, QByteArray> TreeModel::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
     names.insert(Qt::UserRole + 0, "filename");
     names.insert(Qt::UserRole + 1, "patch");
+    names.insert(Qt::UserRole + 2, "status");
     return names;
 }
 QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -851,71 +862,71 @@ Branches::~Branches() {
 }
 void Branches::initHeaderData() {
 }
-CommitModel::CommitModel(bool /*owned*/, QObject *parent):
+Commit::Commit(bool /*owned*/, QObject *parent):
     QObject(parent),
     m_d(nullptr),
     m_ownsPrivate(false)
 {
 }
 
-CommitModel::CommitModel(QObject *parent):
+Commit::Commit(QObject *parent):
     QObject(parent),
-    m_d(commit_model_new(this,
-        commitModelAuthorChanged,
-        commitModelCidChanged,
-        commitModelCommitterChanged,
-        commitModelMessageChanged,
-        commitModelTimeChanged,
-        commitModelTreeChanged)),
+    m_d(commit_new(this,
+        commitAuthorChanged,
+        commitCidChanged,
+        commitCommitterChanged,
+        commitMessageChanged,
+        commitTimeChanged,
+        commitTreeChanged)),
     m_ownsPrivate(true)
 {
 }
 
-CommitModel::~CommitModel() {
+Commit::~Commit() {
     if (m_ownsPrivate) {
-        commit_model_free(m_d);
+        commit_free(m_d);
     }
 }
-QString CommitModel::author() const
+QString Commit::author() const
 {
     QString v;
-    commit_model_author_get(m_d, &v, set_qstring);
+    commit_author_get(m_d, &v, set_qstring);
     return v;
 }
-QString CommitModel::cid() const
+QString Commit::cid() const
 {
     QString v;
-    commit_model_cid_get(m_d, &v, set_qstring);
+    commit_cid_get(m_d, &v, set_qstring);
     return v;
 }
-QString CommitModel::committer() const
+QString Commit::committer() const
 {
     QString v;
-    commit_model_committer_get(m_d, &v, set_qstring);
+    commit_committer_get(m_d, &v, set_qstring);
     return v;
 }
-QString CommitModel::message() const
+QString Commit::message() const
 {
     QString v;
-    commit_model_message_get(m_d, &v, set_qstring);
+    commit_message_get(m_d, &v, set_qstring);
     return v;
 }
-QString CommitModel::time() const
+QString Commit::time() const
 {
     QString v;
-    commit_model_time_get(m_d, &v, set_qstring);
+    commit_time_get(m_d, &v, set_qstring);
     return v;
 }
-QString CommitModel::tree() const
+QString Commit::tree() const
 {
     QString v;
-    commit_model_tree_get(m_d, &v, set_qstring);
+    commit_tree_get(m_d, &v, set_qstring);
     return v;
 }
 Git::Git(bool /*owned*/, QObject *parent):
     QObject(parent),
     m_branches(new Branches(false, this)),
-    m_commit(new CommitModel(false, this)),
+    m_commit(new Commit(false, this)),
     m_tree(new TreeModel(false, this)),
     m_d(nullptr),
     m_ownsPrivate(false)
@@ -925,7 +936,7 @@ Git::Git(bool /*owned*/, QObject *parent):
 Git::Git(QObject *parent):
     QObject(parent),
     m_branches(new Branches(false, this)),
-    m_commit(new CommitModel(false, this)),
+    m_commit(new Commit(false, this)),
     m_tree(new TreeModel(false, this)),
     m_d(git_new(this, m_branches,
         [](const Branches* o) {
@@ -967,12 +978,12 @@ Git::Git(QObject *parent):
             o->endRemoveRows();
         }
 , m_commit,
-        commitModelAuthorChanged,
-        commitModelCidChanged,
-        commitModelCommitterChanged,
-        commitModelMessageChanged,
-        commitModelTimeChanged,
-        commitModelTreeChanged,
+        commitAuthorChanged,
+        commitCidChanged,
+        commitCommitterChanged,
+        commitMessageChanged,
+        commitTimeChanged,
+        commitTreeChanged,
         gitRevwalkFilterChanged, m_tree,
         [](const TreeModel* o) {
             Q_EMIT o->newDataReady(QModelIndex());
@@ -1039,11 +1050,11 @@ Branches* Git::branches()
 {
     return m_branches;
 }
-const CommitModel* Git::commit() const
+const Commit* Git::commit() const
 {
     return m_commit;
 }
-CommitModel* Git::commit()
+Commit* Git::commit()
 {
     return m_commit;
 }

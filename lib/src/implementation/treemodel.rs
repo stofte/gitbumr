@@ -66,4 +66,7 @@ impl TreeModelTrait for TreeModel {
     fn patch(&self, index: usize) -> &str {
         &self.list[index].patch
     }
+    fn status(&self, index: usize) -> &str {
+        &self.list[index].status
+    }
 }

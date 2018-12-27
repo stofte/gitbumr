@@ -6,7 +6,7 @@
 #include <QtCore/QAbstractItemModel>
 
 class Branches;
-class CommitModel;
+class Commit;
 class Git;
 class Log;
 class Repositories;
@@ -56,7 +56,7 @@ private:
 Q_SIGNALS:
 };
 
-class CommitModel : public QObject
+class Commit : public QObject
 {
     Q_OBJECT
     friend class Git;
@@ -71,10 +71,10 @@ private:
     Q_PROPERTY(QString message READ message NOTIFY messageChanged FINAL)
     Q_PROPERTY(QString time READ time NOTIFY timeChanged FINAL)
     Q_PROPERTY(QString tree READ tree NOTIFY treeChanged FINAL)
-    explicit CommitModel(bool owned, QObject *parent);
+    explicit Commit(bool owned, QObject *parent);
 public:
-    explicit CommitModel(QObject *parent = nullptr);
-    ~CommitModel();
+    explicit Commit(QObject *parent = nullptr);
+    ~Commit();
     QString author() const;
     QString cid() const;
     QString committer() const;
@@ -97,12 +97,12 @@ public:
     class Private;
 private:
     Branches* const m_branches;
-    CommitModel* const m_commit;
+    Commit* const m_commit;
     TreeModel* const m_tree;
     Private * m_d;
     bool m_ownsPrivate;
     Q_PROPERTY(Branches* branches READ branches NOTIFY branchesChanged FINAL)
-    Q_PROPERTY(CommitModel* commit READ commit NOTIFY commitChanged FINAL)
+    Q_PROPERTY(Commit* commit READ commit NOTIFY commitChanged FINAL)
     Q_PROPERTY(QString revwalkFilter READ revwalkFilter NOTIFY revwalkFilterChanged FINAL)
     Q_PROPERTY(TreeModel* tree READ tree NOTIFY treeChanged FINAL)
     explicit Git(bool owned, QObject *parent);
@@ -111,8 +111,8 @@ public:
     ~Git();
     const Branches* branches() const;
     Branches* branches();
-    const CommitModel* commit() const;
-    CommitModel* commit();
+    const Commit* commit() const;
+    Commit* commit();
     QString revwalkFilter() const;
     const TreeModel* tree() const;
     TreeModel* tree();
@@ -257,6 +257,7 @@ public:
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Q_INVOKABLE QString filename(int row) const;
     Q_INVOKABLE QString patch(int row) const;
+    Q_INVOKABLE QString status(int row) const;
 
 Q_SIGNALS:
     // new data is ready to be made available to the model with fetchMore()

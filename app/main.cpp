@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<Git>("RustCode", 1, 0, "Git");
     qmlRegisterType<Branches>("RustCode", 1, 0, "Branches");
     qmlRegisterType<Log>("RustCode", 1, 0, "Log");
-    qmlRegisterType<CommitModel>("RustCode", 1, 0, "CommitModel");
+    qmlRegisterType<Commit>("RustCode", 1, 0, "Commit");
     qmlRegisterType<TreeModel>("RustCode", 1, 0, "TreeModel");
 
 #if DEBUG

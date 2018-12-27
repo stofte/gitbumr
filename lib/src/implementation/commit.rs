@@ -1,9 +1,9 @@
-use git2::{Commit};
+use git2;
 use chrono::{FixedOffset, DateTime, NaiveDateTime};
-use interface::{CommitModelTrait, CommitModelEmitter};
+use interface::{CommitTrait, CommitEmitter};
 
-pub struct CommitModel {
-    emit: CommitModelEmitter,
+pub struct Commit {
+    emit: CommitEmitter,
     cid: Option<String>,
     author: Option<String>,
     committer: Option<String>,
@@ -12,7 +12,7 @@ pub struct CommitModel {
     tree: Option<String>,
 }
 
-pub fn fill_commit(commit: &mut CommitModel, c: &Commit, tz_offset: FixedOffset) {
+pub fn fill_commit(commit: &mut Commit, c: &git2::Commit, tz_offset: FixedOffset) {
     let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), tz_offset);
     let dt_str = dt.format("%c").to_string();
     let cid = format!("{:?}", c.id()).to_string();
@@ -36,9 +36,9 @@ pub fn fill_commit(commit: &mut CommitModel, c: &Commit, tz_offset: FixedOffset)
     commit.emit.committer_changed();
 }
 
-impl CommitModelTrait for CommitModel {
-    fn new(emit: CommitModelEmitter) -> CommitModel {
-        CommitModel {
+impl CommitTrait for Commit {
+    fn new(emit: CommitEmitter) -> Commit {
+        Commit {
             cid: None,
             author: None,
             committer: None,
@@ -48,7 +48,7 @@ impl CommitModelTrait for CommitModel {
             emit
         }
     }
-    fn emit(&mut self) -> &mut CommitModelEmitter {
+    fn emit(&mut self) -> &mut CommitEmitter {
         &mut self.emit
     }
     fn author(&self) -> &str {
