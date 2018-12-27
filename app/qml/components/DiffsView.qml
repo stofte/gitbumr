@@ -7,7 +7,7 @@ Item {
     ListView {
         clip: true
         anchors.fill: parent
-        model: gitModel.tree
+        model: gitModel.diffs
         delegate: Component {
             Item {
                 height: textRef.contentHeight

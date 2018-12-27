@@ -1,26 +1,26 @@
 use git2::{Repository, Oid};
 use chrono::FixedOffset;
 use interface::{ GitTrait, GitEmitter };
-use super::{ Branches, fill_branches, Commit, fill_commit, TreeModel, fill_treemodel };
+use super::{ Branches, fill_branches, Commit, fill_commit, Diffs, fill_diffs };
 use utils::{local_branches, get_timesize_offset};
 
 pub struct Git {
     emit: GitEmitter,
     branches: Branches,
     commit: Commit,
-    tree: TreeModel,
+    diffs: Diffs,
     git: Option<Repository>,
     revwalk_filter: String,
     tz_offset: FixedOffset,
 }
 
 impl GitTrait for Git {
-    fn new(emit: GitEmitter, branches: Branches, commit: Commit, tree: TreeModel) -> Git {
+    fn new(emit: GitEmitter, branches: Branches, commit: Commit, diffs: Diffs) -> Git {
         Git {
             emit,
             branches,
             commit,
-            tree,
+            diffs,
             git: None,
             revwalk_filter: "".to_string(),
             tz_offset: get_timesize_offset(),
@@ -41,11 +41,11 @@ impl GitTrait for Git {
     fn commit_mut(&mut self) -> &mut Commit {
         &mut self.commit
     }
-    fn tree(&self) -> &TreeModel {
-        &self.tree
+    fn diffs(&self) -> &Diffs {
+        &self.diffs
     }
-    fn tree_mut(&mut self) -> &mut TreeModel {
-        &mut self.tree
+    fn diffs_mut(&mut self) -> &mut Diffs {
+        &mut self.diffs
     }
     fn load(&mut self, path: String) {
         match Repository::open(path) {
@@ -67,7 +67,7 @@ impl GitTrait for Git {
                 let oid = Oid::from_str(&oid).unwrap();
                 let commit = r.find_commit(oid).unwrap();
                 fill_commit(&mut self.commit, &commit, self.tz_offset);
-                fill_treemodel(&mut self.tree, &commit, &r);
+                fill_diffs(&mut self.diffs, &commit, &r);
             }
             None => panic!("expected git repo in load_commit")
         };

@@ -57,7 +57,7 @@ RUST_FILES = \
     lib/src/implementation/repositories.rs \
     lib/src/implementation/log.rs \
     lib/src/implementation/commit.rs \
-    lib/src/implementation/treemodel.rs
+    lib/src/implementation/diffs.rs
 rust_cargo.output = "$$PWD/lib/target/$$RUST_TARGET/$$BUILD_MODE/rust.lib"
 rust_cargo.commands = $$CCRS_CFLAGS & \
     cargo build --manifest-path="$$PWD/lib/Cargo.toml" --target=$$RUST_TARGET $$CARGO_FLAG

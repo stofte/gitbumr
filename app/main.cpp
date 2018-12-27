@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<Branches>("RustCode", 1, 0, "Branches");
     qmlRegisterType<Log>("RustCode", 1, 0, "Log");
     qmlRegisterType<Commit>("RustCode", 1, 0, "Commit");
-    qmlRegisterType<TreeModel>("RustCode", 1, 0, "TreeModel");
+    qmlRegisterType<Diffs>("RustCode", 1, 0, "Diffs");
 
 #if DEBUG
     QDir dataPath = QDir(QGuiApplication::applicationDirPath());

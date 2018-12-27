@@ -65,7 +65,7 @@ QQC14.SplitView {
             CommitView {
                 height: 100
             }
-            TreeView {
+            DiffsView {
                 height: parent.height - 100
             }
         }

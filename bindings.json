@@ -64,7 +64,7 @@
             "properties": {
                 "branches": { "type": "Branches" },
                 "commit": { "type": "Commit" },
-                "tree": { "type": "TreeModel" },
+                "diffs": { "type": "Diffs" },
                 "revwalkFilter": { "type": "QString" }
             },
             "functions": {
@@ -91,7 +91,7 @@
                 "tree": { "type": "QString" }
             }
         },
-        "TreeModel": {
+        "Diffs": {
             "type": "List",
             "itemProperties": {
                 "filename": { "type": "QString" },

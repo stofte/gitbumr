@@ -1,21 +1,20 @@
 use git2::{Repository, Commit, Patch};
-use interface::{TreeModelTrait, TreeModelEmitter, TreeModelList};
+use interface::{DiffsTrait, DiffsEmitter, DiffsList};
 
 #[derive(Default, Clone)]
-pub struct TreeModelItem {
+pub struct DiffsItem {
     pub filename: String,
     pub status: String,
     pub patch: String,
 }
 
-pub struct TreeModel {
-    emit: TreeModelEmitter,
-    model: TreeModelList,
-    list: Vec<TreeModelItem>,
+pub struct Diffs {
+    emit: DiffsEmitter,
+    model: DiffsList,
+    list: Vec<DiffsItem>,
 }
 
-
-pub fn fill_treemodel(tree: &mut TreeModel, commit: &Commit, repo: &Repository) {
+pub fn fill_diffs(diffs: &mut Diffs, commit: &Commit, repo: &Repository) {
     match commit.parent_id(0) {
         Ok(id) => {
             let t = commit.tree().unwrap();
@@ -32,29 +31,29 @@ pub fn fill_treemodel(tree: &mut TreeModel, commit: &Commit, repo: &Repository) 
                     Some(pstr) => patch_str = pstr,
                     None => ()
                 };
-                list.push(TreeModelItem {
+                list.push(DiffsItem {
                     filename: "".to_string(),
                     status: "".to_string(),
                     patch: patch_str.to_string(),
                 });
             }
-            tree.model.begin_reset_model();
-            tree.list = list;
-            tree.model.end_reset_model();
+            diffs.model.begin_reset_model();
+            diffs.list = list;
+            diffs.model.end_reset_model();
         },
         Err(..) => panic!("handle root node!")
     }
 }
 
-impl TreeModelTrait for TreeModel {
-    fn new(emit: TreeModelEmitter, model: TreeModelList) -> TreeModel {
-        TreeModel {
+impl DiffsTrait for Diffs {
+    fn new(emit: DiffsEmitter, model: DiffsList) -> Diffs {
+        Diffs {
             emit,
             model,
             list: vec![]
         }
     }
-    fn emit(&mut self) -> &mut TreeModelEmitter {
+    fn emit(&mut self) -> &mut DiffsEmitter {
         &mut self.emit
     }
     fn row_count(&self) -> usize {

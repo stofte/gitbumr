@@ -481,6 +481,216 @@ pub unsafe extern "C" fn commit_tree_get(
     set(p, s, to_c_int(v.len()));
 }
 
+pub struct DiffsQObject {}
+
+pub struct DiffsEmitter {
+    qobject: Arc<AtomicPtr<DiffsQObject>>,
+    new_data_ready: fn(*mut DiffsQObject),
+}
+
+unsafe impl Send for DiffsEmitter {}
+
+impl DiffsEmitter {
+    /// Clone the emitter
+    ///
+    /// The emitter can only be cloned when it is mutable. The emitter calls
+    /// into C++ code which may call into Rust again. If emmitting is possible
+    /// from immutable structures, that might lead to access to a mutable
+    /// reference. That is undefined behaviour and forbidden.
+    pub fn clone(&mut self) -> DiffsEmitter {
+        DiffsEmitter {
+            qobject: self.qobject.clone(),
+            new_data_ready: self.new_data_ready,
+        }
+    }
+    fn clear(&self) {
+        let n: *const DiffsQObject = null();
+        self.qobject.store(n as *mut DiffsQObject, Ordering::SeqCst);
+    }
+    pub fn new_data_ready(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.new_data_ready)(ptr);
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct DiffsList {
+    qobject: *mut DiffsQObject,
+    layout_about_to_be_changed: fn(*mut DiffsQObject),
+    layout_changed: fn(*mut DiffsQObject),
+    data_changed: fn(*mut DiffsQObject, usize, usize),
+    begin_reset_model: fn(*mut DiffsQObject),
+    end_reset_model: fn(*mut DiffsQObject),
+    begin_insert_rows: fn(*mut DiffsQObject, usize, usize),
+    end_insert_rows: fn(*mut DiffsQObject),
+    begin_move_rows: fn(*mut DiffsQObject, usize, usize, usize),
+    end_move_rows: fn(*mut DiffsQObject),
+    begin_remove_rows: fn(*mut DiffsQObject, usize, usize),
+    end_remove_rows: fn(*mut DiffsQObject),
+}
+
+impl DiffsList {
+    pub fn layout_about_to_be_changed(&mut self) {
+        (self.layout_about_to_be_changed)(self.qobject);
+    }
+    pub fn layout_changed(&mut self) {
+        (self.layout_changed)(self.qobject);
+    }
+    pub fn data_changed(&mut self, first: usize, last: usize) {
+        (self.data_changed)(self.qobject, first, last);
+    }
+    pub fn begin_reset_model(&mut self) {
+        (self.begin_reset_model)(self.qobject);
+    }
+    pub fn end_reset_model(&mut self) {
+        (self.end_reset_model)(self.qobject);
+    }
+    pub fn begin_insert_rows(&mut self, first: usize, last: usize) {
+        (self.begin_insert_rows)(self.qobject, first, last);
+    }
+    pub fn end_insert_rows(&mut self) {
+        (self.end_insert_rows)(self.qobject);
+    }
+    pub fn begin_move_rows(&mut self, first: usize, last: usize, destination: usize) {
+        (self.begin_move_rows)(self.qobject, first, last, destination);
+    }
+    pub fn end_move_rows(&mut self) {
+        (self.end_move_rows)(self.qobject);
+    }
+    pub fn begin_remove_rows(&mut self, first: usize, last: usize) {
+        (self.begin_remove_rows)(self.qobject, first, last);
+    }
+    pub fn end_remove_rows(&mut self) {
+        (self.end_remove_rows)(self.qobject);
+    }
+}
+
+pub trait DiffsTrait {
+    fn new(emit: DiffsEmitter, model: DiffsList) -> Self;
+    fn emit(&mut self) -> &mut DiffsEmitter;
+    fn row_count(&self) -> usize;
+    fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
+    fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
+    fn can_fetch_more(&self) -> bool {
+        false
+    }
+    fn fetch_more(&mut self) {}
+    fn sort(&mut self, u8, SortOrder) {}
+    fn filename(&self, index: usize) -> &str;
+    fn patch(&self, index: usize) -> &str;
+    fn status(&self, index: usize) -> &str;
+}
+
+#[no_mangle]
+pub extern "C" fn diffs_new(
+    diffs: *mut DiffsQObject,
+    diffs_new_data_ready: fn(*mut DiffsQObject),
+    diffs_layout_about_to_be_changed: fn(*mut DiffsQObject),
+    diffs_layout_changed: fn(*mut DiffsQObject),
+    diffs_data_changed: fn(*mut DiffsQObject, usize, usize),
+    diffs_begin_reset_model: fn(*mut DiffsQObject),
+    diffs_end_reset_model: fn(*mut DiffsQObject),
+    diffs_begin_insert_rows: fn(*mut DiffsQObject, usize, usize),
+    diffs_end_insert_rows: fn(*mut DiffsQObject),
+    diffs_begin_move_rows: fn(*mut DiffsQObject, usize, usize, usize),
+    diffs_end_move_rows: fn(*mut DiffsQObject),
+    diffs_begin_remove_rows: fn(*mut DiffsQObject, usize, usize),
+    diffs_end_remove_rows: fn(*mut DiffsQObject),
+) -> *mut Diffs {
+    let diffs_emit = DiffsEmitter {
+        qobject: Arc::new(AtomicPtr::new(diffs)),
+        new_data_ready: diffs_new_data_ready,
+    };
+    let model = DiffsList {
+        qobject: diffs,
+        layout_about_to_be_changed: diffs_layout_about_to_be_changed,
+        layout_changed: diffs_layout_changed,
+        data_changed: diffs_data_changed,
+        begin_reset_model: diffs_begin_reset_model,
+        end_reset_model: diffs_end_reset_model,
+        begin_insert_rows: diffs_begin_insert_rows,
+        end_insert_rows: diffs_end_insert_rows,
+        begin_move_rows: diffs_begin_move_rows,
+        end_move_rows: diffs_end_move_rows,
+        begin_remove_rows: diffs_begin_remove_rows,
+        end_remove_rows: diffs_end_remove_rows,
+    };
+    let d_diffs = Diffs::new(diffs_emit, model);
+    Box::into_raw(Box::new(d_diffs))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn diffs_free(ptr: *mut Diffs) {
+    Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn diffs_row_count(ptr: *const Diffs) -> c_int {
+    to_c_int((&*ptr).row_count())
+}
+#[no_mangle]
+pub unsafe extern "C" fn diffs_insert_rows(ptr: *mut Diffs, row: c_int, count: c_int) -> bool {
+    (&mut *ptr).insert_rows(to_usize(row), to_usize(count))
+}
+#[no_mangle]
+pub unsafe extern "C" fn diffs_remove_rows(ptr: *mut Diffs, row: c_int, count: c_int) -> bool {
+    (&mut *ptr).remove_rows(to_usize(row), to_usize(count))
+}
+#[no_mangle]
+pub unsafe extern "C" fn diffs_can_fetch_more(ptr: *const Diffs) -> bool {
+    (&*ptr).can_fetch_more()
+}
+#[no_mangle]
+pub unsafe extern "C" fn diffs_fetch_more(ptr: *mut Diffs) {
+    (&mut *ptr).fetch_more()
+}
+#[no_mangle]
+pub unsafe extern "C" fn diffs_sort(
+    ptr: *mut Diffs,
+    column: u8,
+    order: SortOrder,
+) {
+    (&mut *ptr).sort(column, order)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn diffs_data_filename(
+    ptr: *const Diffs, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.filename(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn diffs_data_patch(
+    ptr: *const Diffs, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.patch(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn diffs_data_status(
+    ptr: *const Diffs, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.status(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
 pub struct GitQObject {}
 
 pub struct GitEmitter {
@@ -519,15 +729,15 @@ pub trait GitTrait {
     fn new(emit: GitEmitter,
         branches: Branches,
         commit: Commit,
-        tree: TreeModel) -> Self;
+        diffs: Diffs) -> Self;
     fn emit(&mut self) -> &mut GitEmitter;
     fn branches(&self) -> &Branches;
     fn branches_mut(&mut self) -> &mut Branches;
     fn commit(&self) -> &Commit;
     fn commit_mut(&mut self) -> &mut Commit;
+    fn diffs(&self) -> &Diffs;
+    fn diffs_mut(&mut self) -> &mut Diffs;
     fn revwalk_filter(&self) -> &str;
-    fn tree(&self) -> &TreeModel;
-    fn tree_mut(&mut self) -> &mut TreeModel;
     fn load(&mut self, path: String) -> ();
     fn load_commit(&mut self, oid: String) -> ();
 }
@@ -555,20 +765,20 @@ pub extern "C" fn git_new(
     commit_message_changed: fn(*mut CommitQObject),
     commit_time_changed: fn(*mut CommitQObject),
     commit_tree_changed: fn(*mut CommitQObject),
+    diffs: *mut DiffsQObject,
+    diffs_new_data_ready: fn(*mut DiffsQObject),
+    diffs_layout_about_to_be_changed: fn(*mut DiffsQObject),
+    diffs_layout_changed: fn(*mut DiffsQObject),
+    diffs_data_changed: fn(*mut DiffsQObject, usize, usize),
+    diffs_begin_reset_model: fn(*mut DiffsQObject),
+    diffs_end_reset_model: fn(*mut DiffsQObject),
+    diffs_begin_insert_rows: fn(*mut DiffsQObject, usize, usize),
+    diffs_end_insert_rows: fn(*mut DiffsQObject),
+    diffs_begin_move_rows: fn(*mut DiffsQObject, usize, usize, usize),
+    diffs_end_move_rows: fn(*mut DiffsQObject),
+    diffs_begin_remove_rows: fn(*mut DiffsQObject, usize, usize),
+    diffs_end_remove_rows: fn(*mut DiffsQObject),
     git_revwalk_filter_changed: fn(*mut GitQObject),
-    tree: *mut TreeModelQObject,
-    tree_new_data_ready: fn(*mut TreeModelQObject),
-    tree_layout_about_to_be_changed: fn(*mut TreeModelQObject),
-    tree_layout_changed: fn(*mut TreeModelQObject),
-    tree_data_changed: fn(*mut TreeModelQObject, usize, usize),
-    tree_begin_reset_model: fn(*mut TreeModelQObject),
-    tree_end_reset_model: fn(*mut TreeModelQObject),
-    tree_begin_insert_rows: fn(*mut TreeModelQObject, usize, usize),
-    tree_end_insert_rows: fn(*mut TreeModelQObject),
-    tree_begin_move_rows: fn(*mut TreeModelQObject, usize, usize, usize),
-    tree_end_move_rows: fn(*mut TreeModelQObject),
-    tree_begin_remove_rows: fn(*mut TreeModelQObject, usize, usize),
-    tree_end_remove_rows: fn(*mut TreeModelQObject),
 ) -> *mut Git {
     let branches_emit = BranchesEmitter {
         qobject: Arc::new(AtomicPtr::new(branches)),
@@ -599,25 +809,25 @@ pub extern "C" fn git_new(
         tree_changed: commit_tree_changed,
     };
     let d_commit = Commit::new(commit_emit);
-    let tree_emit = TreeModelEmitter {
-        qobject: Arc::new(AtomicPtr::new(tree)),
-        new_data_ready: tree_new_data_ready,
+    let diffs_emit = DiffsEmitter {
+        qobject: Arc::new(AtomicPtr::new(diffs)),
+        new_data_ready: diffs_new_data_ready,
     };
-    let model = TreeModelList {
-        qobject: tree,
-        layout_about_to_be_changed: tree_layout_about_to_be_changed,
-        layout_changed: tree_layout_changed,
-        data_changed: tree_data_changed,
-        begin_reset_model: tree_begin_reset_model,
-        end_reset_model: tree_end_reset_model,
-        begin_insert_rows: tree_begin_insert_rows,
-        end_insert_rows: tree_end_insert_rows,
-        begin_move_rows: tree_begin_move_rows,
-        end_move_rows: tree_end_move_rows,
-        begin_remove_rows: tree_begin_remove_rows,
-        end_remove_rows: tree_end_remove_rows,
+    let model = DiffsList {
+        qobject: diffs,
+        layout_about_to_be_changed: diffs_layout_about_to_be_changed,
+        layout_changed: diffs_layout_changed,
+        data_changed: diffs_data_changed,
+        begin_reset_model: diffs_begin_reset_model,
+        end_reset_model: diffs_end_reset_model,
+        begin_insert_rows: diffs_begin_insert_rows,
+        end_insert_rows: diffs_end_insert_rows,
+        begin_move_rows: diffs_begin_move_rows,
+        end_move_rows: diffs_end_move_rows,
+        begin_remove_rows: diffs_begin_remove_rows,
+        end_remove_rows: diffs_end_remove_rows,
     };
-    let d_tree = TreeModel::new(tree_emit, model);
+    let d_diffs = Diffs::new(diffs_emit, model);
     let git_emit = GitEmitter {
         qobject: Arc::new(AtomicPtr::new(git)),
         revwalk_filter_changed: git_revwalk_filter_changed,
@@ -625,7 +835,7 @@ pub extern "C" fn git_new(
     let d_git = Git::new(git_emit,
         d_branches,
         d_commit,
-        d_tree);
+        d_diffs);
     Box::into_raw(Box::new(d_git))
 }
 
@@ -645,6 +855,11 @@ pub unsafe extern "C" fn git_commit_get(ptr: *mut Git) -> *mut Commit {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn git_diffs_get(ptr: *mut Git) -> *mut Diffs {
+    (&mut *ptr).diffs_mut()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn git_revwalk_filter_get(
     ptr: *const Git,
     p: *mut QString,
@@ -654,11 +869,6 @@ pub unsafe extern "C" fn git_revwalk_filter_get(
     let v = o.revwalk_filter();
     let s: *const c_char = v.as_ptr() as (*const c_char);
     set(p, s, to_c_int(v.len()));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn git_tree_get(ptr: *mut Git) -> *mut TreeModel {
-    (&mut *ptr).tree_mut()
 }
 
 #[no_mangle]
@@ -1199,214 +1409,4 @@ pub unsafe extern "C" fn repositories_data_display_name(
 pub unsafe extern "C" fn repositories_data_id(ptr: *const Repositories, row: c_int) -> i64 {
     let o = &*ptr;
     o.id(to_usize(row)).into()
-}
-
-pub struct TreeModelQObject {}
-
-pub struct TreeModelEmitter {
-    qobject: Arc<AtomicPtr<TreeModelQObject>>,
-    new_data_ready: fn(*mut TreeModelQObject),
-}
-
-unsafe impl Send for TreeModelEmitter {}
-
-impl TreeModelEmitter {
-    /// Clone the emitter
-    ///
-    /// The emitter can only be cloned when it is mutable. The emitter calls
-    /// into C++ code which may call into Rust again. If emmitting is possible
-    /// from immutable structures, that might lead to access to a mutable
-    /// reference. That is undefined behaviour and forbidden.
-    pub fn clone(&mut self) -> TreeModelEmitter {
-        TreeModelEmitter {
-            qobject: self.qobject.clone(),
-            new_data_ready: self.new_data_ready,
-        }
-    }
-    fn clear(&self) {
-        let n: *const TreeModelQObject = null();
-        self.qobject.store(n as *mut TreeModelQObject, Ordering::SeqCst);
-    }
-    pub fn new_data_ready(&mut self) {
-        let ptr = self.qobject.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            (self.new_data_ready)(ptr);
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct TreeModelList {
-    qobject: *mut TreeModelQObject,
-    layout_about_to_be_changed: fn(*mut TreeModelQObject),
-    layout_changed: fn(*mut TreeModelQObject),
-    data_changed: fn(*mut TreeModelQObject, usize, usize),
-    begin_reset_model: fn(*mut TreeModelQObject),
-    end_reset_model: fn(*mut TreeModelQObject),
-    begin_insert_rows: fn(*mut TreeModelQObject, usize, usize),
-    end_insert_rows: fn(*mut TreeModelQObject),
-    begin_move_rows: fn(*mut TreeModelQObject, usize, usize, usize),
-    end_move_rows: fn(*mut TreeModelQObject),
-    begin_remove_rows: fn(*mut TreeModelQObject, usize, usize),
-    end_remove_rows: fn(*mut TreeModelQObject),
-}
-
-impl TreeModelList {
-    pub fn layout_about_to_be_changed(&mut self) {
-        (self.layout_about_to_be_changed)(self.qobject);
-    }
-    pub fn layout_changed(&mut self) {
-        (self.layout_changed)(self.qobject);
-    }
-    pub fn data_changed(&mut self, first: usize, last: usize) {
-        (self.data_changed)(self.qobject, first, last);
-    }
-    pub fn begin_reset_model(&mut self) {
-        (self.begin_reset_model)(self.qobject);
-    }
-    pub fn end_reset_model(&mut self) {
-        (self.end_reset_model)(self.qobject);
-    }
-    pub fn begin_insert_rows(&mut self, first: usize, last: usize) {
-        (self.begin_insert_rows)(self.qobject, first, last);
-    }
-    pub fn end_insert_rows(&mut self) {
-        (self.end_insert_rows)(self.qobject);
-    }
-    pub fn begin_move_rows(&mut self, first: usize, last: usize, destination: usize) {
-        (self.begin_move_rows)(self.qobject, first, last, destination);
-    }
-    pub fn end_move_rows(&mut self) {
-        (self.end_move_rows)(self.qobject);
-    }
-    pub fn begin_remove_rows(&mut self, first: usize, last: usize) {
-        (self.begin_remove_rows)(self.qobject, first, last);
-    }
-    pub fn end_remove_rows(&mut self) {
-        (self.end_remove_rows)(self.qobject);
-    }
-}
-
-pub trait TreeModelTrait {
-    fn new(emit: TreeModelEmitter, model: TreeModelList) -> Self;
-    fn emit(&mut self) -> &mut TreeModelEmitter;
-    fn row_count(&self) -> usize;
-    fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
-    fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
-    fn can_fetch_more(&self) -> bool {
-        false
-    }
-    fn fetch_more(&mut self) {}
-    fn sort(&mut self, u8, SortOrder) {}
-    fn filename(&self, index: usize) -> &str;
-    fn patch(&self, index: usize) -> &str;
-    fn status(&self, index: usize) -> &str;
-}
-
-#[no_mangle]
-pub extern "C" fn tree_model_new(
-    tree_model: *mut TreeModelQObject,
-    tree_model_new_data_ready: fn(*mut TreeModelQObject),
-    tree_model_layout_about_to_be_changed: fn(*mut TreeModelQObject),
-    tree_model_layout_changed: fn(*mut TreeModelQObject),
-    tree_model_data_changed: fn(*mut TreeModelQObject, usize, usize),
-    tree_model_begin_reset_model: fn(*mut TreeModelQObject),
-    tree_model_end_reset_model: fn(*mut TreeModelQObject),
-    tree_model_begin_insert_rows: fn(*mut TreeModelQObject, usize, usize),
-    tree_model_end_insert_rows: fn(*mut TreeModelQObject),
-    tree_model_begin_move_rows: fn(*mut TreeModelQObject, usize, usize, usize),
-    tree_model_end_move_rows: fn(*mut TreeModelQObject),
-    tree_model_begin_remove_rows: fn(*mut TreeModelQObject, usize, usize),
-    tree_model_end_remove_rows: fn(*mut TreeModelQObject),
-) -> *mut TreeModel {
-    let tree_model_emit = TreeModelEmitter {
-        qobject: Arc::new(AtomicPtr::new(tree_model)),
-        new_data_ready: tree_model_new_data_ready,
-    };
-    let model = TreeModelList {
-        qobject: tree_model,
-        layout_about_to_be_changed: tree_model_layout_about_to_be_changed,
-        layout_changed: tree_model_layout_changed,
-        data_changed: tree_model_data_changed,
-        begin_reset_model: tree_model_begin_reset_model,
-        end_reset_model: tree_model_end_reset_model,
-        begin_insert_rows: tree_model_begin_insert_rows,
-        end_insert_rows: tree_model_end_insert_rows,
-        begin_move_rows: tree_model_begin_move_rows,
-        end_move_rows: tree_model_end_move_rows,
-        begin_remove_rows: tree_model_begin_remove_rows,
-        end_remove_rows: tree_model_end_remove_rows,
-    };
-    let d_tree_model = TreeModel::new(tree_model_emit, model);
-    Box::into_raw(Box::new(d_tree_model))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_free(ptr: *mut TreeModel) {
-    Box::from_raw(ptr).emit().clear();
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_row_count(ptr: *const TreeModel) -> c_int {
-    to_c_int((&*ptr).row_count())
-}
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_insert_rows(ptr: *mut TreeModel, row: c_int, count: c_int) -> bool {
-    (&mut *ptr).insert_rows(to_usize(row), to_usize(count))
-}
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_remove_rows(ptr: *mut TreeModel, row: c_int, count: c_int) -> bool {
-    (&mut *ptr).remove_rows(to_usize(row), to_usize(count))
-}
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_can_fetch_more(ptr: *const TreeModel) -> bool {
-    (&*ptr).can_fetch_more()
-}
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_fetch_more(ptr: *mut TreeModel) {
-    (&mut *ptr).fetch_more()
-}
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_sort(
-    ptr: *mut TreeModel,
-    column: u8,
-    order: SortOrder,
-) {
-    (&mut *ptr).sort(column, order)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_data_filename(
-    ptr: *const TreeModel, row: c_int,
-    d: *mut QString,
-    set: fn(*mut QString, *const c_char, len: c_int),
-) {
-    let o = &*ptr;
-    let data = o.filename(to_usize(row));
-    let s: *const c_char = data.as_ptr() as (*const c_char);
-    set(d, s, to_c_int(data.len()));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_data_patch(
-    ptr: *const TreeModel, row: c_int,
-    d: *mut QString,
-    set: fn(*mut QString, *const c_char, len: c_int),
-) {
-    let o = &*ptr;
-    let data = o.patch(to_usize(row));
-    let s: *const c_char = data.as_ptr() as (*const c_char);
-    set(d, s, to_c_int(data.len()));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn tree_model_data_status(
-    ptr: *const TreeModel, row: c_int,
-    d: *mut QString,
-    set: fn(*mut QString, *const c_char, len: c_int),
-) {
-    let o = &*ptr;
-    let data = o.status(to_usize(row));
-    let s: *const c_char = data.as_ptr() as (*const c_char);
-    set(d, s, to_c_int(data.len()));
 }
