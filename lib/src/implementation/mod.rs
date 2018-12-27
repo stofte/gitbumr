@@ -3,7 +3,7 @@ pub mod log;
 pub mod branches;
 mod git;
 mod commit;
-mod diffs;
+pub mod diffs;
 
 pub use self::repositories::*;
 pub use self::log::*;

@@ -3,7 +3,7 @@ use git2::{Repository, BranchType, Oid, Sort};
 use chrono::{FixedOffset, DateTime, NaiveDateTime, Local};
 use chrono_humanize::HumanTime;
 use crossbeam::{channel::Receiver, channel};
-use implementation::{branches::BranchesItem, log::LogItem};
+use implementation::{branches::BranchesItem, log::LogItem, diffs::DiffsItem};
 
 pub fn pathbuf_filename_to_string(pb: &PathBuf) -> String {
     pb.file_name().unwrap().to_string_lossy().to_string()
@@ -120,4 +120,33 @@ pub fn get_chan_revwalker(path: String, filter: String, max_count: usize) -> Rec
         }
     });
     oids_r
+}
+
+pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsItem> {
+    let mut list = vec![];
+    match commit.parent_id(0) {
+        Ok(id) => {
+            let t = commit.tree().unwrap();
+            let parent_c = repo.find_commit(id).unwrap();
+            let parent_tree = repo.find_tree(parent_c.tree_id()).unwrap();
+            let diff = repo.diff_tree_to_tree(Some(&parent_tree), Some(&t), None).unwrap();
+            let delta_cnt = diff.deltas().len();
+            for idx in 0..delta_cnt {
+                let mut patch = git2::Patch::from_diff(&diff, idx).unwrap().unwrap();
+                let patch_buf = patch.to_buf().unwrap();
+                let mut patch_str = "";
+                match patch_buf.as_str() {
+                    Some(pstr) => patch_str = pstr,
+                    None => ()
+                };
+                list.push(DiffsItem {
+                    filename: "".to_string(),
+                    status: "".to_string(),
+                    patch: patch_str.to_string(),
+                });
+            }
+        },
+        Err(..) => panic!("handle root node!")
+    }
+    list
 }

@@ -1,5 +1,6 @@
-use git2::{Repository, Commit, Patch};
+use git2::{Repository, Commit};
 use interface::{DiffsTrait, DiffsEmitter, DiffsList};
+use utils::{parse_diff_parent};
 
 #[derive(Default, Clone)]
 pub struct DiffsItem {
@@ -15,34 +16,9 @@ pub struct Diffs {
 }
 
 pub fn fill_diffs(diffs: &mut Diffs, commit: &Commit, repo: &Repository) {
-    match commit.parent_id(0) {
-        Ok(id) => {
-            let t = commit.tree().unwrap();
-            let parent_c = repo.find_commit(id).unwrap();
-            let parent_tree = repo.find_tree(parent_c.tree_id()).unwrap();
-            let diff = repo.diff_tree_to_tree(Some(&parent_tree), Some(&t), None).unwrap();
-            let delta_cnt = diff.deltas().len();
-            let mut list = vec![];
-            for idx in 0..delta_cnt {
-                let mut patch = Patch::from_diff(&diff, idx).unwrap().unwrap();
-                let patch_buf = patch.to_buf().unwrap();
-                let mut patch_str = "";
-                match patch_buf.as_str() {
-                    Some(pstr) => patch_str = pstr,
-                    None => ()
-                };
-                list.push(DiffsItem {
-                    filename: "".to_string(),
-                    status: "".to_string(),
-                    patch: patch_str.to_string(),
-                });
-            }
-            diffs.model.begin_reset_model();
-            diffs.list = list;
-            diffs.model.end_reset_model();
-        },
-        Err(..) => panic!("handle root node!")
-    }
+    diffs.model.begin_reset_model();
+    diffs.list = parse_diff_parent(commit, repo);
+    diffs.model.end_reset_model();
 }
 
 impl DiffsTrait for Diffs {
