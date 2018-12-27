@@ -17,14 +17,8 @@ Rectangle {
         model: logModel
         spacing: 0
         ScrollBar.vertical: ScrollBar {
-            minimumSize: 0.05
-            width: 15
-            policy: ScrollBar.AlwaysOn
-            topPadding: 15
-            bottomPadding: 15
-            background: Rectangle{
-                color: Style.window
-            }
+            id: scrollRef
+            width: 0
         }
         Timer {
             id: timerRef
@@ -140,7 +134,7 @@ Rectangle {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
+                    onPressed: {
                         historyListView.currentIndex = index;
                         historyListView.forceActiveFocus();
                     }
@@ -149,6 +143,126 @@ Rectangle {
                         var topIdx = Math.max(0, historyListView.indexAt(1, historyListView.contentY + 1) + 3 * (isDown ? 1 : -1));
                         historyListView.positionViewAtIndex(topIdx, ListView.Beginning);
                     }
+                }
+            }
+        }
+    }
+
+    // the qml scrollbar element lacks up/down arrrows, and has other non-desktoppy behavior,
+    // such as going to position when the scrollbar gutter is clicked outside the tracker,
+    // instead of paging down/up.
+    // this implementation attempts to add in the up/down arrows, but keeps the non-paging
+    // behavior for now.
+    // currently the implementation mimics traditional windows sematics of held scrollbar buttons:
+    // 1. instantly step up/down view on mouse-down
+    // 2. wait N millisecs
+    // 3. if still held, step view down/up one row
+    // 4. wait M millisecs
+    // 5. goto step 3
+    // with the assumption M < N, such that the user must wait a
+    // perceptable amount before rows will start scrolling "fast"
+    ScrollBar {
+        id: realScrollref
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 15
+        anchors.bottomMargin: 15
+        height: parent.height - 30
+        policy: ScrollBar.AlwaysOn
+        enabled: true
+        position: scrollRef.position
+        property bool manipulateList: false
+        background: Rectangle {
+            color: Style.window
+        }
+        contentItem: Rectangle {
+            color: realScrollref.pressed ? Style.controlActive : Style.control
+        }
+        onPressedChanged: {
+            manipulateList = realScrollref.pressed;
+        }
+        onPositionChanged: {
+            if (manipulateList) {
+                scrollRef.position = realScrollref.position
+            }
+        }
+        size: scrollRef.size
+        width: 15
+    }
+
+    Timer {
+        id: scrollStepTimerTimeoutRef
+        interval: 500; running: false; repeat: false
+        onTriggered: {
+            scrollStepTimerRef.running = true;
+            scrollStepTimerRef.restart();
+        }
+    }
+
+    Timer {
+        id: scrollStepTimerRef
+        interval: 60; running: false; repeat: true
+        property bool isDown: false
+        onTriggered: {
+            var topIdx = Math.max(0, historyListView.indexAt(1, historyListView.contentY + 1) + (isDown ? 1 : -1));
+            historyListView.positionViewAtIndex(topIdx, ListView.Beginning);
+        }
+    }
+
+    Rectangle {
+        anchors.top: parent.top
+        anchors.right: parent.right
+        height: 15
+        width: 15
+        color: Style.window
+        Image {
+            anchors.fill: parent
+            source: scrollUpMouseRef.pressed ? "/res/svg/up-active.svg" : "/res/svg/up.svg"
+        }
+        MouseArea {
+            id: scrollUpMouseRef
+            anchors.fill: parent
+            onPressed: {
+                var topIdx = Math.max(0, historyListView.indexAt(1, historyListView.contentY + 1) - 1);
+                historyListView.positionViewAtIndex(topIdx, ListView.Beginning);
+            }
+            onPressedChanged: {
+                if (pressed) {
+                    scrollStepTimerRef.isDown = false;
+                    scrollStepTimerTimeoutRef.start();
+                } else {
+                    scrollStepTimerTimeoutRef.stop();
+                    scrollStepTimerRef.stop();
+                }
+            }
+        }
+    }
+
+    Rectangle {
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        height: 15
+        width: 15
+        color: Style.window
+        Image {
+            anchors.fill: parent
+            rotation: 180
+            source: scrollDownMouseRef.pressed ? "/res/svg/up-active.svg" : "/res/svg/up.svg"
+        }
+        MouseArea {
+            id: scrollDownMouseRef
+            anchors.fill: parent
+            onPressed: {
+                var topIdx = Math.max(0, historyListView.indexAt(1, historyListView.contentY + 1) + 1);
+                historyListView.positionViewAtIndex(topIdx, ListView.Beginning);
+            }
+            onPressedChanged: {
+                if (pressed) {
+                    scrollStepTimerRef.isDown = true;
+                    scrollStepTimerTimeoutRef.start();
+                } else {
+                    scrollStepTimerTimeoutRef.stop();
+                    scrollStepTimerRef.stop();
                 }
             }
         }

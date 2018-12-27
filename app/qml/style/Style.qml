@@ -14,6 +14,8 @@ Item {
     readonly property string mid: palette.mid
     readonly property string light: palette.light
     readonly property string window: "#FAFAFA"
+    readonly property string control: "#D3D3D3"
+    readonly property string controlActive: "#A8A8A8"
     readonly property string selection: "#0078D7"
 
     readonly property string fontName: mainFont.name
