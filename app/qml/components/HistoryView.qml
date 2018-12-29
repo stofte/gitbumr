@@ -146,6 +146,7 @@ Rectangle {
                                 anchors.margins: 10
                                 anchors.fill: parent
                                 font.pointSize: Style.fontPointSize
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                                 text: historyListView.currentItem.messageText
                             }
                         }
