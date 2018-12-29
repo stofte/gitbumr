@@ -149,12 +149,23 @@ Rectangle {
                             }
                         }
                         ScrollBar {
+                            id: detailsScrollRef
                             width: 20
                             anchors.right: parent.right
                             height: parent.height
                             policy: ScrollBar.AlwaysOn
                             size: parent.height / hlDetailsContentRef.height
                             visible: (parent.height / hlDetailsContentRef.height) < 1
+                            contentItem: Rectangle {
+                                color: detailsScrollRef.pressed ? Style.controlActive : Style.control
+                            }
+                            onVisibleChanged: {
+                                if (visible) {
+                                    position = 0
+                                } else {
+                                    hlDetailsContentRef.y = 0
+                                }
+                            }
                             onPositionChanged: {
                                 hlDetailsContentRef.y = -1 * hlDetailsContentRef.height * position;
                             }
