@@ -10,7 +10,7 @@ import "../style"
 Rectangle {
     property int rowHeight: 18
     property string selected: ""
-    color: Style.dark
+    color: Style.window
     ListView {
         id: historyListView
         anchors.fill: parent
@@ -30,8 +30,9 @@ Rectangle {
             timerRef.restart()
             timerRef.commitId = currentItem.commitId;
         }
+        highlightResizeDuration: 1
         highlightMoveDuration: 1
-        highlightMoveVelocity: 1
+        highlightMoveVelocity: -1
         keyNavigationEnabled: true
         interactive: false
         boundsBehavior: Flickable.StopAtBounds
@@ -52,84 +53,66 @@ Rectangle {
                 }
             }
         }
-        delegate: Component {
+        highlightFollowsCurrentItem: true
+        highlight: Component{
             Item {
-                property variant commitId: cid
-                focus: true
-                anchors.rightMargin: 15
-                id: rootItem
-                height: itemHeight
-                anchors.left: parent.left
-                anchors.right: parent.right
-                // we always show the selection for now. use historyListView.focus to check if list is focused.
-                // todo: check if flickering on key held is helped by using listview.highlight property.
-                property var bgColor: ListView.isCurrentItem ? Style.selection : Style.window
-                property int itemHeight: rowHeight + (ListView.isCurrentItem ? 200 : 0)
-
+                height: rowHeight + 200
+                z: 2 // placing the highlight above the list prevents flickering
                 Rectangle {
-                    id: mainRowRef
-                    color: bgColor
+                    y: 0
+                    // 8 == width of splitter itself
+                    x: graphViewSplitter.width + 8
+                    width: parent.width - graphViewSplitter.width - 8
                     height: rowHeight
-                    anchors.top: parent.top
-                    width: parent.width
+                    color: Style.selection
+
                     Rectangle {
                         anchors.fill: parent
-                        anchors.leftMargin: 5
+                        // these two margin values have been set using visual inspection.
+                        // the trick is to overlay the highlight row exactly above the normal text row.
+                        // this requires pixel perfect layout to avoid pixel shenanigans ...
+                        anchors.leftMargin: 1
+                        anchors.rightMargin: 11
                         color: "transparent"
                         RowLayout {
-                            height: parent.height
-                            Layout.fillWidth: true
-                            GraphView {
-                                graphHeight: parent.height
-                                graphWidth: graphViewSplitter.width
-                            }
+                            anchors.fill: parent
                             Rectangle {
-                                Layout.fillWidth: true
+                                clip: true
+                                Layout.preferredWidth: parent.width - hlAuthorRectRef.width - hlTimeRectRef.width
                                 Layout.fillHeight: true
                                 color: "transparent"
                                 TextItem {
+                                    x: 4 // not sure why, but text can get chopped off otherwise
+                                    color: "white"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: message
-                                }
-                            }
-                        }
-                        // to get the author/time to clip the message column,
-                        // it's positioned over the sibling rowlayouts right side.
-                        // assumes later source code => higher z index
-                        Rectangle {
-                            anchors.right: parent.right
-                            height: parent.height
-                            width: 500 // max assumed width
-                            color: "transparent"
-                            Rectangle {
-                                width: authorTextLabel.width + 10
-                                anchors.bottom: parent.bottom
-                                anchors.top: parent.top
-                                anchors.right: timestampColumn.left
-                                color: bgColor
-                                TextItem {
-                                    id: authorTextLabel
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 5
-                                    color: Style.mid
-                                    text: author
+                                    text: historyListView.currentItem.messageText
                                 }
                             }
                             Rectangle {
-                                id: timestampColumn
-                                width: timeTextLabel.width + 10
-                                anchors.bottom: parent.bottom
-                                anchors.top: parent.top
-                                anchors.right: parent.right
-                                color: bgColor
+                                id: hlAuthorRectRef
+                                clip: false
+                                Layout.preferredWidth: hlAuthorRef.contentWidth + 5
+                                Layout.fillHeight: true
+                                color: "transparent"
                                 TextItem {
-                                    id: timeTextLabel
+                                    id: hlAuthorRef
+                                    color: "white"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 5
-                                    color: Style.mid
-                                    text: time
+                                    text: historyListView.currentItem.authorText
+                                }
+                            }
+                            Rectangle {
+                                id: hlTimeRectRef
+                                clip: false
+                                Layout.preferredWidth: hlTimeRef.contentWidth + 5
+                                Layout.fillHeight: true
+                                color: "transparent"
+                                TextItem {
+                                    id: hlTimeRef
+                                    color: "white"
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: historyListView.currentItem.timeText
                                 }
                             }
                         }
@@ -137,23 +120,101 @@ Rectangle {
                 }
 
                 Rectangle {
-                    id: extraRowRef
-                    anchors.top: mainRowRef.bottom
-                    height: 200
+                    x: 0
+                    y: rowHeight
+                    height: parent.height - rowHeight
                     width: parent.width
-                    visible: historyListView.currentIndex == index
-                    color: bgColor
+                    color: Style.selection
                     Rectangle {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.leftMargin: 1
-                        width: parent.width - 2
-                        height: parent.height - 1
+                        x: 2
+                        y: 2
+                        anchors.margins: 2
+                        width: parent.width - 4
+                        height: parent.height - 4
                         color: Style.window
-                        Text {
-                            anchors.centerIn: parent
-                            color: "red"
-                            text: "commit details here"
+
+                        TextEdit {
+                            readOnly: true
+                            selectByMouse: true
+                            anchors.margins: 10
+                            anchors.fill: parent
+                            text: historyListView.currentItem.messageText
+                        }
+                    }
+                }
+            }
+        }
+
+        delegate: Component {
+            Item {
+                property variant commitId: cid
+                property string messageText: message
+                property string authorText: author
+                property string timeText: time
+                property int itemHeight: rowHeight + (ListView.isCurrentItem ? 200 : 0)
+                focus: true
+                id: rootItem
+                height: itemHeight
+                width: parent.width - realScrollref.width
+                clip: true
+                anchors.left: parent.left
+                Rectangle {
+                    id: mainRowRef
+                    color: "transparent"
+                    height: rowHeight
+                    anchors.top: parent.top
+                    width: parent.width
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.leftMargin: 5
+                        anchors.rightMargin: realScrollref.width
+                        color: "transparent"
+                        RowLayout {
+                            height: parent.height
+                            width: parent.width
+                            GraphView {
+                                graphHeight: parent.height
+                                graphWidth: graphViewSplitter.width
+                            }
+                            Rectangle {
+                                clip: true
+                                Layout.preferredWidth: parent.width - graphViewSplitter.width - rowAuthorRectRef.width - rowTimeRectRef.width
+                                Layout.fillHeight: true
+                                color: "transparent"
+                                TextItem {
+                                    id: rowMessageRef
+                                    x: 4 // not sure why, but text can get chopped off otherwise
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: message
+                                }
+                            }
+                            Rectangle {
+                                id: rowAuthorRectRef
+                                clip: false
+                                Layout.preferredWidth: rowAuthorRef.contentWidth + 5
+                                Layout.fillHeight: true
+                                color: "transparent"
+                                TextItem {
+                                    id: rowAuthorRef
+                                    color: Style.mid
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: author
+                                }
+                            }
+                            Rectangle {
+                                id: rowTimeRectRef
+                                clip: false
+                                Layout.preferredWidth: rowTimeRef.contentWidth + 5
+                                Layout.fillHeight: true
+                                color: "transparent"
+                                TextItem {
+                                    id: rowTimeRef
+                                    color: Style.mid
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: time
+                                }
+                            }
                         }
                     }
                 }
@@ -174,20 +235,20 @@ Rectangle {
         }
     }
 
-    // the qml scrollbar element lacks up/down arrrows, and has other non-desktoppy behavior,
-    // such as going to position when the scrollbar gutter is clicked outside the tracker,
-    // instead of paging down/up.
-    // this implementation attempts to add in the up/down arrows, but keeps the non-paging
-    // behavior for now.
-    // currently the implementation mimics traditional windows sematics of held scrollbar buttons:
-    // 1. instantly step up/down view on mouse-down
-    // 2. wait N millisecs
-    // 3. if still held, step view down/up one row
-    // 4. wait M millisecs
-    // 5. goto step 3
-    // with the assumption M < N, such that the user must wait a
-    // perceptable amount before rows will start scrolling "fast"
     ScrollBar {
+        // the qml scrollbar element lacks up/down arrrows, and has other non-desktoppy behavior,
+        // such as going to position when the scrollbar gutter is clicked outside the tracker,
+        // instead of paging down/up.
+        // this implementation attempts to add in the up/down arrows, but keeps the non-paging
+        // behavior for now.
+        // currently the implementation mimics traditional windows sematics of held scrollbar buttons:
+        // 1. instantly step up/down view on mouse-down
+        // 2. wait N millisecs
+        // 3. if still held, step view down/up one row
+        // 4. wait M millisecs
+        // 5. goto step 3
+        // with the assumption M < N, such that the user must wait a
+        // perceptable amount before rows will start scrolling "fast"
         id: realScrollref
         anchors.top: parent.top
         anchors.right: parent.right
@@ -197,6 +258,7 @@ Rectangle {
         policy: ScrollBar.AlwaysOn
         enabled: true
         position: scrollRef.position
+        minimumSize: 0.02
         property bool manipulateList: false
         background: Rectangle {
             color: Style.window
@@ -294,20 +356,37 @@ Rectangle {
         }
     }
 
+    // The following implements the splitters that allows resizing the graph column.
+    // Without using headers, this is probably the easiest way to get column resizing.
+
+    // to prevent the splitter from overlaying the expanded current item, the splitter
+    // is two splitviews that sit (along the y axis) above and below the highlighted item.
+    // since this exists outside the listview itself, we bind the heights to the required
+    // expressions, such that it appears visually as if the current item is fully above
+    // the splitter itself.
+
+    // graphViewSplitter and graphViewSplitterBottom set each others widths,
+    // but it seems ok with qt?
+
     QQC14.SplitView {
         orientation: Qt.Horizontal
-        anchors.fill: parent
+        x: 0
+        y: 0
+        height: !historyListView.highlightItem ? 0 :
+            historyListView.highlightItem.y + rowHeight - historyListView.contentY
+        width: parent.width
 
         handleDelegate: Rectangle {
             color: "transparent"
             opacity: 1
-            width: 10
+            width: 8
 
             LinearGradient {
                 anchors.top: parent.top
                 start: Qt.point(0, 0)
                 end: Qt.point(0, 20)
                 height: 20
+                x: parent.width / 2
                 width: 1
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: Style.dark }
@@ -320,6 +399,37 @@ Rectangle {
             id: graphViewSplitter
             width: 150
             color: "transparent"
+            onWidthChanged: {
+                graphViewSplitterBottom.width = width
+            }
+        }
+
+        Rectangle {
+            color: "transparent"
+        }
+    }
+
+    QQC14.SplitView {
+        orientation: Qt.Horizontal
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: !historyListView.highlightItem ? 0 :
+            historyListView.height - (historyListView.highlightItem.y + historyListView.highlightItem.height - historyListView.contentY)
+
+        handleDelegate: Rectangle {
+            color: "transparent"
+            opacity: 1
+            width: 8
+        }
+
+        Rectangle {
+            id: graphViewSplitterBottom
+            width: graphViewSplitter.width
+            color: "transparent"
+            onWidthChanged: {
+                graphViewSplitter.width = width
+            }
         }
 
         Rectangle {
