@@ -13,5 +13,6 @@
         <file>qml/base/JsonListModel.qml</file>
         <file>qml/components/CommitView.qml</file>
         <file>qml/components/DiffsView.qml</file>
+        <file>qml/components/HunkView.qml</file>
     </qresource>
 </RCC>

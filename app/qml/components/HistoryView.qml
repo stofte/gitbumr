@@ -58,25 +58,29 @@ Rectangle {
                 focus: true
                 anchors.rightMargin: 15
                 id: rootItem
-                height: rowHeight
+                height: itemHeight
                 anchors.left: parent.left
                 anchors.right: parent.right
                 // we always show the selection for now. use historyListView.focus to check if list is focused.
                 // todo: check if flickering on key held is helped by using listview.highlight property.
                 property var bgColor: ListView.isCurrentItem ? Style.selection : Style.window
+                property int itemHeight: rowHeight + (ListView.isCurrentItem ? 200 : 0)
 
                 Rectangle {
+                    id: mainRowRef
                     color: bgColor
-                    anchors.fill: parent
+                    height: rowHeight
+                    anchors.top: parent.top
+                    width: parent.width
                     Rectangle {
                         anchors.fill: parent
                         anchors.leftMargin: 5
                         color: "transparent"
                         RowLayout {
-                            height: rootItem.height
+                            height: parent.height
                             Layout.fillWidth: true
                             GraphView {
-                                graphHeight: rootItem.height
+                                graphHeight: parent.height
                                 graphWidth: graphViewSplitter.width
                             }
                             Rectangle {
@@ -94,7 +98,7 @@ Rectangle {
                         // assumes later source code => higher z index
                         Rectangle {
                             anchors.right: parent.right
-                            height: rootItem.height
+                            height: parent.height
                             width: 500 // max assumed width
                             color: "transparent"
                             Rectangle {
@@ -128,6 +132,28 @@ Rectangle {
                                     text: time
                                 }
                             }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: extraRowRef
+                    anchors.top: mainRowRef.bottom
+                    height: 200
+                    width: parent.width
+                    visible: historyListView.currentIndex == index
+                    color: bgColor
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.leftMargin: 1
+                        width: parent.width - 2
+                        height: parent.height - 1
+                        color: Style.window
+                        Text {
+                            anchors.centerIn: parent
+                            color: "red"
+                            text: "commit details here"
                         }
                     }
                 }

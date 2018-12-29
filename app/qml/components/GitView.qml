@@ -56,17 +56,17 @@ QQC14.SplitView {
             }
         }
         QQC14.SplitView {
-            orientation: Qt.Vertical
+            orientation: Qt.Horizontal
             width: parent.width * 0.5
             handleDelegate: Rectangle {
                 color: Style.dark
-                height: 1
-            }
-            CommitView {
-                height: 100
+                width: 1
             }
             DiffsView {
-                height: parent.height - 100
+                width: parent.width * 0.5
+            }
+            CommitView {
+                width: parent.width * 0.5
             }
         }
     }
