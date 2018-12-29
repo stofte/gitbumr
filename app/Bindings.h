@@ -205,7 +205,9 @@ public:
     Q_INVOKABLE QString cid(int row) const;
     Q_INVOKABLE QByteArray graph(int row) const;
     Q_INVOKABLE QString message(int row) const;
+    Q_INVOKABLE QString summary(int row) const;
     Q_INVOKABLE QString time(int row) const;
+    Q_INVOKABLE QString timeHumanized(int row) const;
 
 Q_SIGNALS:
     // new data is ready to be made available to the model with fetchMore()

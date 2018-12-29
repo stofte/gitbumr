@@ -127,7 +127,9 @@ pub struct LogItem {
     pub id: Oid,
     pub cid: String,
     pub time: String,
+    pub time_humanized: String,
     pub author: String,
+    pub summary: String,
     pub message: String,
     // indicates what graph lane holds the commit
     pub graph_lane: i32,
@@ -206,6 +208,9 @@ impl LogTrait for Log {
     fn author(&self, index: usize) -> &str {
         &self.list[index].author
     }
+    fn summary(&self, index: usize) -> &str {
+        &self.list[index].summary
+    }
     fn message(&self, index: usize) -> &str {
         &self.list[index].message
     }
@@ -214,6 +219,9 @@ impl LogTrait for Log {
     }
     fn time(&self, index: usize) -> &str {
         &self.list[index].time
+    }
+    fn time_humanized(&self, index: usize) -> &str {
+        &self.list[index].time_humanized
     }
     fn load(&mut self, path: String) {
         self.git = Some(Repository::open(&path).unwrap());

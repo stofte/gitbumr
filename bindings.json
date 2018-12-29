@@ -111,9 +111,12 @@
             "type": "List",
             "itemProperties": {
                 "cid": { "type": "QString" },
+                "cidAbbrev": { "type": "QString" },
+                "timeHumanized": { "type": "QString" },
                 "time": { "type": "QString" },
                 "author": { "type": "QString" },
                 "message": { "type": "QString" },
+                "summary": { "type": "QString" },
                 "graph": { "type": "QByteArray" }
             },
             "functions": {

@@ -448,7 +448,9 @@ extern "C" {
     void log_data_cid(const Log::Private*, int, QString*, qstring_set);
     void log_data_graph(const Log::Private*, int, QByteArray*, qbytearray_set);
     void log_data_message(const Log::Private*, int, QString*, qstring_set);
+    void log_data_summary(const Log::Private*, int, QString*, qstring_set);
     void log_data_time(const Log::Private*, int, QString*, qstring_set);
+    void log_data_time_humanized(const Log::Private*, int, QString*, qstring_set);
     void log_sort(Log::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
 
     int log_row_count(const Log::Private*);
@@ -546,10 +548,24 @@ QString Log::message(int row) const
     return s;
 }
 
+QString Log::summary(int row) const
+{
+    QString s;
+    log_data_summary(m_d, row, &s, set_qstring);
+    return s;
+}
+
 QString Log::time(int row) const
 {
     QString s;
     log_data_time(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QString Log::timeHumanized(int row) const
+{
+    QString s;
+    log_data_time_humanized(m_d, row, &s, set_qstring);
     return s;
 }
 
@@ -568,7 +584,11 @@ QVariant Log::data(const QModelIndex &index, int role) const
         case Qt::UserRole + 3:
             return QVariant::fromValue(message(index.row()));
         case Qt::UserRole + 4:
+            return QVariant::fromValue(summary(index.row()));
+        case Qt::UserRole + 5:
             return QVariant::fromValue(time(index.row()));
+        case Qt::UserRole + 6:
+            return QVariant::fromValue(timeHumanized(index.row()));
         }
         break;
     }
@@ -592,7 +612,9 @@ QHash<int, QByteArray> Log::roleNames() const {
     names.insert(Qt::UserRole + 1, "cid");
     names.insert(Qt::UserRole + 2, "graph");
     names.insert(Qt::UserRole + 3, "message");
-    names.insert(Qt::UserRole + 4, "time");
+    names.insert(Qt::UserRole + 4, "summary");
+    names.insert(Qt::UserRole + 5, "time");
+    names.insert(Qt::UserRole + 6, "timeHumanized");
     return names;
 }
 QVariant Log::headerData(int section, Qt::Orientation orientation, int role) const

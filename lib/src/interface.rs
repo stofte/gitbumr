@@ -992,7 +992,9 @@ pub trait LogTrait {
     fn cid(&self, index: usize) -> &str;
     fn graph(&self, index: usize) -> &[u8];
     fn message(&self, index: usize) -> &str;
+    fn summary(&self, index: usize) -> &str;
     fn time(&self, index: usize) -> &str;
+    fn time_humanized(&self, index: usize) -> &str;
 }
 
 #[no_mangle]
@@ -1134,6 +1136,18 @@ pub unsafe extern "C" fn log_data_message(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn log_data_summary(
+    ptr: *const Log, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.summary(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn log_data_time(
     ptr: *const Log, row: c_int,
     d: *mut QString,
@@ -1141,6 +1155,18 @@ pub unsafe extern "C" fn log_data_time(
 ) {
     let o = &*ptr;
     let data = o.time(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn log_data_time_humanized(
+    ptr: *const Log, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.time_humanized(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
 }
