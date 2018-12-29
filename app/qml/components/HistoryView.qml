@@ -119,7 +119,6 @@ Rectangle {
                         }
                     }
                 }
-
                 Rectangle {
                     x: 0
                     y: rowHeight
@@ -136,8 +135,10 @@ Rectangle {
                         clip: true
                         Rectangle {
                             height: hlDetailsMessageRef.contentHeight + 20
+                            width: parent.width
                             id: hlDetailsContentRef
                             y: 0
+                            color: "transparent"
                             TextEdit {
                                 id: hlDetailsMessageRef
                                 readOnly: true
@@ -159,15 +160,15 @@ Rectangle {
                             contentItem: Rectangle {
                                 color: detailsScrollRef.pressed ? Style.controlActive : Style.control
                             }
-                            onVisibleChanged: {
-                                if (visible) {
-                                    position = 0
-                                } else {
-                                    hlDetailsContentRef.y = 0
-                                }
-                            }
                             onPositionChanged: {
                                 hlDetailsContentRef.y = -1 * hlDetailsContentRef.height * position;
+                            }
+                            onSizeChanged: {
+                                // todo: this only works if the size between different selections
+                                // have actual different heights, otherwise the scrollbar might not
+                                // reset between row selections.
+                                hlDetailsContentRef.y = 0;
+                                position = 0;
                             }
                         }
                     }
