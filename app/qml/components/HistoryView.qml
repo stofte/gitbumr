@@ -152,7 +152,6 @@ Rectangle {
                 property string authorText: author
                 property string timeText: time
                 property int itemHeight: rowHeight + (ListView.isCurrentItem ? 200 : 0)
-                focus: true
                 id: rootItem
                 height: itemHeight
                 width: parent.width - realScrollref.width
