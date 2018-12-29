@@ -58,6 +58,7 @@ Rectangle {
             Item {
                 height: rowHeight + 200
                 z: 2 // placing the highlight above the list prevents flickering
+                clip: true
                 Rectangle {
                     y: 0
                     // 8 == width of splitter itself
@@ -85,7 +86,7 @@ Rectangle {
                                     x: 4 // not sure why, but text can get chopped off otherwise
                                     color: "white"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: historyListView.currentItem.messageText
+                                    text: historyListView.currentItem.summaryText
                                 }
                             }
                             Rectangle {
@@ -132,13 +133,31 @@ Rectangle {
                         width: parent.width - 4
                         height: parent.height - 4
                         color: Style.window
-
-                        TextEdit {
-                            readOnly: true
-                            selectByMouse: true
-                            anchors.margins: 10
-                            anchors.fill: parent
-                            text: historyListView.currentItem.messageText
+                        clip: true
+                        Rectangle {
+                            height: hlDetailsMessageRef.contentHeight + 20
+                            id: hlDetailsContentRef
+                            y: 0
+                            TextEdit {
+                                id: hlDetailsMessageRef
+                                readOnly: true
+                                selectByMouse: true
+                                anchors.margins: 10
+                                anchors.fill: parent
+                                font.pointSize: Style.fontPointSize
+                                text: historyListView.currentItem.messageText
+                            }
+                        }
+                        ScrollBar {
+                            width: 20
+                            anchors.right: parent.right
+                            height: parent.height
+                            policy: ScrollBar.AlwaysOn
+                            size: parent.height / hlDetailsContentRef.height
+                            visible: (parent.height / hlDetailsContentRef.height) < 1
+                            onPositionChanged: {
+                                hlDetailsContentRef.y = -1 * hlDetailsContentRef.height * position;
+                            }
                         }
                     }
                 }
@@ -149,6 +168,7 @@ Rectangle {
             Item {
                 property variant commitId: cid
                 property string messageText: message
+                property string summaryText: summary
                 property string authorText: author
                 property string timeText: time
                 property int itemHeight: rowHeight + (ListView.isCurrentItem ? 200 : 0)
@@ -184,7 +204,7 @@ Rectangle {
                                     id: rowMessageRef
                                     x: 4 // not sure why, but text can get chopped off otherwise
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: message
+                                    text: summary
                                 }
                             }
                             Rectangle {
