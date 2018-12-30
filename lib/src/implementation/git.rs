@@ -1,13 +1,14 @@
 use git2::{Repository, Oid};
 use chrono::FixedOffset;
 use interface::{ GitTrait, GitEmitter };
-use super::{ Branches, fill_branches, Commit, fill_commit, Diffs, fill_diffs };
+use super::{ Branches, fill_branches, Commit, fill_commit, Diffs, fill_diffs, Hunks, fill_hunks };
 use utils::{local_branches, get_timesize_offset};
 
 pub struct Git {
     emit: GitEmitter,
     branches: Branches,
     commit: Commit,
+    hunks: Hunks,
     diffs: Diffs,
     git: Option<Repository>,
     revwalk_filter: String,
@@ -15,12 +16,13 @@ pub struct Git {
 }
 
 impl GitTrait for Git {
-    fn new(emit: GitEmitter, branches: Branches, commit: Commit, diffs: Diffs) -> Git {
+    fn new(emit: GitEmitter, branches: Branches, commit: Commit, diffs: Diffs, hunks: Hunks) -> Git {
         Git {
             emit,
             branches,
             commit,
             diffs,
+            hunks,
             git: None,
             revwalk_filter: "".to_string(),
             tz_offset: get_timesize_offset(),
@@ -47,6 +49,12 @@ impl GitTrait for Git {
     fn diffs_mut(&mut self) -> &mut Diffs {
         &mut self.diffs
     }
+    fn hunks(&self) -> &Hunks {
+        &self.hunks
+    }
+    fn hunks_mut(&mut self) -> &mut Hunks {
+        &mut self.hunks
+    }
     fn load(&mut self, path: String) {
         match Repository::open(path) {
             Ok(r) => {
@@ -67,10 +75,13 @@ impl GitTrait for Git {
                 let oid = Oid::from_str(&oid).unwrap();
                 let commit = r.find_commit(oid).unwrap();
                 fill_commit(&mut self.commit, &commit, self.tz_offset);
-                fill_diffs(&mut self.diffs, &commit, &r);
+                fill_diffs(&mut self.diffs, &commit, &r, oid.to_string());
             }
             None => panic!("expected git repo in load_commit")
         };
+    }
+    fn load_diff(&mut self, oid: String, index: u64) {
+        fill_hunks(&mut self.hunks, &self.diffs, index, &oid);
     }
     fn revwalk_filter(&self) -> &str {
         &self.revwalk_filter

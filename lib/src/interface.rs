@@ -485,6 +485,7 @@ pub struct DiffsQObject {}
 
 pub struct DiffsEmitter {
     qobject: Arc<AtomicPtr<DiffsQObject>>,
+    commit_oid_changed: fn(*mut DiffsQObject),
     new_data_ready: fn(*mut DiffsQObject),
 }
 
@@ -500,12 +501,19 @@ impl DiffsEmitter {
     pub fn clone(&mut self) -> DiffsEmitter {
         DiffsEmitter {
             qobject: self.qobject.clone(),
+            commit_oid_changed: self.commit_oid_changed,
             new_data_ready: self.new_data_ready,
         }
     }
     fn clear(&self) {
         let n: *const DiffsQObject = null();
         self.qobject.store(n as *mut DiffsQObject, Ordering::SeqCst);
+    }
+    pub fn commit_oid_changed(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.commit_oid_changed)(ptr);
+        }
     }
     pub fn new_data_ready(&mut self) {
         let ptr = self.qobject.load(Ordering::SeqCst);
@@ -570,6 +578,7 @@ impl DiffsList {
 pub trait DiffsTrait {
     fn new(emit: DiffsEmitter, model: DiffsList) -> Self;
     fn emit(&mut self) -> &mut DiffsEmitter;
+    fn commit_oid(&self) -> &str;
     fn row_count(&self) -> usize;
     fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
     fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
@@ -586,6 +595,7 @@ pub trait DiffsTrait {
 #[no_mangle]
 pub extern "C" fn diffs_new(
     diffs: *mut DiffsQObject,
+    diffs_commit_oid_changed: fn(*mut DiffsQObject),
     diffs_new_data_ready: fn(*mut DiffsQObject),
     diffs_layout_about_to_be_changed: fn(*mut DiffsQObject),
     diffs_layout_changed: fn(*mut DiffsQObject),
@@ -601,6 +611,7 @@ pub extern "C" fn diffs_new(
 ) -> *mut Diffs {
     let diffs_emit = DiffsEmitter {
         qobject: Arc::new(AtomicPtr::new(diffs)),
+        commit_oid_changed: diffs_commit_oid_changed,
         new_data_ready: diffs_new_data_ready,
     };
     let model = DiffsList {
@@ -624,6 +635,18 @@ pub extern "C" fn diffs_new(
 #[no_mangle]
 pub unsafe extern "C" fn diffs_free(ptr: *mut Diffs) {
     Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn diffs_commit_oid_get(
+    ptr: *const Diffs,
+    p: *mut QString,
+    set: fn(*mut QString, *const c_char, c_int),
+) {
+    let o = &*ptr;
+    let v = o.commit_oid();
+    let s: *const c_char = v.as_ptr() as (*const c_char);
+    set(p, s, to_c_int(v.len()));
 }
 
 #[no_mangle]
@@ -729,7 +752,8 @@ pub trait GitTrait {
     fn new(emit: GitEmitter,
         branches: Branches,
         commit: Commit,
-        diffs: Diffs) -> Self;
+        diffs: Diffs,
+        hunks: Hunks) -> Self;
     fn emit(&mut self) -> &mut GitEmitter;
     fn branches(&self) -> &Branches;
     fn branches_mut(&mut self) -> &mut Branches;
@@ -737,9 +761,12 @@ pub trait GitTrait {
     fn commit_mut(&mut self) -> &mut Commit;
     fn diffs(&self) -> &Diffs;
     fn diffs_mut(&mut self) -> &mut Diffs;
+    fn hunks(&self) -> &Hunks;
+    fn hunks_mut(&mut self) -> &mut Hunks;
     fn revwalk_filter(&self) -> &str;
     fn load(&mut self, path: String) -> ();
     fn load_commit(&mut self, oid: String) -> ();
+    fn load_diff(&mut self, oid: String, index: u64) -> ();
 }
 
 #[no_mangle]
@@ -766,6 +793,7 @@ pub extern "C" fn git_new(
     commit_time_changed: fn(*mut CommitQObject),
     commit_tree_changed: fn(*mut CommitQObject),
     diffs: *mut DiffsQObject,
+    diffs_commit_oid_changed: fn(*mut DiffsQObject),
     diffs_new_data_ready: fn(*mut DiffsQObject),
     diffs_layout_about_to_be_changed: fn(*mut DiffsQObject),
     diffs_layout_changed: fn(*mut DiffsQObject),
@@ -778,6 +806,19 @@ pub extern "C" fn git_new(
     diffs_end_move_rows: fn(*mut DiffsQObject),
     diffs_begin_remove_rows: fn(*mut DiffsQObject, usize, usize),
     diffs_end_remove_rows: fn(*mut DiffsQObject),
+    hunks: *mut HunksQObject,
+    hunks_new_data_ready: fn(*mut HunksQObject),
+    hunks_layout_about_to_be_changed: fn(*mut HunksQObject),
+    hunks_layout_changed: fn(*mut HunksQObject),
+    hunks_data_changed: fn(*mut HunksQObject, usize, usize),
+    hunks_begin_reset_model: fn(*mut HunksQObject),
+    hunks_end_reset_model: fn(*mut HunksQObject),
+    hunks_begin_insert_rows: fn(*mut HunksQObject, usize, usize),
+    hunks_end_insert_rows: fn(*mut HunksQObject),
+    hunks_begin_move_rows: fn(*mut HunksQObject, usize, usize, usize),
+    hunks_end_move_rows: fn(*mut HunksQObject),
+    hunks_begin_remove_rows: fn(*mut HunksQObject, usize, usize),
+    hunks_end_remove_rows: fn(*mut HunksQObject),
     git_revwalk_filter_changed: fn(*mut GitQObject),
 ) -> *mut Git {
     let branches_emit = BranchesEmitter {
@@ -811,6 +852,7 @@ pub extern "C" fn git_new(
     let d_commit = Commit::new(commit_emit);
     let diffs_emit = DiffsEmitter {
         qobject: Arc::new(AtomicPtr::new(diffs)),
+        commit_oid_changed: diffs_commit_oid_changed,
         new_data_ready: diffs_new_data_ready,
     };
     let model = DiffsList {
@@ -828,6 +870,25 @@ pub extern "C" fn git_new(
         end_remove_rows: diffs_end_remove_rows,
     };
     let d_diffs = Diffs::new(diffs_emit, model);
+    let hunks_emit = HunksEmitter {
+        qobject: Arc::new(AtomicPtr::new(hunks)),
+        new_data_ready: hunks_new_data_ready,
+    };
+    let model = HunksList {
+        qobject: hunks,
+        layout_about_to_be_changed: hunks_layout_about_to_be_changed,
+        layout_changed: hunks_layout_changed,
+        data_changed: hunks_data_changed,
+        begin_reset_model: hunks_begin_reset_model,
+        end_reset_model: hunks_end_reset_model,
+        begin_insert_rows: hunks_begin_insert_rows,
+        end_insert_rows: hunks_end_insert_rows,
+        begin_move_rows: hunks_begin_move_rows,
+        end_move_rows: hunks_end_move_rows,
+        begin_remove_rows: hunks_begin_remove_rows,
+        end_remove_rows: hunks_end_remove_rows,
+    };
+    let d_hunks = Hunks::new(hunks_emit, model);
     let git_emit = GitEmitter {
         qobject: Arc::new(AtomicPtr::new(git)),
         revwalk_filter_changed: git_revwalk_filter_changed,
@@ -835,7 +896,8 @@ pub extern "C" fn git_new(
     let d_git = Git::new(git_emit,
         d_branches,
         d_commit,
-        d_diffs);
+        d_diffs,
+        d_hunks);
     Box::into_raw(Box::new(d_git))
 }
 
@@ -857,6 +919,11 @@ pub unsafe extern "C" fn git_commit_get(ptr: *mut Git) -> *mut Commit {
 #[no_mangle]
 pub unsafe extern "C" fn git_diffs_get(ptr: *mut Git) -> *mut Diffs {
     (&mut *ptr).diffs_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn git_hunks_get(ptr: *mut Git) -> *mut Hunks {
+    (&mut *ptr).hunks_mut()
 }
 
 #[no_mangle]
@@ -887,6 +954,238 @@ pub unsafe extern "C" fn git_load_commit(ptr: *mut Git, oid_str: *const c_ushort
     let o = &mut *ptr;
     let r = o.load_commit(oid);
     r
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn git_load_diff(ptr: *mut Git, oid_str: *const c_ushort, oid_len: c_int, index: u64) -> () {
+    let mut oid = String::new();
+    set_string_from_utf16(&mut oid, oid_str, oid_len);
+    let o = &mut *ptr;
+    let r = o.load_diff(oid, index);
+    r
+}
+
+pub struct HunksQObject {}
+
+pub struct HunksEmitter {
+    qobject: Arc<AtomicPtr<HunksQObject>>,
+    new_data_ready: fn(*mut HunksQObject),
+}
+
+unsafe impl Send for HunksEmitter {}
+
+impl HunksEmitter {
+    /// Clone the emitter
+    ///
+    /// The emitter can only be cloned when it is mutable. The emitter calls
+    /// into C++ code which may call into Rust again. If emmitting is possible
+    /// from immutable structures, that might lead to access to a mutable
+    /// reference. That is undefined behaviour and forbidden.
+    pub fn clone(&mut self) -> HunksEmitter {
+        HunksEmitter {
+            qobject: self.qobject.clone(),
+            new_data_ready: self.new_data_ready,
+        }
+    }
+    fn clear(&self) {
+        let n: *const HunksQObject = null();
+        self.qobject.store(n as *mut HunksQObject, Ordering::SeqCst);
+    }
+    pub fn new_data_ready(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.new_data_ready)(ptr);
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct HunksList {
+    qobject: *mut HunksQObject,
+    layout_about_to_be_changed: fn(*mut HunksQObject),
+    layout_changed: fn(*mut HunksQObject),
+    data_changed: fn(*mut HunksQObject, usize, usize),
+    begin_reset_model: fn(*mut HunksQObject),
+    end_reset_model: fn(*mut HunksQObject),
+    begin_insert_rows: fn(*mut HunksQObject, usize, usize),
+    end_insert_rows: fn(*mut HunksQObject),
+    begin_move_rows: fn(*mut HunksQObject, usize, usize, usize),
+    end_move_rows: fn(*mut HunksQObject),
+    begin_remove_rows: fn(*mut HunksQObject, usize, usize),
+    end_remove_rows: fn(*mut HunksQObject),
+}
+
+impl HunksList {
+    pub fn layout_about_to_be_changed(&mut self) {
+        (self.layout_about_to_be_changed)(self.qobject);
+    }
+    pub fn layout_changed(&mut self) {
+        (self.layout_changed)(self.qobject);
+    }
+    pub fn data_changed(&mut self, first: usize, last: usize) {
+        (self.data_changed)(self.qobject, first, last);
+    }
+    pub fn begin_reset_model(&mut self) {
+        (self.begin_reset_model)(self.qobject);
+    }
+    pub fn end_reset_model(&mut self) {
+        (self.end_reset_model)(self.qobject);
+    }
+    pub fn begin_insert_rows(&mut self, first: usize, last: usize) {
+        (self.begin_insert_rows)(self.qobject, first, last);
+    }
+    pub fn end_insert_rows(&mut self) {
+        (self.end_insert_rows)(self.qobject);
+    }
+    pub fn begin_move_rows(&mut self, first: usize, last: usize, destination: usize) {
+        (self.begin_move_rows)(self.qobject, first, last, destination);
+    }
+    pub fn end_move_rows(&mut self) {
+        (self.end_move_rows)(self.qobject);
+    }
+    pub fn begin_remove_rows(&mut self, first: usize, last: usize) {
+        (self.begin_remove_rows)(self.qobject, first, last);
+    }
+    pub fn end_remove_rows(&mut self) {
+        (self.end_remove_rows)(self.qobject);
+    }
+}
+
+pub trait HunksTrait {
+    fn new(emit: HunksEmitter, model: HunksList) -> Self;
+    fn emit(&mut self) -> &mut HunksEmitter;
+    fn row_count(&self) -> usize;
+    fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
+    fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
+    fn can_fetch_more(&self) -> bool {
+        false
+    }
+    fn fetch_more(&mut self) {}
+    fn sort(&mut self, u8, SortOrder) {}
+    fn hunk(&self, index: usize) -> &str;
+    fn lines_new(&self, index: usize) -> &[u8];
+    fn lines_old(&self, index: usize) -> &[u8];
+    fn lines_origin(&self, index: usize) -> &[u8];
+}
+
+#[no_mangle]
+pub extern "C" fn hunks_new(
+    hunks: *mut HunksQObject,
+    hunks_new_data_ready: fn(*mut HunksQObject),
+    hunks_layout_about_to_be_changed: fn(*mut HunksQObject),
+    hunks_layout_changed: fn(*mut HunksQObject),
+    hunks_data_changed: fn(*mut HunksQObject, usize, usize),
+    hunks_begin_reset_model: fn(*mut HunksQObject),
+    hunks_end_reset_model: fn(*mut HunksQObject),
+    hunks_begin_insert_rows: fn(*mut HunksQObject, usize, usize),
+    hunks_end_insert_rows: fn(*mut HunksQObject),
+    hunks_begin_move_rows: fn(*mut HunksQObject, usize, usize, usize),
+    hunks_end_move_rows: fn(*mut HunksQObject),
+    hunks_begin_remove_rows: fn(*mut HunksQObject, usize, usize),
+    hunks_end_remove_rows: fn(*mut HunksQObject),
+) -> *mut Hunks {
+    let hunks_emit = HunksEmitter {
+        qobject: Arc::new(AtomicPtr::new(hunks)),
+        new_data_ready: hunks_new_data_ready,
+    };
+    let model = HunksList {
+        qobject: hunks,
+        layout_about_to_be_changed: hunks_layout_about_to_be_changed,
+        layout_changed: hunks_layout_changed,
+        data_changed: hunks_data_changed,
+        begin_reset_model: hunks_begin_reset_model,
+        end_reset_model: hunks_end_reset_model,
+        begin_insert_rows: hunks_begin_insert_rows,
+        end_insert_rows: hunks_end_insert_rows,
+        begin_move_rows: hunks_begin_move_rows,
+        end_move_rows: hunks_end_move_rows,
+        begin_remove_rows: hunks_begin_remove_rows,
+        end_remove_rows: hunks_end_remove_rows,
+    };
+    let d_hunks = Hunks::new(hunks_emit, model);
+    Box::into_raw(Box::new(d_hunks))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_free(ptr: *mut Hunks) {
+    Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_row_count(ptr: *const Hunks) -> c_int {
+    to_c_int((&*ptr).row_count())
+}
+#[no_mangle]
+pub unsafe extern "C" fn hunks_insert_rows(ptr: *mut Hunks, row: c_int, count: c_int) -> bool {
+    (&mut *ptr).insert_rows(to_usize(row), to_usize(count))
+}
+#[no_mangle]
+pub unsafe extern "C" fn hunks_remove_rows(ptr: *mut Hunks, row: c_int, count: c_int) -> bool {
+    (&mut *ptr).remove_rows(to_usize(row), to_usize(count))
+}
+#[no_mangle]
+pub unsafe extern "C" fn hunks_can_fetch_more(ptr: *const Hunks) -> bool {
+    (&*ptr).can_fetch_more()
+}
+#[no_mangle]
+pub unsafe extern "C" fn hunks_fetch_more(ptr: *mut Hunks) {
+    (&mut *ptr).fetch_more()
+}
+#[no_mangle]
+pub unsafe extern "C" fn hunks_sort(
+    ptr: *mut Hunks,
+    column: u8,
+    order: SortOrder,
+) {
+    (&mut *ptr).sort(column, order)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_data_hunk(
+    ptr: *const Hunks, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.hunk(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_data_lines_new(
+    ptr: *const Hunks, row: c_int,
+    d: *mut QByteArray,
+    set: fn(*mut QByteArray, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.lines_new(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_data_lines_old(
+    ptr: *const Hunks, row: c_int,
+    d: *mut QByteArray,
+    set: fn(*mut QByteArray, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.lines_old(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_data_lines_origin(
+    ptr: *const Hunks, row: c_int,
+    d: *mut QByteArray,
+    set: fn(*mut QByteArray, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.lines_origin(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
 }
 
 pub struct LogQObject {}

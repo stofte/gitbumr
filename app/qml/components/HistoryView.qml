@@ -10,7 +10,15 @@ import "../style"
 Rectangle {
     property int rowHeight: 18
     property string selected: ""
+    property bool reload: false
     color: Style.window
+    onReloadChanged: {
+        if (reload) {
+            historyListView.currentIndex = 0;
+            reload = false;
+        }
+    }
+
     ListView {
         id: historyListView
         anchors.fill: parent
@@ -24,11 +32,22 @@ Rectangle {
             id: timerRef
             property string commitId: ""
             interval: 100; running: true; repeat: true
-            onTriggered: selected = commitId
+            onTriggered: {
+                selected = commitId;
+            }
         }
+        onCurrentItemChanged: {
+            if (currentItem) {
+                timerRef.restart();
+                timerRef.commitId = currentItem.commitId;
+            }
+        }
+
         onCurrentIndexChanged: {
-            timerRef.restart()
-            timerRef.commitId = currentItem.commitId;
+            if (currentItem) {
+                timerRef.restart();
+                timerRef.commitId = currentItem.commitId;
+            }
         }
         highlightResizeDuration: 1
         highlightMoveDuration: 1

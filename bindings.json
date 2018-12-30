@@ -65,6 +65,7 @@
                 "branches": { "type": "Branches" },
                 "commit": { "type": "Commit" },
                 "diffs": { "type": "Diffs" },
+                "hunks": { "type": "Hunks" },
                 "revwalkFilter": { "type": "QString" }
             },
             "functions": {
@@ -76,7 +77,17 @@
                 "loadCommit": {
                     "return": "void",
                     "mut": true,
-                    "arguments": [{ "name": "oid", "type": "QString" }]
+                    "arguments": [
+                        { "name": "oid", "type": "QString" }
+                    ]
+                },
+                "loadDiff": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "oid", "type": "QString" },
+                        { "name": "index", "type": "quint64" }
+                    ]
                 }
             }
         },
@@ -97,6 +108,18 @@
                 "filename": { "type": "QString" },
                 "status": { "type": "QString" },
                 "patch": { "type": "QString" }
+            },
+            "properties": {
+                "commitOid": { "type": "QString" }
+            }
+        },
+        "Hunks": {
+            "type": "List",
+            "itemProperties": {
+                "hunk": { "type": "QString" },
+                "linesOrigin": { "type": "QByteArray" },
+                "linesNew": { "type": "QByteArray" },
+                "linesOld": { "type": "QByteArray" }
             }
         },
         "Branches": {

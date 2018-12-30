@@ -62,6 +62,10 @@ namespace {
     {
         Q_EMIT o->treeChanged();
     }
+    inline void diffsCommitOidChanged(Diffs* o)
+    {
+        Q_EMIT o->commitOidChanged();
+    }
     inline void gitRevwalkFilterChanged(Git* o)
     {
         Q_EMIT o->revwalkFilterChanged();
@@ -392,7 +396,7 @@ bool Diffs::setHeaderData(int section, Qt::Orientation orientation, const QVaria
 }
 
 extern "C" {
-    Diffs::Private* diffs_new(Diffs*,
+    Diffs::Private* diffs_new(Diffs*, void (*)(Diffs*),
         void (*)(const Diffs*),
         void (*)(Diffs*),
         void (*)(Diffs*),
@@ -406,6 +410,7 @@ extern "C" {
         void (*)(Diffs*, int, int),
         void (*)(Diffs*));
     void diffs_free(Diffs::Private*);
+    void diffs_commit_oid_get(const Diffs::Private*, QString*, qstring_set);
 };
 
 extern "C" {
@@ -421,7 +426,7 @@ extern "C" {
         void (*)(Branches*, int, int, int),
         void (*)(Branches*),
         void (*)(Branches*, int, int),
-        void (*)(Branches*), Commit*, void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), Diffs*,
+        void (*)(Branches*), Commit*, void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), Diffs*, void (*)(Diffs*),
         void (*)(const Diffs*),
         void (*)(Diffs*),
         void (*)(Diffs*),
@@ -433,14 +438,203 @@ extern "C" {
         void (*)(Diffs*, int, int, int),
         void (*)(Diffs*),
         void (*)(Diffs*, int, int),
-        void (*)(Diffs*), void (*)(Git*));
+        void (*)(Diffs*), Hunks*,
+        void (*)(const Hunks*),
+        void (*)(Hunks*),
+        void (*)(Hunks*),
+        void (*)(Hunks*, quintptr, quintptr),
+        void (*)(Hunks*),
+        void (*)(Hunks*),
+        void (*)(Hunks*, int, int),
+        void (*)(Hunks*),
+        void (*)(Hunks*, int, int, int),
+        void (*)(Hunks*),
+        void (*)(Hunks*, int, int),
+        void (*)(Hunks*), void (*)(Git*));
     void git_free(Git::Private*);
     Branches::Private* git_branches_get(const Git::Private*);
     Commit::Private* git_commit_get(const Git::Private*);
     Diffs::Private* git_diffs_get(const Git::Private*);
+    Hunks::Private* git_hunks_get(const Git::Private*);
     void git_revwalk_filter_get(const Git::Private*, QString*, qstring_set);
     void git_load(Git::Private*, const ushort*, int);
     void git_load_commit(Git::Private*, const ushort*, int);
+    void git_load_diff(Git::Private*, const ushort*, int, quint64);
+};
+
+extern "C" {
+    void hunks_data_hunk(const Hunks::Private*, int, QString*, qstring_set);
+    void hunks_data_lines_new(const Hunks::Private*, int, QByteArray*, qbytearray_set);
+    void hunks_data_lines_old(const Hunks::Private*, int, QByteArray*, qbytearray_set);
+    void hunks_data_lines_origin(const Hunks::Private*, int, QByteArray*, qbytearray_set);
+    void hunks_sort(Hunks::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
+
+    int hunks_row_count(const Hunks::Private*);
+    bool hunks_insert_rows(Hunks::Private*, int, int);
+    bool hunks_remove_rows(Hunks::Private*, int, int);
+    bool hunks_can_fetch_more(const Hunks::Private*);
+    void hunks_fetch_more(Hunks::Private*);
+}
+int Hunks::columnCount(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : 1;
+}
+
+bool Hunks::hasChildren(const QModelIndex &parent) const
+{
+    return rowCount(parent) > 0;
+}
+
+int Hunks::rowCount(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : hunks_row_count(m_d);
+}
+
+bool Hunks::insertRows(int row, int count, const QModelIndex &)
+{
+    return hunks_insert_rows(m_d, row, count);
+}
+
+bool Hunks::removeRows(int row, int count, const QModelIndex &)
+{
+    return hunks_remove_rows(m_d, row, count);
+}
+
+QModelIndex Hunks::index(int row, int column, const QModelIndex &parent) const
+{
+    if (!parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0 && column < 1) {
+        return createIndex(row, column, (quintptr)row);
+    }
+    return QModelIndex();
+}
+
+QModelIndex Hunks::parent(const QModelIndex &) const
+{
+    return QModelIndex();
+}
+
+bool Hunks::canFetchMore(const QModelIndex &parent) const
+{
+    return (parent.isValid()) ? 0 : hunks_can_fetch_more(m_d);
+}
+
+void Hunks::fetchMore(const QModelIndex &parent)
+{
+    if (!parent.isValid()) {
+        hunks_fetch_more(m_d);
+    }
+}
+void Hunks::updatePersistentIndexes() {}
+
+void Hunks::sort(int column, Qt::SortOrder order)
+{
+    hunks_sort(m_d, column, order);
+}
+Qt::ItemFlags Hunks::flags(const QModelIndex &i) const
+{
+    auto flags = QAbstractItemModel::flags(i);
+    return flags;
+}
+
+QString Hunks::hunk(int row) const
+{
+    QString s;
+    hunks_data_hunk(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QByteArray Hunks::linesNew(int row) const
+{
+    QByteArray b;
+    hunks_data_lines_new(m_d, row, &b, set_qbytearray);
+    return b;
+}
+
+QByteArray Hunks::linesOld(int row) const
+{
+    QByteArray b;
+    hunks_data_lines_old(m_d, row, &b, set_qbytearray);
+    return b;
+}
+
+QByteArray Hunks::linesOrigin(int row) const
+{
+    QByteArray b;
+    hunks_data_lines_origin(m_d, row, &b, set_qbytearray);
+    return b;
+}
+
+QVariant Hunks::data(const QModelIndex &index, int role) const
+{
+    Q_ASSERT(rowCount(index.parent()) > index.row());
+    switch (index.column()) {
+    case 0:
+        switch (role) {
+        case Qt::UserRole + 0:
+            return QVariant::fromValue(hunk(index.row()));
+        case Qt::UserRole + 1:
+            return QVariant::fromValue(linesNew(index.row()));
+        case Qt::UserRole + 2:
+            return QVariant::fromValue(linesOld(index.row()));
+        case Qt::UserRole + 3:
+            return QVariant::fromValue(linesOrigin(index.row()));
+        }
+        break;
+    }
+    return QVariant();
+}
+
+int Hunks::role(const char* name) const {
+    auto names = roleNames();
+    auto i = names.constBegin();
+    while (i != names.constEnd()) {
+        if (i.value() == name) {
+            return i.key();
+        }
+        ++i;
+    }
+    return -1;
+}
+QHash<int, QByteArray> Hunks::roleNames() const {
+    QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
+    names.insert(Qt::UserRole + 0, "hunk");
+    names.insert(Qt::UserRole + 1, "linesNew");
+    names.insert(Qt::UserRole + 2, "linesOld");
+    names.insert(Qt::UserRole + 3, "linesOrigin");
+    return names;
+}
+QVariant Hunks::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation != Qt::Horizontal) {
+        return QVariant();
+    }
+    return m_headerData.value(qMakePair(section, (Qt::ItemDataRole)role), role == Qt::DisplayRole ?QString::number(section + 1) :QVariant());
+}
+
+bool Hunks::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+{
+    if (orientation != Qt::Horizontal) {
+        return false;
+    }
+    m_headerData.insert(qMakePair(section, (Qt::ItemDataRole)role), value);
+    return true;
+}
+
+extern "C" {
+    Hunks::Private* hunks_new(Hunks*,
+        void (*)(const Hunks*),
+        void (*)(Hunks*),
+        void (*)(Hunks*),
+        void (*)(Hunks*, quintptr, quintptr),
+        void (*)(Hunks*),
+        void (*)(Hunks*),
+        void (*)(Hunks*, int, int),
+        void (*)(Hunks*),
+        void (*)(Hunks*, int, int, int),
+        void (*)(Hunks*),
+        void (*)(Hunks*, int, int),
+        void (*)(Hunks*));
+    void hunks_free(Hunks::Private*);
 };
 
 extern "C" {
@@ -956,6 +1150,7 @@ Diffs::Diffs(bool /*owned*/, QObject *parent):
 Diffs::Diffs(QObject *parent):
     QAbstractItemModel(parent),
     m_d(diffs_new(this,
+        diffsCommitOidChanged,
         [](const Diffs* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -1010,11 +1205,18 @@ Diffs::~Diffs() {
 }
 void Diffs::initHeaderData() {
 }
+QString Diffs::commitOid() const
+{
+    QString v;
+    diffs_commit_oid_get(m_d, &v, set_qstring);
+    return v;
+}
 Git::Git(bool /*owned*/, QObject *parent):
     QObject(parent),
     m_branches(new Branches(false, this)),
     m_commit(new Commit(false, this)),
     m_diffs(new Diffs(false, this)),
+    m_hunks(new Hunks(false, this)),
     m_d(nullptr),
     m_ownsPrivate(false)
 {
@@ -1025,6 +1227,7 @@ Git::Git(QObject *parent):
     m_branches(new Branches(false, this)),
     m_commit(new Commit(false, this)),
     m_diffs(new Diffs(false, this)),
+    m_hunks(new Hunks(false, this)),
     m_d(git_new(this, m_branches,
         [](const Branches* o) {
             Q_EMIT o->newDataReady(QModelIndex());
@@ -1071,6 +1274,7 @@ Git::Git(QObject *parent):
         commitMessageChanged,
         commitTimeChanged,
         commitTreeChanged, m_diffs,
+        diffsCommitOidChanged,
         [](const Diffs* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -1109,6 +1313,45 @@ Git::Git(QObject *parent):
         [](Diffs* o) {
             o->endRemoveRows();
         }
+, m_hunks,
+        [](const Hunks* o) {
+            Q_EMIT o->newDataReady(QModelIndex());
+        },
+        [](Hunks* o) {
+            Q_EMIT o->layoutAboutToBeChanged();
+        },
+        [](Hunks* o) {
+            o->updatePersistentIndexes();
+            Q_EMIT o->layoutChanged();
+        },
+        [](Hunks* o, quintptr first, quintptr last) {
+            o->dataChanged(o->createIndex(first, 0, first),
+                       o->createIndex(last, 0, last));
+        },
+        [](Hunks* o) {
+            o->beginResetModel();
+        },
+        [](Hunks* o) {
+            o->endResetModel();
+        },
+        [](Hunks* o, int first, int last) {
+            o->beginInsertRows(QModelIndex(), first, last);
+        },
+        [](Hunks* o) {
+            o->endInsertRows();
+        },
+        [](Hunks* o, int first, int last, int destination) {
+            o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
+        },
+        [](Hunks* o) {
+            o->endMoveRows();
+        },
+        [](Hunks* o, int first, int last) {
+            o->beginRemoveRows(QModelIndex(), first, last);
+        },
+        [](Hunks* o) {
+            o->endRemoveRows();
+        }
 ,
         gitRevwalkFilterChanged)),
     m_ownsPrivate(true)
@@ -1116,11 +1359,15 @@ Git::Git(QObject *parent):
     m_branches->m_d = git_branches_get(m_d);
     m_commit->m_d = git_commit_get(m_d);
     m_diffs->m_d = git_diffs_get(m_d);
+    m_hunks->m_d = git_hunks_get(m_d);
     connect(this->m_branches, &Branches::newDataReady, this->m_branches, [this](const QModelIndex& i) {
         this->m_branches->fetchMore(i);
     }, Qt::QueuedConnection);
     connect(this->m_diffs, &Diffs::newDataReady, this->m_diffs, [this](const QModelIndex& i) {
         this->m_diffs->fetchMore(i);
+    }, Qt::QueuedConnection);
+    connect(this->m_hunks, &Hunks::newDataReady, this->m_hunks, [this](const QModelIndex& i) {
+        this->m_hunks->fetchMore(i);
     }, Qt::QueuedConnection);
 }
 
@@ -1153,6 +1400,14 @@ Diffs* Git::diffs()
 {
     return m_diffs;
 }
+const Hunks* Git::hunks() const
+{
+    return m_hunks;
+}
+Hunks* Git::hunks()
+{
+    return m_hunks;
+}
 QString Git::revwalkFilter() const
 {
     QString v;
@@ -1166,6 +1421,75 @@ void Git::load(const QString& path)
 void Git::loadCommit(const QString& oid)
 {
     return git_load_commit(m_d, oid.utf16(), oid.size());
+}
+void Git::loadDiff(const QString& oid, quint64 index)
+{
+    return git_load_diff(m_d, oid.utf16(), oid.size(), index);
+}
+Hunks::Hunks(bool /*owned*/, QObject *parent):
+    QAbstractItemModel(parent),
+    m_d(nullptr),
+    m_ownsPrivate(false)
+{
+    initHeaderData();
+}
+
+Hunks::Hunks(QObject *parent):
+    QAbstractItemModel(parent),
+    m_d(hunks_new(this,
+        [](const Hunks* o) {
+            Q_EMIT o->newDataReady(QModelIndex());
+        },
+        [](Hunks* o) {
+            Q_EMIT o->layoutAboutToBeChanged();
+        },
+        [](Hunks* o) {
+            o->updatePersistentIndexes();
+            Q_EMIT o->layoutChanged();
+        },
+        [](Hunks* o, quintptr first, quintptr last) {
+            o->dataChanged(o->createIndex(first, 0, first),
+                       o->createIndex(last, 0, last));
+        },
+        [](Hunks* o) {
+            o->beginResetModel();
+        },
+        [](Hunks* o) {
+            o->endResetModel();
+        },
+        [](Hunks* o, int first, int last) {
+            o->beginInsertRows(QModelIndex(), first, last);
+        },
+        [](Hunks* o) {
+            o->endInsertRows();
+        },
+        [](Hunks* o, int first, int last, int destination) {
+            o->beginMoveRows(QModelIndex(), first, last, QModelIndex(), destination);
+        },
+        [](Hunks* o) {
+            o->endMoveRows();
+        },
+        [](Hunks* o, int first, int last) {
+            o->beginRemoveRows(QModelIndex(), first, last);
+        },
+        [](Hunks* o) {
+            o->endRemoveRows();
+        }
+)),
+    m_ownsPrivate(true)
+{
+    connect(this, &Hunks::newDataReady, this, [this](const QModelIndex& i) {
+        this->fetchMore(i);
+    }, Qt::QueuedConnection);
+    initHeaderData();
+}
+
+Hunks::~Hunks() {
+    if (m_ownsPrivate) {
+        hunks_free(m_d);
+    }
+}
+void Hunks::initHeaderData() {
 }
 Log::Log(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),

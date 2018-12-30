@@ -1,4 +1,4 @@
-use std::{path::{PathBuf}, thread};
+use std::{path::{PathBuf}, thread, str};
 use git2::{Repository, BranchType, Oid, Sort};
 use chrono::{FixedOffset, DateTime, NaiveDateTime, Local};
 use chrono_humanize::HumanTime;
@@ -139,6 +139,28 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsI
                 let delta_new_file = delta.new_file().path().unwrap();
                 let delta_status = delta.status();
                 let mut patch = git2::Patch::from_diff(&diff, idx).unwrap().unwrap();
+                let mut hunks = vec![];
+                let mut hunks_origins = vec![];
+                let mut hunks_lineno_new = vec![];
+                let mut hunks_lineno_old = vec![];
+                for h_idx in 0..patch.num_hunks() {
+                    let h_lines = patch.num_lines_in_hunk(h_idx).unwrap();
+                    let mut hunk_str = String::with_capacity(300);
+                    let mut hunk_origins_vec = vec![];
+                    let mut hunk_lineno_new_vec = vec![];
+                    let mut hunk_lineno_old_vec = vec![];
+                    for h_line_idx in 0..h_lines {
+                        let h_line = patch.line_in_hunk(h_idx, h_line_idx).unwrap();
+                        hunk_str.push_str(str::from_utf8(h_line.content()).unwrap());
+                        hunk_origins_vec.push(h_line.origin());
+                        hunk_lineno_new_vec.push(h_line.new_lineno());
+                        hunk_lineno_old_vec.push(h_line.old_lineno());
+                    }
+                    hunks.push(hunk_str);
+                    hunks_origins.push(hunk_origins_vec);
+                    hunks_lineno_new.push(hunk_lineno_new_vec);
+                    hunks_lineno_old.push(hunk_lineno_old_vec);
+                }
                 let patch_buf = patch.to_buf().unwrap();
                 let mut patch_str = "";
                 match patch_buf.as_str() {
@@ -149,6 +171,10 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsI
                     filename: format!("{}", pathbuf_to_string(delta_new_file.to_path_buf())),
                     status: format!("{:?}", delta_status),
                     patch: patch_str.to_string(),
+                    hunks: hunks,
+                    lines_origin: hunks_origins,
+                    lines_new: hunks_lineno_new,
+                    lines_old: hunks_lineno_old,
                 });
             }
         },

@@ -9,6 +9,7 @@ class Branches;
 class Commit;
 class Diffs;
 class Git;
+class Hunks;
 class Log;
 class Repositories;
 
@@ -99,10 +100,12 @@ public:
 private:
     Private * m_d;
     bool m_ownsPrivate;
+    Q_PROPERTY(QString commitOid READ commitOid NOTIFY commitOidChanged FINAL)
     explicit Diffs(bool owned, QObject *parent);
 public:
     explicit Diffs(QObject *parent = nullptr);
     ~Diffs();
+    QString commitOid() const;
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -132,6 +135,7 @@ private:
     void initHeaderData();
     void updatePersistentIndexes();
 Q_SIGNALS:
+    void commitOidChanged();
 };
 
 class Git : public QObject
@@ -143,11 +147,13 @@ private:
     Branches* const m_branches;
     Commit* const m_commit;
     Diffs* const m_diffs;
+    Hunks* const m_hunks;
     Private * m_d;
     bool m_ownsPrivate;
     Q_PROPERTY(Branches* branches READ branches NOTIFY branchesChanged FINAL)
     Q_PROPERTY(Commit* commit READ commit NOTIFY commitChanged FINAL)
     Q_PROPERTY(Diffs* diffs READ diffs NOTIFY diffsChanged FINAL)
+    Q_PROPERTY(Hunks* hunks READ hunks NOTIFY hunksChanged FINAL)
     Q_PROPERTY(QString revwalkFilter READ revwalkFilter NOTIFY revwalkFilterChanged FINAL)
     explicit Git(bool owned, QObject *parent);
 public:
@@ -159,14 +165,63 @@ public:
     Commit* commit();
     const Diffs* diffs() const;
     Diffs* diffs();
+    const Hunks* hunks() const;
+    Hunks* hunks();
     QString revwalkFilter() const;
     Q_INVOKABLE void load(const QString& path);
     Q_INVOKABLE void loadCommit(const QString& oid);
+    Q_INVOKABLE void loadDiff(const QString& oid, quint64 index);
 Q_SIGNALS:
     void branchesChanged();
     void commitChanged();
     void diffsChanged();
+    void hunksChanged();
     void revwalkFilterChanged();
+};
+
+class Hunks : public QAbstractItemModel
+{
+    Q_OBJECT
+    friend class Git;
+public:
+    class Private;
+private:
+    Private * m_d;
+    bool m_ownsPrivate;
+    explicit Hunks(bool owned, QObject *parent);
+public:
+    explicit Hunks(QObject *parent = nullptr);
+    ~Hunks();
+
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex &index) const override;
+    bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    bool canFetchMore(const QModelIndex &parent) const override;
+    void fetchMore(const QModelIndex &parent) override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+    int role(const char* name) const;
+    QHash<int, QByteArray> roleNames() const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
+    Q_INVOKABLE bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    Q_INVOKABLE QString hunk(int row) const;
+    Q_INVOKABLE QByteArray linesNew(int row) const;
+    Q_INVOKABLE QByteArray linesOld(int row) const;
+    Q_INVOKABLE QByteArray linesOrigin(int row) const;
+
+Q_SIGNALS:
+    // new data is ready to be made available to the model with fetchMore()
+    void newDataReady(const QModelIndex &parent) const;
+private:
+    QHash<QPair<int,Qt::ItemDataRole>, QVariant> m_headerData;
+    void initHeaderData();
+    void updatePersistentIndexes();
+Q_SIGNALS:
 };
 
 class Log : public QAbstractItemModel

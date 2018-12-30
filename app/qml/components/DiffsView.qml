@@ -6,9 +6,13 @@ import "../base"
 import "../style"
 
 Item {
+    id: root
     property int rowHeight: 18
+    property bool reload: false
+    signal diffChanged(string commitOid, int index)
     ListView {
         id: diffListViewRef
+        property bool reloadFirst: true
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
@@ -26,6 +30,14 @@ Item {
                 currentIndex = 0
             } else {
                 indexChanged = false
+            }
+            if (reload && !reloadFirst) {
+                reload = false;
+            } else {
+                if (reloadFirst) {
+                    reload = reloadFirst = false;
+                }
+                root.diffChanged(gitModel.diffs.commitOid, currentIndex);
             }
         }
         model: gitModel.diffs

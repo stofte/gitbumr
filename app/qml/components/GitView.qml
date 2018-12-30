@@ -20,6 +20,8 @@ QQC14.SplitView {
     Git {
         id: gitModel
         onRevwalkFilterChanged: {
+            // let the view know that the model is being reloaded
+            historyViewRef.reload = true;
             logModel.filter(revwalkFilter);
         }
     }
@@ -52,6 +54,8 @@ QQC14.SplitView {
             width: parent.width * 0.5
             clip: true
             onSelectedChanged: {
+                // assume index updates first, so it is safe to read here
+                diffsViewRef.reload = true;
                 gitModel.loadCommit(selected);
             }
         }
@@ -63,9 +67,13 @@ QQC14.SplitView {
                 width: 1
             }
             DiffsView {
+                id: diffsViewRef
                 width: parent.width * 0.5
+                onDiffChanged: {
+                    gitModel.loadDiff(commitOid, index);
+                }
             }
-            CommitView {
+            HunkView {
                 width: parent.width * 0.5
             }
         }
