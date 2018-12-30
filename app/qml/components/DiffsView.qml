@@ -16,7 +16,7 @@ Item {
         function computeGridWidth() {
             var pw = parent.width - 15; // 15 is for the scrollbar, visible or not
             var max_len = gitModel.diffs.maxFilenameLength * 7 + 15;
-            var times = Math.floor(pw / max_len);
+            var times = Math.max(Math.floor(pw / max_len), 1);
             var adjusted_len = (pw) / times;
             return isNaN(adjusted_len) ? 0 : adjusted_len;
         }
