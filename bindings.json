@@ -119,6 +119,7 @@
             "type": "List",
             "itemProperties": {
                 "hunk": { "type": "QString" },
+                "hunkMaxLineLength": { "type": "quint64" },
                 "linesOrigin": { "type": "QByteArray" },
                 "linesNew": { "type": "QByteArray" },
                 "linesOld": { "type": "QByteArray" }

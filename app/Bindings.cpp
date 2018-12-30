@@ -480,6 +480,7 @@ extern "C" {
 
 extern "C" {
     void hunks_data_hunk(const Hunks::Private*, int, QString*, qstring_set);
+    quint64 hunks_data_hunk_max_line_length(const Hunks::Private*, int);
     void hunks_data_lines_new(const Hunks::Private*, int, QByteArray*, qbytearray_set);
     void hunks_data_lines_old(const Hunks::Private*, int, QByteArray*, qbytearray_set);
     void hunks_data_lines_origin(const Hunks::Private*, int, QByteArray*, qbytearray_set);
@@ -559,6 +560,11 @@ QString Hunks::hunk(int row) const
     return s;
 }
 
+quint64 Hunks::hunkMaxLineLength(int row) const
+{
+    return hunks_data_hunk_max_line_length(m_d, row);
+}
+
 QByteArray Hunks::linesNew(int row) const
 {
     QByteArray b;
@@ -589,10 +595,12 @@ QVariant Hunks::data(const QModelIndex &index, int role) const
         case Qt::UserRole + 0:
             return QVariant::fromValue(hunk(index.row()));
         case Qt::UserRole + 1:
-            return QVariant::fromValue(linesNew(index.row()));
+            return QVariant::fromValue(hunkMaxLineLength(index.row()));
         case Qt::UserRole + 2:
-            return QVariant::fromValue(linesOld(index.row()));
+            return QVariant::fromValue(linesNew(index.row()));
         case Qt::UserRole + 3:
+            return QVariant::fromValue(linesOld(index.row()));
+        case Qt::UserRole + 4:
             return QVariant::fromValue(linesOrigin(index.row()));
         }
         break;
@@ -614,9 +622,10 @@ int Hunks::role(const char* name) const {
 QHash<int, QByteArray> Hunks::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
     names.insert(Qt::UserRole + 0, "hunk");
-    names.insert(Qt::UserRole + 1, "linesNew");
-    names.insert(Qt::UserRole + 2, "linesOld");
-    names.insert(Qt::UserRole + 3, "linesOrigin");
+    names.insert(Qt::UserRole + 1, "hunkMaxLineLength");
+    names.insert(Qt::UserRole + 2, "linesNew");
+    names.insert(Qt::UserRole + 3, "linesOld");
+    names.insert(Qt::UserRole + 4, "linesOrigin");
     return names;
 }
 QVariant Hunks::headerData(int section, Qt::Orientation orientation, int role) const

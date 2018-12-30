@@ -1,4 +1,9 @@
 import QtQuick 2.9
+import QtQuick.Controls 2.2
+import QtQuick.Layouts 1.3
+import QtQuick.Controls 1.4 as QQC14
+import QtGraphicalEffects 1.0
+import QtQml 2.11
 import "../base"
 import "../style"
 
@@ -71,15 +76,42 @@ Rectangle {
         clip: true
         delegate: Component {
             Item {
-                height: diffRef.contentHeight + 10
-                TextEdit {
-                    id: diffRef
-                    width: parent.width
-                    font.family: Style.fontNameFixedWidth
-                    //textFormat: Text.StyledText
-                    readOnly: true
-                    selectByMouse: true
-                    text: hunk
+                height: diffRef.contentHeight + 10 + hunkBotScrollRef.height
+                width: parent.width
+                Rectangle {
+                    anchors.fill: parent
+                    color: "transparent"
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 5
+                        color: "white"
+                        clip: true
+                        TextEdit {
+                            id: diffRef
+                            x: 0
+                            y: 0
+                            width: parent.width
+                            font.family: Style.fontNameFixedWidth
+                            readOnly: true
+                            selectByMouse: true
+                            text: hunk
+                        }
+                        DesktopScrollbar {
+                            id: hunkBotScrollRef
+                            verticalMode: false
+                            scrollWidth: parent.width
+                            scrollHeight: 15
+                            scrollSize: parent.width / diffRef.contentWidth
+                            anchors.bottom: parent.bottom
+                            onStep: {
+                                // todo
+                                //console.log("hunk pressed right", down, parent.width, diffRef.contentWidth, ' ==>> ', parent.width / diffRef.contentWidth)
+                            }
+                            onPositionChanged: {
+                                diffRef.x = -1 * position * diffRef.contentWidth
+                            }
+                        }
+                    }
                 }
             }
         }

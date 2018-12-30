@@ -25,19 +25,31 @@ Item {
     id: root
     property real scrollSize: 0
     property real scrollPosition: 0
+    property real nativeScrollPosition: 0
     property int scrollHeight: 100
     property int scrollWidth: 15
+    property bool verticalMode: true
 
     width: scrollWidth
+    height: scrollHeight
 
     signal step(bool down)
     signal positionChanged(real position)
 
     onScrollSizeChanged: {
-        if (scrollSize == 1 || isNaN(scrollSize)) {
-            scrollWidth = 0;
+        if (scrollSize >= 1 || isNaN(scrollSize)) {
+            // hides scroller
+            if (verticalMode) {
+                scrollWidth = 0;
+            } else {
+                scrollHeight = 0;
+            }
         } else {
-            scrollWidth = 15
+            if (verticalMode) {
+                scrollWidth = 15;
+            } else {
+                scrollHeight = 15;
+            }
         }
     }
 
@@ -62,10 +74,12 @@ Item {
     Rectangle {
         id: stepUpRef
         anchors.top: parent.top
+        anchors.left: parent.left
         height: 15
-        width: scrollWidth
+        width: 15
         color: Style.window
         Image {
+            rotation: verticalMode ? 0 : -90
             anchors.fill: parent
             source: scrollUpMouseRef.pressed ? "/res/svg/up-active.svg" : "/res/svg/up.svg"
         }
@@ -90,13 +104,15 @@ Item {
     ScrollBar {
         id: scrollerRef
         property bool manipulateList: false
-        height: scrollHeight - 30
-        width: scrollWidth
-        anchors.top: stepUpRef.bottom
+        height: scrollHeight - (verticalMode ? 30 : 0)
+        width: scrollWidth - (verticalMode ? 0 : 30)
+        anchors.top: verticalMode ? stepUpRef.bottom : parent.top
+        anchors.left: verticalMode ? parent.left : stepUpRef.right
         minimumSize: 0.02
         policy: ScrollBar.AlwaysOn
         size: scrollSize
         position: scrollPosition
+        orientation: verticalMode ? Qt.Vertical : Qt.Horizontal
         background: Rectangle {
             color: Style.window
         }
@@ -110,17 +126,19 @@ Item {
             if (manipulateList) {
                 root.positionChanged(scrollerRef.position);
             }
+            nativeScrollPosition = position;
         }
     }
 
     Rectangle {
-        anchors.top: scrollerRef.bottom
+        anchors.top: verticalMode ? scrollerRef.bottom : parent.top
+        anchors.left: verticalMode ? parent.left : scrollerRef.right
         height: 15
-        width: scrollWidth
+        width: 15
         color: Style.window
         Image {
             anchors.fill: parent
-            rotation: 180
+            rotation: verticalMode ? 180 : 90
             source: scrollDownMouseRef.pressed ? "/res/svg/up-active.svg" : "/res/svg/up.svg"
         }
         MouseArea {

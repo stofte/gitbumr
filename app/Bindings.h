@@ -214,6 +214,7 @@ public:
     Q_INVOKABLE bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Q_INVOKABLE QString hunk(int row) const;
+    Q_INVOKABLE quint64 hunkMaxLineLength(int row) const;
     Q_INVOKABLE QByteArray linesNew(int row) const;
     Q_INVOKABLE QByteArray linesOld(int row) const;
     Q_INVOKABLE QByteArray linesOrigin(int row) const;

@@ -149,6 +149,7 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
         let delta_status = delta.status();
         let mut patch = git2::Patch::from_diff(&diff, idx).unwrap().unwrap();
         let mut hunks = vec![];
+        let mut hunks_max_line_length = vec![];
         let mut hunks_origins = vec![];
         let mut hunks_lineno_new = vec![];
         let mut hunks_lineno_old = vec![];
@@ -158,12 +159,17 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
             let mut hunk_origins_vec = vec![];
             let mut hunk_lineno_new_vec = vec![];
             let mut hunk_lineno_old_vec = vec![];
+            let mut hunk_max_line_length = 0;
             for h_line_idx in 0..h_lines {
                 let h_line = patch.line_in_hunk(h_idx, h_line_idx).unwrap();
                 // attempt to decode the hunk line as utf8. if this fails, assume it's a binary thing and skip the hunk
                 match str::from_utf8(h_line.content()) {
                     Ok(h_line_decoded) => {
-                        hunk_str.push_str(str::from_utf8(h_line.content()).unwrap());
+                        let lstr = str::from_utf8(h_line.content()).unwrap();
+                        if lstr.len() > hunk_max_line_length {
+                            hunk_max_line_length = lstr.len();
+                        }
+                        hunk_str.push_str(lstr);
                         hunk_origins_vec.push(h_line.origin());
                         hunk_lineno_new_vec.push(h_line.new_lineno());
                         hunk_lineno_old_vec.push(h_line.old_lineno());
@@ -177,6 +183,7 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
             hunks_origins.push(hunk_origins_vec);
             hunks_lineno_new.push(hunk_lineno_new_vec);
             hunks_lineno_old.push(hunk_lineno_old_vec);
+            hunks_max_line_length.push(hunk_max_line_length);
         }
         let patch_buf = patch.to_buf().unwrap();
         let mut patch_str = "";
@@ -195,6 +202,7 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
             status: format!("{:?}", delta_status),
             patch: patch_str.to_string(),
             hunks: hunks,
+            hunks_max_line_length: hunks_max_line_length,
             lines_origin: hunks_origins,
             lines_new: hunks_lineno_new,
             lines_old: hunks_lineno_old,
