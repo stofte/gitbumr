@@ -596,7 +596,8 @@ pub trait DiffsTrait {
     }
     fn fetch_more(&mut self) {}
     fn sort(&mut self, u8, SortOrder) {}
-    fn filename(&self, index: usize) -> &str;
+    fn filename_new(&self, index: usize) -> &str;
+    fn filename_old(&self, index: usize) -> &str;
     fn patch(&self, index: usize) -> &str;
     fn status(&self, index: usize) -> &str;
 }
@@ -695,13 +696,25 @@ pub unsafe extern "C" fn diffs_sort(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn diffs_data_filename(
+pub unsafe extern "C" fn diffs_data_filename_new(
     ptr: *const Diffs, row: c_int,
     d: *mut QString,
     set: fn(*mut QString, *const c_char, len: c_int),
 ) {
     let o = &*ptr;
-    let data = o.filename(to_usize(row));
+    let data = o.filename_new(to_usize(row));
+    let s: *const c_char = data.as_ptr() as (*const c_char);
+    set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn diffs_data_filename_old(
+    ptr: *const Diffs, row: c_int,
+    d: *mut QString,
+    set: fn(*mut QString, *const c_char, len: c_int),
+) {
+    let o = &*ptr;
+    let data = o.filename_old(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
 }

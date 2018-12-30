@@ -253,7 +253,8 @@ extern "C" {
 };
 
 extern "C" {
-    void diffs_data_filename(const Diffs::Private*, int, QString*, qstring_set);
+    void diffs_data_filename_new(const Diffs::Private*, int, QString*, qstring_set);
+    void diffs_data_filename_old(const Diffs::Private*, int, QString*, qstring_set);
     void diffs_data_patch(const Diffs::Private*, int, QString*, qstring_set);
     void diffs_data_status(const Diffs::Private*, int, QString*, qstring_set);
     void diffs_sort(Diffs::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
@@ -325,10 +326,17 @@ Qt::ItemFlags Diffs::flags(const QModelIndex &i) const
     return flags;
 }
 
-QString Diffs::filename(int row) const
+QString Diffs::filenameNew(int row) const
 {
     QString s;
-    diffs_data_filename(m_d, row, &s, set_qstring);
+    diffs_data_filename_new(m_d, row, &s, set_qstring);
+    return s;
+}
+
+QString Diffs::filenameOld(int row) const
+{
+    QString s;
+    diffs_data_filename_old(m_d, row, &s, set_qstring);
     return s;
 }
 
@@ -353,10 +361,12 @@ QVariant Diffs::data(const QModelIndex &index, int role) const
     case 0:
         switch (role) {
         case Qt::UserRole + 0:
-            return QVariant::fromValue(filename(index.row()));
+            return QVariant::fromValue(filenameNew(index.row()));
         case Qt::UserRole + 1:
-            return QVariant::fromValue(patch(index.row()));
+            return QVariant::fromValue(filenameOld(index.row()));
         case Qt::UserRole + 2:
+            return QVariant::fromValue(patch(index.row()));
+        case Qt::UserRole + 3:
             return QVariant::fromValue(status(index.row()));
         }
         break;
@@ -377,9 +387,10 @@ int Diffs::role(const char* name) const {
 }
 QHash<int, QByteArray> Diffs::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
-    names.insert(Qt::UserRole + 0, "filename");
-    names.insert(Qt::UserRole + 1, "patch");
-    names.insert(Qt::UserRole + 2, "status");
+    names.insert(Qt::UserRole + 0, "filenameNew");
+    names.insert(Qt::UserRole + 1, "filenameOld");
+    names.insert(Qt::UserRole + 2, "patch");
+    names.insert(Qt::UserRole + 3, "status");
     return names;
 }
 QVariant Diffs::headerData(int section, Qt::Orientation orientation, int role) const

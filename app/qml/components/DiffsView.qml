@@ -128,7 +128,7 @@ Item {
                         x: 20
                         y: 3
                         color: "white"
-                        text: diffListViewRef.currentItem && diffListViewRef.currentItem.filenameText
+                        text: diffListViewRef.currentItem && diffListViewRef.currentItem.filenameNewText
                     }
                 }
             }
@@ -140,7 +140,7 @@ Item {
         delegate: Component {
             Item {
                 height: rowHeight
-                property string filenameText: filename
+                property string filenameNewText: filenameNew
                 property string statusText: status
                 width: diffListViewRef.gridItemWidth
                 clip: true
@@ -162,7 +162,7 @@ Item {
                 TextItem {
                     x: 20
                     y: 3
-                    text: filename
+                    text: filenameNewText
                 }
                 MouseArea {
                     anchors.fill: parent

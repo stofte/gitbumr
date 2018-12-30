@@ -4,7 +4,8 @@ use utils::{parse_diff_parent};
 
 #[derive(Default, Clone)]
 pub struct DiffsItem {
-    pub filename: String,
+    pub filename_new: String,
+    pub filename_old: String,
     // https://docs.rs/git2/0.7.5/git2/enum.Delta.html
     // Added
     // Deleted
@@ -62,8 +63,11 @@ impl DiffsTrait for Diffs {
     fn row_count(&self) -> usize {
         self.list.len()
     }
-    fn filename(&self, index: usize) -> &str {
-        &self.list[index].filename
+    fn filename_old(&self, index: usize) -> &str {
+        &self.list[index].filename_old
+    }
+    fn filename_new(&self, index: usize) -> &str {
+        &self.list[index].filename_new
     }
     fn patch(&self, index: usize) -> &str {
         &self.list[index].patch

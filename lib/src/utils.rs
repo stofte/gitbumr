@@ -184,12 +184,14 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
             Some(pstr) => patch_str = pstr,
             None => ()
         };
+        let old_fn_str = format!("{}", pathbuf_to_string(delta_old_file.to_path_buf()));
         let fn_str = format!("{}", pathbuf_to_string(delta_new_file.to_path_buf()));
         if fn_str.len() > max_filename_len {
             max_filename_len = fn_str.len();
         }
         list.push(DiffsItem {
-            filename: fn_str,
+            filename_old: old_fn_str,
+            filename_new: fn_str,
             status: format!("{:?}", delta_status),
             patch: patch_str.to_string(),
             hunks: hunks,

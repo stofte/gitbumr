@@ -105,7 +105,8 @@
         "Diffs": {
             "type": "List",
             "itemProperties": {
-                "filename": { "type": "QString" },
+                "filenameOld": { "type": "QString" },
+                "filenameNew": { "type": "QString" },
                 "status": { "type": "QString" },
                 "patch": { "type": "QString" }
             },
