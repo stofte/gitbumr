@@ -70,7 +70,6 @@ QQC14.SplitView {
                 id: diffsViewRef
                 height: 150
                 onDiffChanged: {
-                    console.log("DIFF:", status, filenameOld !== filenameNew, filenameOld +' => '+ filenameNew);
                     gitModel.loadDiff(commitOid, index);
                     hunkViewRef.filenameOld = filenameOld;
                     hunkViewRef.filenameNew = filenameNew;

@@ -6,10 +6,6 @@ Rectangle {
     property string filenameOld: ""
     property string filenameNew: ""
     property string statusText: ""
-    onFilenameNewChanged: {
-        console.log(filenameOld, filenameNew)
-    }
-
     color: "transparent"
     Rectangle {
         property bool isComparison: filenameOld !== filenameNew
