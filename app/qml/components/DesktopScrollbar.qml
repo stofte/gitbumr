@@ -116,7 +116,7 @@ Item {
     Rectangle {
         anchors.top: scrollerRef.bottom
         height: 15
-        width: 15
+        width: scrollWidth
         color: Style.window
         Image {
             anchors.fill: parent
