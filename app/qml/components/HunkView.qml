@@ -1,9 +1,10 @@
-import QtQuick 2.0
+import QtQuick 2.9
 import "../base"
 import "../style"
 
 ListView {
     model: gitModel.hunks
+    clip: true
     delegate: Component {
         Item {
             height: diffRef.contentHeight + 10

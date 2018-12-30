@@ -60,21 +60,21 @@ QQC14.SplitView {
             }
         }
         QQC14.SplitView {
-            orientation: Qt.Horizontal
+            orientation: Qt.Vertical
             width: parent.width * 0.5
             handleDelegate: Rectangle {
                 color: Style.dark
-                width: 1
+                height: 1
             }
             DiffsView {
                 id: diffsViewRef
-                width: parent.width * 0.5
+                height: 150
                 onDiffChanged: {
                     gitModel.loadDiff(commitOid, index);
                 }
             }
             HunkView {
-                width: parent.width * 0.5
+                height: parent.height - diffsViewRef.height
             }
         }
     }

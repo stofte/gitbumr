@@ -5,6 +5,17 @@ use utils::{parse_diff_parent};
 #[derive(Default, Clone)]
 pub struct DiffsItem {
     pub filename: String,
+    // https://docs.rs/git2/0.7.5/git2/enum.Delta.html
+    // Added
+    // Deleted
+    // Modified
+    // Renamed
+    // Copied
+    // Ignored
+    // Untracked
+    // Typechange
+    // Unreadable
+    // Conflicted
     pub status: String,
     pub patch: String,
     // The following cannot be accesed via the diffs list directly, but when a file
@@ -22,13 +33,17 @@ pub struct Diffs {
     model: DiffsList,
     pub list: Vec<DiffsItem>,
     pub commit_oid: String,
+    pub max_filename_length: u64,
 }
 
 pub fn fill_diffs(diffs: &mut Diffs, commit: &Commit, repo: &Repository, oid: String) {
     diffs.model.begin_reset_model();
-    diffs.list = parse_diff_parent(commit, repo);
+    let (newdifflist, difflist_max_fn_len) = parse_diff_parent(commit, repo);
+    diffs.list = newdifflist;
     diffs.commit_oid = oid;
     diffs.model.end_reset_model();
+    diffs.max_filename_length = difflist_max_fn_len as u64;
+    diffs.emit.max_filename_length_changed();
 }
 
 impl DiffsTrait for Diffs {
@@ -38,6 +53,7 @@ impl DiffsTrait for Diffs {
             model,
             list: vec![],
             commit_oid: "".to_string(),
+            max_filename_length: 0,
         }
     }
     fn emit(&mut self) -> &mut DiffsEmitter {
@@ -57,5 +73,8 @@ impl DiffsTrait for Diffs {
     }
     fn commit_oid(&self) -> &str {
         &self.commit_oid
+    }
+    fn max_filename_length(&self) -> u64 {
+        self.max_filename_length
     }
 }

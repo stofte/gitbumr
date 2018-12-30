@@ -486,6 +486,7 @@ pub struct DiffsQObject {}
 pub struct DiffsEmitter {
     qobject: Arc<AtomicPtr<DiffsQObject>>,
     commit_oid_changed: fn(*mut DiffsQObject),
+    max_filename_length_changed: fn(*mut DiffsQObject),
     new_data_ready: fn(*mut DiffsQObject),
 }
 
@@ -502,6 +503,7 @@ impl DiffsEmitter {
         DiffsEmitter {
             qobject: self.qobject.clone(),
             commit_oid_changed: self.commit_oid_changed,
+            max_filename_length_changed: self.max_filename_length_changed,
             new_data_ready: self.new_data_ready,
         }
     }
@@ -513,6 +515,12 @@ impl DiffsEmitter {
         let ptr = self.qobject.load(Ordering::SeqCst);
         if !ptr.is_null() {
             (self.commit_oid_changed)(ptr);
+        }
+    }
+    pub fn max_filename_length_changed(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.max_filename_length_changed)(ptr);
         }
     }
     pub fn new_data_ready(&mut self) {
@@ -579,6 +587,7 @@ pub trait DiffsTrait {
     fn new(emit: DiffsEmitter, model: DiffsList) -> Self;
     fn emit(&mut self) -> &mut DiffsEmitter;
     fn commit_oid(&self) -> &str;
+    fn max_filename_length(&self) -> u64;
     fn row_count(&self) -> usize;
     fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
     fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
@@ -596,6 +605,7 @@ pub trait DiffsTrait {
 pub extern "C" fn diffs_new(
     diffs: *mut DiffsQObject,
     diffs_commit_oid_changed: fn(*mut DiffsQObject),
+    diffs_max_filename_length_changed: fn(*mut DiffsQObject),
     diffs_new_data_ready: fn(*mut DiffsQObject),
     diffs_layout_about_to_be_changed: fn(*mut DiffsQObject),
     diffs_layout_changed: fn(*mut DiffsQObject),
@@ -612,6 +622,7 @@ pub extern "C" fn diffs_new(
     let diffs_emit = DiffsEmitter {
         qobject: Arc::new(AtomicPtr::new(diffs)),
         commit_oid_changed: diffs_commit_oid_changed,
+        max_filename_length_changed: diffs_max_filename_length_changed,
         new_data_ready: diffs_new_data_ready,
     };
     let model = DiffsList {
@@ -647,6 +658,11 @@ pub unsafe extern "C" fn diffs_commit_oid_get(
     let v = o.commit_oid();
     let s: *const c_char = v.as_ptr() as (*const c_char);
     set(p, s, to_c_int(v.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn diffs_max_filename_length_get(ptr: *const Diffs) -> u64 {
+    (&*ptr).max_filename_length()
 }
 
 #[no_mangle]
@@ -794,6 +810,7 @@ pub extern "C" fn git_new(
     commit_tree_changed: fn(*mut CommitQObject),
     diffs: *mut DiffsQObject,
     diffs_commit_oid_changed: fn(*mut DiffsQObject),
+    diffs_max_filename_length_changed: fn(*mut DiffsQObject),
     diffs_new_data_ready: fn(*mut DiffsQObject),
     diffs_layout_about_to_be_changed: fn(*mut DiffsQObject),
     diffs_layout_changed: fn(*mut DiffsQObject),
@@ -853,6 +870,7 @@ pub extern "C" fn git_new(
     let diffs_emit = DiffsEmitter {
         qobject: Arc::new(AtomicPtr::new(diffs)),
         commit_oid_changed: diffs_commit_oid_changed,
+        max_filename_length_changed: diffs_max_filename_length_changed,
         new_data_ready: diffs_new_data_ready,
     };
     let model = DiffsList {

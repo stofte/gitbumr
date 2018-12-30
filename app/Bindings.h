@@ -101,11 +101,13 @@ private:
     Private * m_d;
     bool m_ownsPrivate;
     Q_PROPERTY(QString commitOid READ commitOid NOTIFY commitOidChanged FINAL)
+    Q_PROPERTY(quint64 maxFilenameLength READ maxFilenameLength NOTIFY maxFilenameLengthChanged FINAL)
     explicit Diffs(bool owned, QObject *parent);
 public:
     explicit Diffs(QObject *parent = nullptr);
     ~Diffs();
     QString commitOid() const;
+    quint64 maxFilenameLength() const;
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -136,6 +138,7 @@ private:
     void updatePersistentIndexes();
 Q_SIGNALS:
     void commitOidChanged();
+    void maxFilenameLengthChanged();
 };
 
 class Git : public QObject

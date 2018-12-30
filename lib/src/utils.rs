@@ -124,8 +124,9 @@ pub fn get_chan_revwalker(path: String, filter: String, max_count: usize) -> Rec
     oids_r
 }
 
-pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsItem> {
+pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<DiffsItem>, usize) {
     let mut list = vec![];
+    let mut max_filename_len = 0;
     match commit.parent_id(0) {
         Ok(id) => {
             let t = commit.tree().unwrap();
@@ -151,10 +152,18 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsI
                     let mut hunk_lineno_old_vec = vec![];
                     for h_line_idx in 0..h_lines {
                         let h_line = patch.line_in_hunk(h_idx, h_line_idx).unwrap();
-                        hunk_str.push_str(str::from_utf8(h_line.content()).unwrap());
-                        hunk_origins_vec.push(h_line.origin());
-                        hunk_lineno_new_vec.push(h_line.new_lineno());
-                        hunk_lineno_old_vec.push(h_line.old_lineno());
+                        // attempt to decode the hunk line as utf8. if this fails, assume it's a binary thing and skip the hunk
+                        match str::from_utf8(h_line.content()) {
+                            Ok(h_line_decoded) => {
+                                hunk_str.push_str(str::from_utf8(h_line.content()).unwrap());
+                                hunk_origins_vec.push(h_line.origin());
+                                hunk_lineno_new_vec.push(h_line.new_lineno());
+                                hunk_lineno_old_vec.push(h_line.old_lineno());
+                            },
+                            Err(..) => {
+                                break;
+                            }
+                        }
                     }
                     hunks.push(hunk_str);
                     hunks_origins.push(hunk_origins_vec);
@@ -167,8 +176,12 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsI
                     Some(pstr) => patch_str = pstr,
                     None => ()
                 };
+                let fn_str = format!("{}", pathbuf_to_string(delta_new_file.to_path_buf()));
+                if fn_str.len() > max_filename_len {
+                    max_filename_len = fn_str.len();
+                }
                 list.push(DiffsItem {
-                    filename: format!("{}", pathbuf_to_string(delta_new_file.to_path_buf())),
+                    filename: fn_str,
                     status: format!("{:?}", delta_status),
                     patch: patch_str.to_string(),
                     hunks: hunks,
@@ -180,5 +193,5 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsI
         },
         Err(..) => panic!("handle root node!")
     }
-    list
+    (list, max_filename_len)
 }

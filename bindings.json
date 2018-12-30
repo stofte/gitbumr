@@ -110,7 +110,8 @@
                 "patch": { "type": "QString" }
             },
             "properties": {
-                "commitOid": { "type": "QString" }
+                "commitOid": { "type": "QString" },
+                "maxFilenameLength": { "type": "quint64" }
             }
         },
         "Hunks": {

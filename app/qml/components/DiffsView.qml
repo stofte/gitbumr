@@ -10,9 +10,45 @@ Item {
     property int rowHeight: 18
     property bool reload: false
     signal diffChanged(string commitOid, int index)
-    ListView {
+    GridView {
         id: diffListViewRef
+        // computes an adjusted column width based on the number of chars in a filepath.
+        function computeGridWidth() {
+            var pw = parent.width - 15; // 15 is for the scrollbar, visible or not
+            var max_len = gitModel.diffs.maxFilenameLength * 7 + 15;
+            var times = Math.floor(pw / max_len);
+            var adjusted_len = (pw) / times;
+            return isNaN(adjusted_len) ? 0 : adjusted_len;
+        }
+        function mapGitStatusToColor(status) {
+            switch (status) {
+                case "Modified":
+                    return "#F6C342";
+                case "Added":
+                    return "#14892C";
+                case "Deleted":
+                    return "#D04437";
+                default:
+                    throw new Error('mapGitStatusToColor hnhandled git status: ' + status);
+            }
+        }
+        function mapGitStatusToLetterOffset(status) {
+            switch (status) {
+                case "Modified":
+                    return 3;
+                case "Deleted":
+                case "Added":
+                    return 4;
+                default:
+                    throw new Error('mapGitStatusToLetterOffset unhandled git status: ' + status);
+            }
+        }
+        function mapGitStatusToLetter(status) {
+            return status.substring(0, 1);
+        }
+
         property bool reloadFirst: true
+        property int gridItemWidth: computeGridWidth()
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
@@ -40,26 +76,55 @@ Item {
                 root.diffChanged(gitModel.diffs.commitOid, currentIndex);
             }
         }
+        clip: true
+        cellHeight: rowHeight
+        cellWidth: gridItemWidth
         model: gitModel.diffs
         interactive: false
-        highlightResizeDuration: 1
+        //highlightResizeDuration: 1
         highlightMoveDuration: 1
-        highlightMoveVelocity: -1
+        //highlightMoveVelocity: -1
         keyNavigationEnabled: true
         highlightFollowsCurrentItem: true
         highlight: Component{
             Item {
+                function getColor() {
+                    return diffListViewRef.currentItem ? diffListViewRef.mapGitStatusToColor(diffListViewRef.currentItem.statusText)
+                                                       : "#000000";
+                }
+                function getLetter() {
+                    return diffListViewRef.currentItem ? diffListViewRef.mapGitStatusToLetter(diffListViewRef.currentItem.statusText)
+                                                       : "";
+                }
+                function getLetterOffset() {
+                    return diffListViewRef.currentItem ? diffListViewRef.mapGitStatusToLetterOffset(diffListViewRef.currentItem.statusText)
+                                                       : 0;
+                }
+
                 z: 2
                 height: rowHeight
                 clip: true
                 Rectangle{
                     anchors.fill: parent
                     color: Style.selection
+                    Rectangle {
+                        height: rowHeight - 5
+                        width: rowHeight - 5
+                        x: 3
+                        y: 2.5
+                        color: getColor()
+                        TextItem {
+                            x: getLetterOffset()
+                            y: 1
+                            color: "white"
+                            text: getLetter()
+                        }
+                    }
                     TextItem {
-                        x: 5
+                        x: 20
                         y: 3
                         color: "white"
-                        text: diffListViewRef.currentItem ? diffListViewRef.currentItem.filenameText : ""
+                        text: diffListViewRef.currentItem && diffListViewRef.currentItem.filenameText
                     }
                 }
             }
@@ -72,10 +137,25 @@ Item {
             Item {
                 height: rowHeight
                 property string filenameText: filename
-                width: parent.width
+                property string statusText: status
+                width: diffListViewRef.gridItemWidth
                 clip: true
+                Rectangle {
+                    height: rowHeight - 5
+                    width: rowHeight - 5
+                    x: 3
+                    y: 2.5
+                    color: diffListViewRef.mapGitStatusToColor(status)
+
+                    TextItem {
+                        x: diffListViewRef.mapGitStatusToLetterOffset(status)
+                        y: 1
+                        color: "white"
+                        text: diffListViewRef.mapGitStatusToLetter(status)
+                    }
+                }
                 TextItem {
-                    x: 5
+                    x: 20
                     y: 3
                     text: filename
                 }

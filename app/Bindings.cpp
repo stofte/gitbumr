@@ -66,6 +66,10 @@ namespace {
     {
         Q_EMIT o->commitOidChanged();
     }
+    inline void diffsMaxFilenameLengthChanged(Diffs* o)
+    {
+        Q_EMIT o->maxFilenameLengthChanged();
+    }
     inline void gitRevwalkFilterChanged(Git* o)
     {
         Q_EMIT o->revwalkFilterChanged();
@@ -396,7 +400,7 @@ bool Diffs::setHeaderData(int section, Qt::Orientation orientation, const QVaria
 }
 
 extern "C" {
-    Diffs::Private* diffs_new(Diffs*, void (*)(Diffs*),
+    Diffs::Private* diffs_new(Diffs*, void (*)(Diffs*), void (*)(Diffs*),
         void (*)(const Diffs*),
         void (*)(Diffs*),
         void (*)(Diffs*),
@@ -411,6 +415,7 @@ extern "C" {
         void (*)(Diffs*));
     void diffs_free(Diffs::Private*);
     void diffs_commit_oid_get(const Diffs::Private*, QString*, qstring_set);
+    quint64 diffs_max_filename_length_get(const Diffs::Private*);
 };
 
 extern "C" {
@@ -426,7 +431,7 @@ extern "C" {
         void (*)(Branches*, int, int, int),
         void (*)(Branches*),
         void (*)(Branches*, int, int),
-        void (*)(Branches*), Commit*, void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), Diffs*, void (*)(Diffs*),
+        void (*)(Branches*), Commit*, void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), void (*)(Commit*), Diffs*, void (*)(Diffs*), void (*)(Diffs*),
         void (*)(const Diffs*),
         void (*)(Diffs*),
         void (*)(Diffs*),
@@ -1151,6 +1156,7 @@ Diffs::Diffs(QObject *parent):
     QAbstractItemModel(parent),
     m_d(diffs_new(this,
         diffsCommitOidChanged,
+        diffsMaxFilenameLengthChanged,
         [](const Diffs* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -1210,6 +1216,10 @@ QString Diffs::commitOid() const
     QString v;
     diffs_commit_oid_get(m_d, &v, set_qstring);
     return v;
+}
+quint64 Diffs::maxFilenameLength() const
+{
+    return diffs_max_filename_length_get(m_d);
 }
 Git::Git(bool /*owned*/, QObject *parent):
     QObject(parent),
@@ -1275,6 +1285,7 @@ Git::Git(QObject *parent):
         commitTimeChanged,
         commitTreeChanged, m_diffs,
         diffsCommitOidChanged,
+        diffsMaxFilenameLengthChanged,
         [](const Diffs* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
