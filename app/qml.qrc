@@ -15,5 +15,6 @@
         <file>qml/components/DiffsView.qml</file>
         <file>qml/components/HunkView.qml</file>
         <file>qml/components/DesktopScrollbar.qml</file>
+        <file>qml/components/DiffStatusIcon.qml</file>
     </qresource>
 </RCC>

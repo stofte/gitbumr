@@ -9,7 +9,7 @@ Item {
     id: root
     property int rowHeight: 18
     property bool reload: false
-    signal diffChanged(string commitOid, int index)
+    signal diffChanged(string commitOid, int index, string status, string filenameOld, string filenameNew)
     GridView {
         id: diffListViewRef
         // computes an adjusted column width based on the number of chars in a filepath.
@@ -20,36 +20,6 @@ Item {
             var adjusted_len = (pw) / times;
             return isNaN(adjusted_len) ? 0 : adjusted_len;
         }
-        function mapGitStatusToColor(status) {
-            switch (status) {
-                case "Modified":
-                    return "#F6C342";
-                case "Added":
-                    return "#14892C";
-                case "Deleted":
-                    return "#D04437";
-                case "Renamed":
-                    return "#AC707A";
-                default:
-                    throw new Error('mapGitStatusToColor hnhandled git status: ' + status);
-            }
-        }
-        function mapGitStatusToLetterOffset(status) {
-            switch (status) {
-                case "Modified":
-                    return 3;
-                case "Renamed":
-                case "Deleted":
-                case "Added":
-                    return 4;
-                default:
-                    throw new Error('mapGitStatusToLetterOffset unhandled git status: ' + status);
-            }
-        }
-        function mapGitStatusToLetter(status) {
-            return status.substring(0, 1);
-        }
-
         property bool reloadFirst: true
         property int gridItemWidth: computeGridWidth()
         anchors.top: parent.top
@@ -76,7 +46,13 @@ Item {
                 if (reloadFirst) {
                     reload = reloadFirst = false;
                 }
-                root.diffChanged(gitModel.diffs.commitOid, currentIndex);
+                root.diffChanged(
+                    gitModel.diffs.commitOid,
+                    currentIndex,
+                    currentItem.statusText,
+                    currentItem.filenameOldText,
+                    currentItem.filenameNewText
+                );
             }
         }
         clip: true
@@ -84,45 +60,20 @@ Item {
         cellWidth: gridItemWidth
         model: gitModel.diffs
         interactive: false
-        //highlightResizeDuration: 1
         highlightMoveDuration: 1
-        //highlightMoveVelocity: -1
         keyNavigationEnabled: true
         highlightFollowsCurrentItem: true
         highlight: Component{
             Item {
-                function getColor() {
-                    return diffListViewRef.currentItem ? diffListViewRef.mapGitStatusToColor(diffListViewRef.currentItem.statusText)
-                                                       : "#000000";
-                }
-                function getLetter() {
-                    return diffListViewRef.currentItem ? diffListViewRef.mapGitStatusToLetter(diffListViewRef.currentItem.statusText)
-                                                       : "";
-                }
-                function getLetterOffset() {
-                    return diffListViewRef.currentItem ? diffListViewRef.mapGitStatusToLetterOffset(diffListViewRef.currentItem.statusText)
-                                                       : 0;
-                }
-
                 z: 2
                 height: rowHeight
                 clip: true
                 Rectangle{
                     anchors.fill: parent
                     color: Style.selection
-                    Rectangle {
-                        height: rowHeight - 5
-                        width: rowHeight - 5
-                        x: 3
-                        y: 2.5
-                        color: getColor()
-                        TextItem {
-                            x: getLetterOffset()
-                            y: 1
-                            color: "white"
-                            font.weight: Font.Bold
-                            text: getLetter()
-                        }
+                    DiffStatusIcon {
+                        statusValue: diffListViewRef.currentItem ? diffListViewRef.currentItem.statusText : ""
+                        iconSize: rowHeight - 5
                     }
                     TextItem {
                         x: 20
@@ -140,24 +91,14 @@ Item {
         delegate: Component {
             Item {
                 height: rowHeight
+                property string filenameOldText: filenameOld
                 property string filenameNewText: filenameNew
                 property string statusText: status
                 width: diffListViewRef.gridItemWidth
                 clip: true
-                Rectangle {
-                    height: rowHeight - 5
-                    width: rowHeight - 5
-                    x: 3
-                    y: 2.5
-                    color: diffListViewRef.mapGitStatusToColor(status)
-
-                    TextItem {
-                        x: diffListViewRef.mapGitStatusToLetterOffset(status)
-                        y: 1
-                        color: "white"
-                        font.weight: Font.Bold
-                        text: diffListViewRef.mapGitStatusToLetter(status)
-                    }
+                DiffStatusIcon {
+                    statusValue: status
+                    iconSize: rowHeight - 5
                 }
                 TextItem {
                     x: 20
