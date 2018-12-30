@@ -33,6 +33,14 @@ Item {
     signal step(bool down)
     signal positionChanged(real position)
 
+    onScrollSizeChanged: {
+        if (scrollSize == 1 || isNaN(scrollSize)) {
+            scrollWidth = 0;
+        } else {
+            scrollWidth = 15
+        }
+    }
+
     Timer {
         id: scrollStepTimerTimeoutRef
         interval: 500; running: false; repeat: false

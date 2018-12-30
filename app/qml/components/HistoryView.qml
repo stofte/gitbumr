@@ -86,7 +86,7 @@ Rectangle {
                                     x: 4 // not sure why, but text can get chopped off otherwise
                                     color: "white"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: historyListView.currentItem.summaryText
+                                    text: historyListView.currentItem && historyListView.currentItem.summaryText
                                 }
                             }
                             Rectangle {
@@ -99,7 +99,7 @@ Rectangle {
                                     id: hlAuthorRef
                                     color: "white"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: historyListView.currentItem.authorText
+                                    text: historyListView.currentItem && historyListView.currentItem.authorText
                                 }
                             }
                             Rectangle {
@@ -113,7 +113,7 @@ Rectangle {
                                     color: "white"
                                     anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: historyListView.currentItem.timeText
+                                    text: historyListView.currentItem && historyListView.currentItem.timeText
                                 }
                             }
                         }
@@ -147,12 +147,12 @@ Rectangle {
                                 anchors.fill: parent
                                 font.pointSize: Style.fontPointSize
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                                text: historyListView.currentItem.messageText
+                                text: historyListView.currentItem && historyListView.currentItem.messageText
                             }
                         }
                         ScrollBar {
                             id: detailsScrollRef
-                            width: 20
+                            width: 15
                             anchors.right: parent.right
                             height: parent.height
                             policy: ScrollBar.AlwaysOn

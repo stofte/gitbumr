@@ -134,6 +134,10 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsI
             let diff = repo.diff_tree_to_tree(Some(&parent_tree), Some(&t), None).unwrap();
             let delta_cnt = diff.deltas().len();
             for idx in 0..delta_cnt {
+                let delta = diff.get_delta(idx).unwrap();
+                let delta_old_file = delta.old_file().path().unwrap();
+                let delta_new_file = delta.new_file().path().unwrap();
+                let delta_status = delta.status();
                 let mut patch = git2::Patch::from_diff(&diff, idx).unwrap().unwrap();
                 let patch_buf = patch.to_buf().unwrap();
                 let mut patch_str = "";
@@ -142,8 +146,8 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> Vec<DiffsI
                     None => ()
                 };
                 list.push(DiffsItem {
-                    filename: "".to_string(),
-                    status: "".to_string(),
+                    filename: format!("{}", pathbuf_to_string(delta_new_file.to_path_buf())),
+                    status: format!("{:?}", delta_status),
                     patch: patch_str.to_string(),
                 });
             }

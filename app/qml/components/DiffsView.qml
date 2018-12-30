@@ -1,47 +1,102 @@
-import QtQuick 2.0
+import QtQuick 2.9
 import RustCode 1.0
+import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import "../base"
 import "../style"
 
 Item {
+    property int rowHeight: 18
     ListView {
-        clip: true
-        anchors.fill: parent
+        id: diffListViewRef
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.right: diffScrollRef.left
+        currentIndex: 0
+        // todo: must be a better way to detect list has been reloaded/rebound.
+        // this relies on the fact that currentIndex fires before currentItem,
+        // but at least this resets the selected row when changing commits.
+        property bool indexChanged: false
+        onCurrentIndexChanged: {
+            indexChanged = true
+        }
+        onCurrentItemChanged: {
+            if (!indexChanged) {
+                currentIndex = 0
+            } else {
+                indexChanged = false
+            }
+        }
         model: gitModel.diffs
         interactive: false
-        delegate: Component {
-            ColumnLayout {
-                TextEdit {
-                    id: textRef
-                    font.family: Style.fontNameFixedWidth
-                    width: parent.width
-                    wrapMode: Text.NoWrap
-                    readOnly: true
-                    selectByMouse: true
-                    text: filename
-                }
-                TextEdit {
-                    id: diffRef
-                    width: parent.width
-                    font.family: Style.fontNameFixedWidth
-                    textFormat: Text.RichText
-                    readOnly: true
-                    selectByMouse: true
-                    text: "<table>
-      <tr>
-        <td bgcolor='red'>Jill</td>
-        <td>Smith</td>
-        <td>50</td>
-      </tr>
-      <tr>
-        <td>Eve</td>
-        <td>Jackson</td>
-        <td>94</td>
-      </tr>
-    </table>"
+        highlightResizeDuration: 1
+        highlightMoveDuration: 1
+        highlightMoveVelocity: -1
+        keyNavigationEnabled: true
+        highlightFollowsCurrentItem: true
+        highlight: Component{
+            Item {
+                z: 2
+                height: rowHeight
+                clip: true
+                Rectangle{
+                    anchors.fill: parent
+                    color: Style.selection
+                    TextItem {
+                        x: 5
+                        y: 3
+                        color: "white"
+                        text: diffListViewRef.currentItem ? diffListViewRef.currentItem.filenameText : ""
+                    }
                 }
             }
+        }
+        ScrollBar.vertical: ScrollBar {
+            id: diffRealScrollRef
+            width: 0
+        }
+        delegate: Component {
+            Item {
+                height: rowHeight
+                property string filenameText: filename
+                width: parent.width
+                clip: true
+                TextItem {
+                    x: 5
+                    y: 3
+                    text: filename
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onPressed: {
+                        diffListViewRef.currentIndex = index;
+                        diffListViewRef.forceActiveFocus();
+                    }
+                    onWheel: {
+                        var isDown = wheel.angleDelta.y < 0;
+                        var topIdx = Math.max(0, diffListViewRef.indexAt(1, diffListViewRef.contentY + 1) + 3 * (isDown ? 1 : -1));
+                        diffListViewRef.positionViewAtIndex(topIdx, ListView.Beginning);
+                    }
+                }
+            }
+        }
+    }
+
+    DesktopScrollbar {
+        id: diffScrollRef
+        anchors.top: parent.top
+        anchors.right: parent.right
+        scrollHeight: parent.height
+        scrollSize: diffRealScrollRef.size
+        scrollPosition: diffRealScrollRef.position
+        onPositionChanged: {
+            diffRealScrollRef.position = position
+        }
+        onStep: {
+            var stepVal = down ? 1 : -1;
+            var topIdx = Math.max(0, diffListViewRef.indexAt(1, diffListViewRef.contentY + 1) + stepVal);
+            diffListViewRef.positionViewAtIndex(topIdx, ListView.Beginning);
         }
     }
 }
