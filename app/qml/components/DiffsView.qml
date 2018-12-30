@@ -28,6 +28,8 @@ Item {
                     return "#14892C";
                 case "Deleted":
                     return "#D04437";
+                case "Renamed":
+                    return "#AC707A";
                 default:
                     throw new Error('mapGitStatusToColor hnhandled git status: ' + status);
             }
@@ -36,6 +38,7 @@ Item {
             switch (status) {
                 case "Modified":
                     return 3;
+                case "Renamed":
                 case "Deleted":
                 case "Added":
                     return 4;
@@ -117,6 +120,7 @@ Item {
                             x: getLetterOffset()
                             y: 1
                             color: "white"
+                            font.weight: Font.Bold
                             text: getLetter()
                         }
                     }
@@ -151,6 +155,7 @@ Item {
                         x: diffListViewRef.mapGitStatusToLetterOffset(status)
                         y: 1
                         color: "white"
+                        font.weight: Font.Bold
                         text: diffListViewRef.mapGitStatusToLetter(status)
                     }
                 }

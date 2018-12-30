@@ -1,5 +1,5 @@
 use std::{path::{PathBuf}, thread, str};
-use git2::{Repository, BranchType, Oid, Sort};
+use git2::{Repository, BranchType, Oid, Sort, DiffOptions, DiffFindOptions};
 use chrono::{FixedOffset, DateTime, NaiveDateTime, Local};
 use chrono_humanize::HumanTime;
 use crossbeam::{channel::Receiver, channel};
@@ -128,14 +128,19 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
     let mut list = vec![];
     let mut max_filename_len = 0;
     let t = commit.tree().unwrap();
-    let diff = match commit.parent_id(0) {
+    let mut diff_find_opts = DiffFindOptions::new();
+    // not sure what the diff opts are really used for.
+    // find_options controls the actual similary/rename checking.
+    let mut diff_opts = DiffOptions::new();
+    let mut diff = match commit.parent_id(0) {
         Ok(id) => {
             let parent_c = repo.find_commit(id).unwrap();
             let parent_tree = repo.find_tree(parent_c.tree_id()).unwrap();
-            repo.diff_tree_to_tree(Some(&parent_tree), Some(&t), None).unwrap()
+            repo.diff_tree_to_tree(Some(&parent_tree), Some(&t), Some(&mut diff_opts)).unwrap()
         },
-        Err(..) => repo.diff_tree_to_tree(None, Some(&t), None).unwrap()
+        Err(..) => repo.diff_tree_to_tree(None, Some(&t), Some(&mut diff_opts)).unwrap()
     };
+    diff.find_similar(Some(&mut diff_find_opts));
     let delta_cnt = diff.deltas().len();
     for idx in 0..delta_cnt {
         let delta = diff.get_delta(idx).unwrap();
