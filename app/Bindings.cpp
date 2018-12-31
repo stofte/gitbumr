@@ -482,7 +482,11 @@ extern "C" {
     void hunks_data_hunk(const Hunks::Private*, int, QString*, qstring_set);
     quint64 hunks_data_hunk_max_line_length(const Hunks::Private*, int);
     void hunks_data_lines_new(const Hunks::Private*, int, QByteArray*, qbytearray_set);
+    quint64 hunks_data_lines_new_cols(const Hunks::Private*, int);
+    quint64 hunks_data_lines_new_from(const Hunks::Private*, int);
+    quint64 hunks_data_lines_new_to(const Hunks::Private*, int);
     void hunks_data_lines_old(const Hunks::Private*, int, QByteArray*, qbytearray_set);
+    quint64 hunks_data_lines_old_cols(const Hunks::Private*, int);
     void hunks_data_lines_origin(const Hunks::Private*, int, QByteArray*, qbytearray_set);
     void hunks_sort(Hunks::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
 
@@ -572,11 +576,31 @@ QByteArray Hunks::linesNew(int row) const
     return b;
 }
 
+quint64 Hunks::linesNewCols(int row) const
+{
+    return hunks_data_lines_new_cols(m_d, row);
+}
+
+quint64 Hunks::linesNewFrom(int row) const
+{
+    return hunks_data_lines_new_from(m_d, row);
+}
+
+quint64 Hunks::linesNewTo(int row) const
+{
+    return hunks_data_lines_new_to(m_d, row);
+}
+
 QByteArray Hunks::linesOld(int row) const
 {
     QByteArray b;
     hunks_data_lines_old(m_d, row, &b, set_qbytearray);
     return b;
+}
+
+quint64 Hunks::linesOldCols(int row) const
+{
+    return hunks_data_lines_old_cols(m_d, row);
 }
 
 QByteArray Hunks::linesOrigin(int row) const
@@ -599,8 +623,16 @@ QVariant Hunks::data(const QModelIndex &index, int role) const
         case Qt::UserRole + 2:
             return QVariant::fromValue(linesNew(index.row()));
         case Qt::UserRole + 3:
-            return QVariant::fromValue(linesOld(index.row()));
+            return QVariant::fromValue(linesNewCols(index.row()));
         case Qt::UserRole + 4:
+            return QVariant::fromValue(linesNewFrom(index.row()));
+        case Qt::UserRole + 5:
+            return QVariant::fromValue(linesNewTo(index.row()));
+        case Qt::UserRole + 6:
+            return QVariant::fromValue(linesOld(index.row()));
+        case Qt::UserRole + 7:
+            return QVariant::fromValue(linesOldCols(index.row()));
+        case Qt::UserRole + 8:
             return QVariant::fromValue(linesOrigin(index.row()));
         }
         break;
@@ -624,8 +656,12 @@ QHash<int, QByteArray> Hunks::roleNames() const {
     names.insert(Qt::UserRole + 0, "hunk");
     names.insert(Qt::UserRole + 1, "hunkMaxLineLength");
     names.insert(Qt::UserRole + 2, "linesNew");
-    names.insert(Qt::UserRole + 3, "linesOld");
-    names.insert(Qt::UserRole + 4, "linesOrigin");
+    names.insert(Qt::UserRole + 3, "linesNewCols");
+    names.insert(Qt::UserRole + 4, "linesNewFrom");
+    names.insert(Qt::UserRole + 5, "linesNewTo");
+    names.insert(Qt::UserRole + 6, "linesOld");
+    names.insert(Qt::UserRole + 7, "linesOldCols");
+    names.insert(Qt::UserRole + 8, "linesOrigin");
     return names;
 }
 QVariant Hunks::headerData(int section, Qt::Orientation orientation, int role) const
@@ -666,6 +702,7 @@ extern "C" {
     void log_data_author(const Log::Private*, int, QString*, qstring_set);
     void log_data_cid(const Log::Private*, int, QString*, qstring_set);
     void log_data_graph(const Log::Private*, int, QByteArray*, qbytearray_set);
+    bool log_data_is_merge(const Log::Private*, int);
     void log_data_message(const Log::Private*, int, QString*, qstring_set);
     void log_data_summary(const Log::Private*, int, QString*, qstring_set);
     void log_data_time(const Log::Private*, int, QString*, qstring_set);
@@ -760,6 +797,11 @@ QByteArray Log::graph(int row) const
     return b;
 }
 
+bool Log::isMerge(int row) const
+{
+    return log_data_is_merge(m_d, row);
+}
+
 QString Log::message(int row) const
 {
     QString s;
@@ -801,12 +843,14 @@ QVariant Log::data(const QModelIndex &index, int role) const
         case Qt::UserRole + 2:
             return QVariant::fromValue(graph(index.row()));
         case Qt::UserRole + 3:
-            return QVariant::fromValue(message(index.row()));
+            return QVariant::fromValue(isMerge(index.row()));
         case Qt::UserRole + 4:
-            return QVariant::fromValue(summary(index.row()));
+            return QVariant::fromValue(message(index.row()));
         case Qt::UserRole + 5:
-            return QVariant::fromValue(time(index.row()));
+            return QVariant::fromValue(summary(index.row()));
         case Qt::UserRole + 6:
+            return QVariant::fromValue(time(index.row()));
+        case Qt::UserRole + 7:
             return QVariant::fromValue(timeHumanized(index.row()));
         }
         break;
@@ -830,10 +874,11 @@ QHash<int, QByteArray> Log::roleNames() const {
     names.insert(Qt::UserRole + 0, "author");
     names.insert(Qt::UserRole + 1, "cid");
     names.insert(Qt::UserRole + 2, "graph");
-    names.insert(Qt::UserRole + 3, "message");
-    names.insert(Qt::UserRole + 4, "summary");
-    names.insert(Qt::UserRole + 5, "time");
-    names.insert(Qt::UserRole + 6, "timeHumanized");
+    names.insert(Qt::UserRole + 3, "isMerge");
+    names.insert(Qt::UserRole + 4, "message");
+    names.insert(Qt::UserRole + 5, "summary");
+    names.insert(Qt::UserRole + 6, "time");
+    names.insert(Qt::UserRole + 7, "timeHumanized");
     return names;
 }
 QVariant Log::headerData(int section, Qt::Orientation orientation, int role) const

@@ -42,7 +42,6 @@ Rectangle {
                 timerRef.commitId = currentItem.commitId;
             }
         }
-
         onCurrentIndexChanged: {
             if (currentItem) {
                 timerRef.restart();
@@ -85,7 +84,6 @@ Rectangle {
                     width: parent.width - graphViewSplitter.width - 8
                     height: rowHeight
                     color: Style.selection
-
                     Rectangle {
                         anchors.fill: parent
                         // these two margin values have been set using visual inspection.
@@ -160,16 +158,19 @@ Rectangle {
                             color: "transparent"
                             TextEdit {
                                 id: hlDetailsMessageRef
+                                x: 10
+                                y: -detailsScrollRef.position * height + 10
+                                width: parent.width - x
                                 readOnly: true
                                 selectByMouse: true
-                                anchors.margins: 10
-                                anchors.fill: parent
+                                //anchors.margins: 10
+                                //anchors.fill: parent
                                 font.pointSize: Style.fontPointSize
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                                 text: historyListView.currentItem && historyListView.currentItem.messageText
                             }
                         }
-                        ScrollBar {
+                        CustomScrollBar {
                             id: detailsScrollRef
                             width: 15
                             anchors.right: parent.right
@@ -177,19 +178,11 @@ Rectangle {
                             policy: ScrollBar.AlwaysOn
                             size: parent.height / hlDetailsContentRef.height
                             visible: (parent.height / hlDetailsContentRef.height) < 1
-                            contentItem: Rectangle {
-                                color: detailsScrollRef.pressed ? Style.controlActive : Style.control
-                            }
-                            onPositionChanged: {
-                                hlDetailsContentRef.y = -1 * hlDetailsContentRef.height * position;
-                            }
-                            onSizeChanged: {
-                                // todo: this only works if the size between different selections
-                                // have actual different heights, otherwise the scrollbar might not
-                                // reset between row selections.
-                                hlDetailsContentRef.y = 0;
-                                position = 0;
-                            }
+                            stepSize: 1 / hlDetailsMessageRef.lineCount
+                            captureMouseWheel: true
+                            capturePositiveSide: false
+                            containerOtherSize: parent.width
+                            scrollTarget: historyListView.currentItem
                         }
                     }
                 }

@@ -1096,7 +1096,11 @@ pub trait HunksTrait {
     fn hunk(&self, index: usize) -> &str;
     fn hunk_max_line_length(&self, index: usize) -> u64;
     fn lines_new(&self, index: usize) -> &[u8];
+    fn lines_new_cols(&self, index: usize) -> u64;
+    fn lines_new_from(&self, index: usize) -> u64;
+    fn lines_new_to(&self, index: usize) -> u64;
     fn lines_old(&self, index: usize) -> &[u8];
+    fn lines_old_cols(&self, index: usize) -> u64;
     fn lines_origin(&self, index: usize) -> &[u8];
 }
 
@@ -1203,6 +1207,24 @@ pub unsafe extern "C" fn hunks_data_lines_new(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn hunks_data_lines_new_cols(ptr: *const Hunks, row: c_int) -> u64 {
+    let o = &*ptr;
+    o.lines_new_cols(to_usize(row)).into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_data_lines_new_from(ptr: *const Hunks, row: c_int) -> u64 {
+    let o = &*ptr;
+    o.lines_new_from(to_usize(row)).into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_data_lines_new_to(ptr: *const Hunks, row: c_int) -> u64 {
+    let o = &*ptr;
+    o.lines_new_to(to_usize(row)).into()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn hunks_data_lines_old(
     ptr: *const Hunks, row: c_int,
     d: *mut QByteArray,
@@ -1212,6 +1234,12 @@ pub unsafe extern "C" fn hunks_data_lines_old(
     let data = o.lines_old(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_data_lines_old_cols(ptr: *const Hunks, row: c_int) -> u64 {
+    let o = &*ptr;
+    o.lines_old_cols(to_usize(row)).into()
 }
 
 #[no_mangle]
@@ -1328,6 +1356,7 @@ pub trait LogTrait {
     fn author(&self, index: usize) -> &str;
     fn cid(&self, index: usize) -> &str;
     fn graph(&self, index: usize) -> &[u8];
+    fn is_merge(&self, index: usize) -> bool;
     fn message(&self, index: usize) -> &str;
     fn summary(&self, index: usize) -> &str;
     fn time(&self, index: usize) -> &str;
@@ -1458,6 +1487,12 @@ pub unsafe extern "C" fn log_data_graph(
     let data = o.graph(to_usize(row));
     let s: *const c_char = data.as_ptr() as (*const c_char);
     set(d, s, to_c_int(data.len()));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn log_data_is_merge(ptr: *const Log, row: c_int) -> bool {
+    let o = &*ptr;
+    o.is_merge(to_usize(row)).into()
 }
 
 #[no_mangle]

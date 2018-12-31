@@ -1,5 +1,6 @@
 use interface::{HunksTrait, HunksEmitter, HunksList};
 use implementation::diffs::Diffs;
+use utils::MAX_U32_INT;
 
 #[derive(Default, Clone)]
 pub struct HunksItem {
@@ -7,7 +8,11 @@ pub struct HunksItem {
     pub hunk_max_line_length: u64,
     pub lines_origin: Vec<u8>,
     pub lines_old: Vec<u8>,
+    pub lines_old_cols: u64,
     pub lines_new: Vec<u8>,
+    pub lines_new_cols: u64,
+    pub lines_new_from: u64,
+    pub lines_new_to: u64,
 }
 
 pub struct Hunks {
@@ -18,20 +23,56 @@ pub struct Hunks {
 
 fn map_git_origin_sigil(c: char) -> u8 {
     match c {
-        ' ' => 0,
-        '+' => 1,
-        '-' => 2,
+        ' ' => 0, // context line
+        '+' => 1, // added line
+        '-' => 2, // deleted line
+        '<' => 3,
+        '>' => 4,
+        '=' => 5,
         _   => panic!("unexpected sigil in map_git_origin_sigil: {}", c)
     }
 }
 
+fn split_into_bytes(inp: Vec<u32>) -> Vec<u8> {
+    let mut outp = vec![];
+    for i in inp.iter() {
+        outp.push(*i as u8);
+        outp.push((*i >> 8) as u8);
+        outp.push((*i >> 16) as u8);
+        outp.push((*i >> 24) as u8);
+    }
+    outp
+}
+
 fn map_from_diff_to_hunk_list(hunk: &str, hunk_max_line_length: usize, lines_origin: &Vec<char>, lines_old: &Vec<Option<u32>>, lines_new: &Vec<Option<u32>>) -> HunksItem {
+    let l_origins_as_ints: Vec<u8> = lines_origin.iter().map(|c| map_git_origin_sigil(*c)).collect();
+    let l_old_as_ints: Vec<u32> = lines_old.iter().map(|c| match c { Some(cv) => *cv, None => MAX_U32_INT }).collect();
+    let l_new_as_ints: Vec<u32> = lines_new.iter().map(|c| match c { Some(cv) => *cv, None => MAX_U32_INT }).collect();
+    // todo find something less retarded
+    let mut l_old_max = 0 as u64;
+    let mut l_new_max = 0 as u64;
+    let mut l_new_from = 0 as u64;
+    let mut l_new_to = 0 as u64;
+    if lines_old.iter().any(|c| c.is_some()) {
+        l_old_max = format!("{}", lines_old.iter().max().unwrap().unwrap()).len() as u64;
+    }
+    if lines_new.iter().any(|c| c.is_some()) {
+        let lmax = lines_new.iter().max().unwrap().unwrap();
+        let lmin = lines_new.iter().filter(|c| c.is_some()).min().unwrap().unwrap();
+        l_new_max = format!("{}", lmax).len() as u64;
+        l_new_from = lmin as u64;
+        l_new_to = lmax as u64;
+    }
     HunksItem {
         hunk: hunk.to_string(),
         hunk_max_line_length: hunk_max_line_length as u64,
-        lines_origin: vec![],
-        lines_old: vec![],
-        lines_new: vec![],
+        lines_origin: l_origins_as_ints,
+        lines_old: split_into_bytes(l_old_as_ints),
+        lines_old_cols: l_old_max,
+        lines_new: split_into_bytes(l_new_as_ints),
+        lines_new_cols: l_new_max,
+        lines_new_from: l_new_from,
+        lines_new_to: l_new_to,
     }
 }
 
@@ -42,7 +83,13 @@ pub fn fill_hunks(hunks: &mut Hunks, diffs: &Diffs, index: u64, oid: &str) {
     let mut hv = vec![];
     let diff = &diffs.list[index as usize];
     for h_idx in 0..diff.hunks.len() {
-        hv.push(map_from_diff_to_hunk_list(&diff.hunks[h_idx], diff.hunks_max_line_length[h_idx], &vec![], &vec![], &vec![]));
+        hv.push(map_from_diff_to_hunk_list(
+            &diff.hunks[h_idx],
+            diff.hunks_max_line_length[h_idx],
+            &diff.lines_origin[h_idx],
+            &diff.lines_old[h_idx],
+            &diff.lines_new[h_idx],
+        ));
     }
     hunks.model.begin_reset_model();
     hunks.list = hv;
@@ -76,7 +123,18 @@ impl HunksTrait for Hunks {
         &self.list[index].lines_old
     }
     fn hunk_max_line_length(&self, index: usize) -> u64 {
-        println!("hunk_max_line_length: {}", self.list[index].hunk_max_line_length);
         self.list[index].hunk_max_line_length as u64
+    }
+    fn lines_old_cols(&self, index: usize) -> u64 {
+        self.list[index].lines_old_cols as u64
+    }
+    fn lines_new_cols(&self, index: usize) -> u64 {
+        self.list[index].lines_new_cols as u64
+    }
+    fn lines_new_from(&self, index: usize) -> u64 {
+        self.list[index].lines_new_from as u64
+    }
+    fn lines_new_to(&self, index: usize) -> u64 {
+        self.list[index].lines_new_to as u64
     }
 }

@@ -5,6 +5,7 @@ import "../base"
 import "../style"
 
 Item {
+    id: root
     property int graphHeight: 100
     property int graphWidth: 150
     property int lanes
@@ -110,9 +111,9 @@ Item {
 
         onPaint: {
             var halfG = graphHeight / 2;
-            context.lineWidth = 1.5;
-            context.strokeStyle = Qt.rgba(0,0,1);
-            context.fillStyle = Qt.rgba(1,1,1);
+            context.lineWidth = 1;
+            context.strokeStyle = Qt.rgba(0.5,0.5,0.5,1);
+            context.fillStyle = isMerge ? Qt.rgba(0.5,0.5,0.5,1) : Qt.rgba(0.52549,0.7490,0.81960,1);
             for(var i = 0; i < graphModel.model.count; i++) {
                 var elm = graphModel.model.get(i);
                 var offW = halfG + i * graphHeight;
@@ -120,13 +121,9 @@ Item {
                 var shiftOffW = offW + elm.rowShiftOffset * graphHeight;
                 paintPaths(context, elm, offW, rowOffW, shiftOffW);
             }
-            context.beginPath();
             var cOffW = halfG + graphModel.commitIndex * graphHeight;
-            context.lineWidth = 2;
-            context.arc(cOffW, halfG, 4, 0, 2 * Math.PI);
-            context.stroke();
             context.beginPath();
-            context.arc(cOffW, halfG, 3, 0, 2 * Math.PI);
+            context.arc(cOffW, halfG, 3.5, 0, 2 * Math.PI);
             context.fill();
         }
     }

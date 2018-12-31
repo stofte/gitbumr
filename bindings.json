@@ -120,9 +120,13 @@
             "itemProperties": {
                 "hunk": { "type": "QString" },
                 "hunkMaxLineLength": { "type": "quint64" },
+                "linesNewFrom": { "type": "quint64" },
+                "linesNewTo": { "type": "quint64" },
                 "linesOrigin": { "type": "QByteArray" },
                 "linesNew": { "type": "QByteArray" },
-                "linesOld": { "type": "QByteArray" }
+                "linesNewCols": { "type": "quint64" },
+                "linesOld": { "type": "QByteArray" },
+                "linesOldCols": { "type": "quint64" }
             }
         },
         "Branches": {
@@ -142,7 +146,8 @@
                 "author": { "type": "QString" },
                 "message": { "type": "QString" },
                 "summary": { "type": "QString" },
-                "graph": { "type": "QByteArray" }
+                "graph": { "type": "QByteArray" },
+                "isMerge": { "type": "bool" }
             },
             "functions": {
                 "load": {

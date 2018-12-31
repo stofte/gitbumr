@@ -216,7 +216,11 @@ public:
     Q_INVOKABLE QString hunk(int row) const;
     Q_INVOKABLE quint64 hunkMaxLineLength(int row) const;
     Q_INVOKABLE QByteArray linesNew(int row) const;
+    Q_INVOKABLE quint64 linesNewCols(int row) const;
+    Q_INVOKABLE quint64 linesNewFrom(int row) const;
+    Q_INVOKABLE quint64 linesNewTo(int row) const;
     Q_INVOKABLE QByteArray linesOld(int row) const;
+    Q_INVOKABLE quint64 linesOldCols(int row) const;
     Q_INVOKABLE QByteArray linesOrigin(int row) const;
 
 Q_SIGNALS:
@@ -264,6 +268,7 @@ public:
     Q_INVOKABLE QString author(int row) const;
     Q_INVOKABLE QString cid(int row) const;
     Q_INVOKABLE QByteArray graph(int row) const;
+    Q_INVOKABLE bool isMerge(int row) const;
     Q_INVOKABLE QString message(int row) const;
     Q_INVOKABLE QString summary(int row) const;
     Q_INVOKABLE QString time(int row) const;

@@ -5,6 +5,8 @@ use chrono_humanize::HumanTime;
 use crossbeam::{channel::Receiver, channel};
 use implementation::{branches::BranchesItem, log::LogItem, diffs::DiffsItem};
 
+pub static MAX_U32_INT: u32 = 4294967295;
+
 pub fn pathbuf_filename_to_string(pb: &PathBuf) -> String {
     pb.file_name().unwrap().to_string_lossy().to_string()
 }
@@ -23,10 +25,6 @@ pub fn get_timesize_offset() -> FixedOffset {
     let ldt = Local::now();
     let z = ldt.offset().local_minus_utc();
     FixedOffset::east(z)
-}
-
-pub fn strip_whitespace(str: &str) -> String {
-    str.replace("\r\n", " ").replace("\n", " ")
 }
 
 pub fn is_git_repo(path: &str) -> Result<(), &'static str> {
@@ -68,11 +66,11 @@ pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
     let fo = FixedOffset::east(tz_offset_sec);
     let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), fo);
     let ht = HumanTime::from(dt);
-    let m = strip_whitespace(c.message().unwrap());
     let a = c.author();
     let n = a.name().unwrap();
     let idstr = format!("{:?}", oid).to_string();
     let ps: Vec<Oid> = c.parents().map(|x| x.id()).collect();
+    let is_merge = ps.len() > 1;
     LogItem {
         id: oid,
         cid: idstr.chars().collect(),
@@ -84,6 +82,7 @@ pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
         parents: ps,
         graph_lane: 0,
         graph: vec![],
+        is_merge,
         is_leaf: false // set by loggraph when parsing revwalk
     }
 }
@@ -140,7 +139,7 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
         },
         Err(..) => repo.diff_tree_to_tree(None, Some(&t), Some(&mut diff_opts)).unwrap()
     };
-    diff.find_similar(Some(&mut diff_find_opts));
+    diff.find_similar(Some(&mut diff_find_opts)).unwrap();
     let delta_cnt = diff.deltas().len();
     for idx in 0..delta_cnt {
         let delta = diff.get_delta(idx).unwrap();
@@ -165,11 +164,10 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
                 // attempt to decode the hunk line as utf8. if this fails, assume it's a binary thing and skip the hunk
                 match str::from_utf8(h_line.content()) {
                     Ok(h_line_decoded) => {
-                        let lstr = str::from_utf8(h_line.content()).unwrap();
-                        if lstr.len() > hunk_max_line_length {
-                            hunk_max_line_length = lstr.len();
+                        if h_line_decoded.len() > hunk_max_line_length {
+                            hunk_max_line_length = h_line_decoded.len();
                         }
-                        hunk_str.push_str(lstr);
+                        hunk_str.push_str(h_line_decoded);
                         hunk_origins_vec.push(h_line.origin());
                         hunk_lineno_new_vec.push(h_line.new_lineno());
                         hunk_lineno_old_vec.push(h_line.old_lineno());

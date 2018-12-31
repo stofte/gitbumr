@@ -137,6 +137,7 @@ pub struct LogItem {
     pub parents: Vec<Oid>,
     pub is_leaf: bool,
     pub graph: Vec<u8>,
+    pub is_merge: bool,
 }
 
 pub struct Log {
@@ -244,5 +245,8 @@ impl LogTrait for Log {
     }
     fn graph(&self, index: usize) -> &[u8] {
         &self.list[index].graph
+    }
+    fn is_merge(&self, index: usize) -> bool {
+        self.list[index].is_merge
     }
 }

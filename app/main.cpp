@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
     }
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("DatabaseFileName", dbFilePath);
+    engine.rootContext()->setContextProperty("MAX_U32_INT", quint32(4294967295));
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
 #if DEBUG
