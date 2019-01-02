@@ -37,8 +37,10 @@ ScrollBar {
     // todo: fix when not at ends
     onScrollContainerSizeChanged: {
         if (root.position > 0) {
-            var sizeVal = scrollContainerSize / scrollContentSize;
-            root.position = sizeVal > 1 ? 0 : 1 - sizeVal;
+            var offset = 1 - (root.position + root.size);
+            if (offset < 0) {
+                root.position += offset;
+            }
         }
     }
     onScrollTargetChanged: {
