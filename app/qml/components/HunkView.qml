@@ -191,10 +191,16 @@ Rectangle {
                             height: 20
                             color: "transparent"
                             TextElement {
+                                property bool decodeError: linesNewTo === 0 && linesNewFrom === 0
+                                function getLineText() {
+                                    return decodeError ? " : failed to decode hunk as UTF-8"
+                                                       : " : " + (linesNewTo - linesNewFrom + 1) + " lines";
+                                }
                                 x: 5
                                 y: 4
                                 opacity: 0.6
-                                text: "Hunk " + (index + 1) + " : " + (linesNewTo - linesNewFrom + 1) + " lines"
+                                color: decodeError ? "red" : "black"
+                                text: "Hunk " + (index + 1) + getLineText()
                             }
                         }
                         Rectangle {

@@ -191,6 +191,10 @@ pub fn parse_diff_parent(commit: &git2::Commit, repo: &Repository) -> (Vec<Diffs
                         hunk_lineno_old_vec.push(h_line.old_lineno());
                     },
                     Err(..) => {
+                        hunk_str.clear();
+                        hunk_origins_vec = vec![];
+                        hunk_lineno_new_vec = vec![];
+                        hunk_lineno_old_vec = vec![];
                         break;
                     }
                 }
