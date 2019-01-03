@@ -7,13 +7,28 @@ import "base"
 import "style"
 
 ApplicationWindow {
-    id: root
+    id: appRoot
     visible: true
     width: 1000
     height: 600
     color: Style.window
     property variant repoMgr;
-
+    // Some basic handling of selected text. this isn't perfect, but at least
+    // prevents the window from having multiple visible text selections as once.
+    // For now, we deselect old text if some new item is touched, since theres
+    // no way to currently restore the focus without destroying the existing
+    // selection. The isTextElement property is defined for TextElement items.
+    property variant prevActiveTextElement;
+    onActiveFocusItemChanged: {
+        if (activeFocusItem !== prevActiveTextElement) {
+            if (prevActiveTextElement) {
+                prevActiveTextElement.deselect();
+            }
+            if (activeFocusItem && activeFocusItem.isTextElement) {
+                prevActiveTextElement = activeFocusItem;
+            }
+        }
+    }
     Repositories {
         id: repositoriesModel
         onActiveRepositoryChanged: {
@@ -25,13 +40,12 @@ ApplicationWindow {
             }
         }
     }
-
     Component.onCompleted: {
         // to actually cause repositoriesModel to be created on windows load,
         // the window using the model must be created on load.
         if (!repoMgr) {
             var component = Qt.createComponent("components/RepositoryManager.qml");
-            repoMgr = component.createObject(root);
+            repoMgr = component.createObject(appRoot);
             if (!repositoriesModel.activeRepository) {
                 noRepoView.visible = true;
             }

@@ -3,6 +3,7 @@ import "../style"
 
 TextEdit {
     property bool selectableText: false
+    property bool isTextElement: selectableText
     // seems that if text elements overlap, renderType switches to QtRendering?
     // eg, seen in hunkview linenumber listings
     renderType: Text.QtRendering

@@ -156,13 +156,12 @@ Rectangle {
                             id: hlDetailsContentRef
                             y: 0
                             color: "transparent"
-                            TextEdit {
+                            TextElement {
                                 id: hlDetailsMessageRef
                                 x: 10
                                 y: -detailsScrollRef.position * height + 10
                                 width: parent.width - x
-                                readOnly: true
-                                selectByMouse: true
+                                selectableText: true
                                 //anchors.margins: 10
                                 //anchors.fill: parent
                                 font.pointSize: Style.fontPointSize
