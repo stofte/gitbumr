@@ -70,7 +70,9 @@ QQC14.SplitView {
                 id: diffsViewRef
                 height: 150
                 onDiffChanged: {
+                    hunkViewRef.hunkId = null;
                     gitModel.loadDiff(commitOid, index);
+                    hunkViewRef.hunkId = ""+commitOid+index;
                     hunkViewRef.filenameOld = filenameOld;
                     hunkViewRef.filenameNew = filenameNew;
                     hunkViewRef.statusText = status;
