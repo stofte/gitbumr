@@ -11,6 +11,7 @@ ScrollBar {
     property real scrollContentSize: 0
     property real pageScrollOverlapSize: 35
     property real pageScrollStepSize: (scrollContainerSize - pageScrollOverlapSize) / scrollContentSize
+    property real scrollBarMinimumSize: 18
     // scrollTarget is assumed to point to the content being scrolled,
     // so we can detect when it changes, to reset the scroll position.
     property variant scrollTarget
@@ -26,6 +27,7 @@ ScrollBar {
     rightPadding: isVertival ? 2 : height
     topPadding: isVertival ? width : 2
     bottomPadding: isVertival ? width : 2
+    minimumSize: Math.min(0.5, scrollBarMinimumSize / (height))
     contentItem: Rectangle {
         color: !parent.enabled ? Style.window :
                 parent.pressed ? Style.controlActive : Style.control
