@@ -9,6 +9,8 @@ ScrollBar {
     property real scrollContainerSize: 0
     property real scrollContainerSizePrev: 0
     property real scrollContentSize: 0
+    property real pageScrollOverlapSize: 35
+    property real pageScrollStepSize: (scrollContainerSize - pageScrollOverlapSize) / scrollContentSize
     // scrollTarget is assumed to point to the content being scrolled,
     // so we can detect when it changes, to reset the scroll position.
     property variant scrollTarget
@@ -41,6 +43,34 @@ ScrollBar {
             if (offset < 0) {
                 root.position += offset;
             }
+        }
+    }
+    // Use `Keys.forwardTo: [scrollRef]` to send keys to the scrollbar to handle
+    // tradtional keyboard keys for list scrolling/paging
+    Keys.onPressed: {
+        if (!root.visible || !root.enabled) return;
+        var oldStepSize;
+        if (event.key === Qt.Key_Down) {
+            root.increase();
+        } else if (event.key === Qt.Key_Up) {
+            root.decrease();
+        } else if (event.key === Qt.Key_PageDown) {
+            oldStepSize = root.stepSize;
+            root.stepSize = pageScrollStepSize;
+            root.increase();
+            root.stepSize = oldStepSize;
+        } else if (event.key === Qt.Key_PageUp) {
+            oldStepSize = root.stepSize;
+            root.stepSize = pageScrollStepSize;
+            root.decrease();
+            root.stepSize = oldStepSize;
+        } else if (event.key === Qt.Key_Home) {
+            root.position = 0;
+        } else if (event.key === Qt.Key_End) {
+            oldStepSize = root.stepSize;
+            root.stepSize = 1;
+            root.increase();
+            root.stepSize = oldStepSize;
         }
     }
     onScrollTargetChanged: {

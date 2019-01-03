@@ -1,4 +1,4 @@
-import QtQuick 2.9
+import QtQuick 2.11
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 1.4 as QQC14
@@ -35,14 +35,12 @@ Rectangle {
         anchors.left: parent.left
         clip: true
         color: "transparent"
-
         DiffStatusIcon {
             y: 1
             x: 0
             statusValue: headerRectRef.isComparison ? "Deleted" : statusText
             iconSize: 13
         }
-
         DiffStatusIcon {
             x: 0
             y: fnTopRef.y + fnTopRef.contentHeight
@@ -50,8 +48,7 @@ Rectangle {
             statusValue: "Added"
             iconSize: 13
         }
-
-        TextItem {
+        TextElement {
             id: fnTopRef
             x: 20
             y: 4
@@ -59,8 +56,7 @@ Rectangle {
             wrapMode: Text.WrapAnywhere
             text: headerRectRef.isComparison ? filenameOld : filenameNew
         }
-
-        TextItem {
+        TextElement {
             id: fnBotRef
             x: 20
             y: fnTopRef.y + fnTopRef.contentHeight + 3
@@ -146,6 +142,7 @@ Rectangle {
         }
         return h;
     }
+    Keys.forwardTo: [hunksMainScrollRef]
     Rectangle {
         // The hunkListViewRef listview contains variable height elements. Even
         // with just a few elements in the list, Qt will compute the full height,
@@ -174,9 +171,6 @@ Rectangle {
             delegate: Component {
                 Item {
                     property bool isFloatingScrollBar: index === root.floatScrollBarIndex
-                    property int indexProperty: index
-                    property int itemLineCount: originsJsonModel.model.count || 0
-                    property real itemContentHeight: height
                     id: hunkListRootItemRef
                     height: diffRef.contentHeight + 10 + hunkBotScrollRef.height + hunkTitleRectRef.height
                     width: parent.width
@@ -196,7 +190,7 @@ Rectangle {
                             width: parent.width
                             height: 20
                             color: "transparent"
-                            TextItem {
+                            TextElement {
                                 x: 5
                                 y: 4
                                 opacity: 0.6
@@ -222,6 +216,24 @@ Rectangle {
                             }
                             color: "transparent"
                             clip: true
+                            Component {
+                                id: lineNumComponentRef
+                                Rectangle {
+                                    height: 10
+                                    width: parent.width
+                                    color: "transparent"
+                                    TextElement {
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        height: 10
+                                        width: parent.width
+                                        horizontalAlignment: Text.AlignRight
+                                        font.pointSize: Style.fontPointSize - 2
+                                        font.family: Style.fontNameFixedWidth
+                                        text: value === MAX_U32_INT ? " " : value
+                                    }
+                                }
+                            }
                             ListView {
                                 id: linesOldListRef
                                 anchors.top: parent.top
@@ -232,22 +244,7 @@ Rectangle {
                                 height: diffRef.height
                                 model: linesOldJsonModel.model
                                 interactive: false
-                                delegate: Component {
-                                    Rectangle {
-                                        height: 10
-                                        width: parent.width
-                                        color: "transparent"
-                                        TextItem {
-                                            anchors.right: parent.right
-                                            anchors.top: parent.top
-                                            height: 10
-                                            width: parent.width
-                                            horizontalAlignment: Text.AlignRight
-                                            font.family: Style.fontNameFixedWidth
-                                            text: value === MAX_U32_INT ? " " : value
-                                        }
-                                    }
-                                }
+                                delegate: lineNumComponentRef
                             }
                             ListView {
                                 id: linesNewListRef
@@ -259,22 +256,7 @@ Rectangle {
                                 height: diffRef.height
                                 model: linesNewJsonModel.model
                                 interactive: false
-                                delegate: Component {
-                                    Rectangle {
-                                        height: 10
-                                        width: parent.width
-                                        color: "transparent"
-                                        TextItem {
-                                            anchors.right: parent.right
-                                            anchors.top: parent.top
-                                            height: 10
-                                            width: parent.width
-                                            horizontalAlignment: Text.AlignRight
-                                            font.family: Style.fontNameFixedWidth
-                                            text: value === MAX_U32_INT ? " " : value
-                                        }
-                                    }
-                                }
+                                delegate: lineNumComponentRef
                             }
                         }
                         Rectangle {
@@ -319,7 +301,7 @@ Rectangle {
                                             height: 10
                                             width: 15
                                             color: mapOriginToColor(value)
-                                            TextItem {
+                                            TextElement {
                                                 y: 0
                                                 anchors.right: parent.right
                                                 anchors.rightMargin: 4
@@ -330,15 +312,15 @@ Rectangle {
                                         }
                                     }
                                 }
-                                TextEdit {
+                                TextElement {
                                     id: diffRef
                                     x: 15
                                     y: 0
                                     // ensure the full width can always be selected
                                     width: hunkListingsRectRef.width
                                     font.family: Style.fontNameFixedWidth
-                                    readOnly: true
-                                    selectByMouse: true
+                                    font.pointSize: Style.fontPointSize - 2
+                                    selectableText: true
                                     text: hunk
                                     // todo some font metrics stuff.
                                     // Should equal a 4 space sized tab (at least for the adobefont+dpi settings, etc)
@@ -382,12 +364,23 @@ Rectangle {
             height: parent.height
             orientation: Qt.Vertical
             size: height / hunkListViewRef.height
-            stepSize: 1 / (hunkItemLineCount * 0.5)
+            // 20 is 2 * lineheights.
+            // todo: if everything in the scroll container divided by 10,
+            // scroll steps would always align with lines.
+            stepSize: 1 / (hunkListViewRef.height / 20)
             scrollContainerSize: parent.height
             scrollContentSize: hunkListViewRef.height
             captureMouseWheel: true
             capturePositiveSide: false
             containerOtherSize: parent.width
+        }
+    }
+    // Todo some nicer way of handling focus
+    MouseArea {
+        anchors.fill: parent;
+        onPressed: {
+            mouse.accepted = false;
+            root.forceActiveFocus();
         }
     }
 }

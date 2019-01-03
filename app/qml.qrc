@@ -18,5 +18,6 @@
         <file>qml/components/DiffStatusIcon.qml</file>
         <file>qml/base/TypedArrayListModel.qml</file>
         <file>qml/components/CustomScrollBar.qml</file>
+        <file>qml/base/TextElement.qml</file>
     </qresource>
 </RCC>
