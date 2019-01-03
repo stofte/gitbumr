@@ -334,6 +334,8 @@ Rectangle {
                                     id: diffRef
                                     x: 15
                                     y: 0
+                                    // ensure the full width can always be selected
+                                    width: hunkListingsRectRef.width
                                     font.family: Style.fontNameFixedWidth
                                     readOnly: true
                                     selectByMouse: true
