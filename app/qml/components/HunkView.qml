@@ -194,7 +194,7 @@ Rectangle {
                                 x: 5
                                 y: 4
                                 opacity: 0.6
-                                text: "Hunk " + (index + 1) + " : Lines " + linesNewFrom + "-" + linesNewTo
+                                text: "Hunk " + (index + 1) + " : " + (linesNewTo - linesNewFrom + 1) + " lines"
                             }
                         }
                         Rectangle {
