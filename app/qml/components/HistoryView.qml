@@ -306,20 +306,12 @@ Rectangle {
 
     // graphViewSplitter and graphViewSplitterBottom set each others widths,
     // but it seems ok with qt?
-
-    QQC14.SplitView {
-        orientation: Qt.Horizontal
-        x: 0
-        y: 0
-        height: !historyListView.highlightItem ? 0 :
-            historyListView.highlightItem.y + rowHeight - historyListView.contentY
-        width: parent.width
-
-        handleDelegate: Rectangle {
+    Component {
+        id: graphSplitterDraggerComponentRef
+        Rectangle {
             color: "transparent"
             opacity: 1
             width: 8
-
             LinearGradient {
                 anchors.top: parent.top
                 start: Qt.point(0, 0)
@@ -333,7 +325,28 @@ Rectangle {
                 }
             }
         }
-
+    }
+    function getGraphSplitterHeight(top) {
+        if (historyListView.highlightItem) {
+            var off;
+            if (top) {
+                off = historyListView.highlightItem.y + rowHeight - historyListView.contentY;
+                return (off + historyListView.highlightItem.height) < 0 ? historyListView.height : off;
+            } else {
+                off = historyListView.height - (historyListView.highlightItem.y + historyListView.highlightItem.height - historyListView.contentY);
+                return off > historyListView.height ? 0 : off;
+            }
+        } else {
+            return top ? historyListView.height : 0;
+        }
+    }
+    QQC14.SplitView {
+        orientation: Qt.Horizontal
+        x: 0
+        y: 0
+        height: getGraphSplitterHeight(true)
+        width: parent.width
+        handleDelegate: graphSplitterDraggerComponentRef
         Rectangle {
             id: graphViewSplitter
             width: 150
@@ -342,26 +355,19 @@ Rectangle {
                 graphViewSplitterBottom.width = width
             }
         }
-
-        Rectangle {
-            color: "transparent"
-        }
+        Item { }
     }
-
     QQC14.SplitView {
         orientation: Qt.Horizontal
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: !historyListView.highlightItem ? 0 :
-            historyListView.height - (historyListView.highlightItem.y + historyListView.highlightItem.height - historyListView.contentY)
-
+        height: getGraphSplitterHeight(false)
         handleDelegate: Rectangle {
             color: "transparent"
             opacity: 1
             width: 8
         }
-
         Rectangle {
             id: graphViewSplitterBottom
             width: graphViewSplitter.width
@@ -370,9 +376,6 @@ Rectangle {
                 graphViewSplitter.width = width
             }
         }
-
-        Rectangle {
-            color: "transparent"
-        }
+        Item { }
     }
 }
