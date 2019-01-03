@@ -7,6 +7,13 @@ use implementation::{branches::BranchesItem, log::LogItem, diffs::DiffsItem};
 
 pub static MAX_U32_INT: u32 = 4294967295;
 
+fn unpack_opt_str(str: Option<&str>) -> String {
+    match str {
+        Some(s) => s.to_string(),
+        None => "".to_string()
+    }
+}
+
 pub fn pathbuf_filename_to_string(pb: &PathBuf) -> String {
     pb.file_name().unwrap().to_string_lossy().to_string()
 }
@@ -62,28 +69,34 @@ pub fn local_branches(repo: &Repository) -> Vec<BranchesItem> {
 }
 
 pub fn get_commit(oid: Oid, tz_offset_sec: i32, repo: &Repository) -> LogItem {
-    let c = repo.find_commit(oid).unwrap();
-    let fo = FixedOffset::east(tz_offset_sec);
-    let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), fo);
-    let ht = HumanTime::from(dt);
-    let a = c.author();
-    let n = a.name().unwrap();
-    let idstr = format!("{:?}", oid).to_string();
-    let ps: Vec<Oid> = c.parents().map(|x| x.id()).collect();
-    let is_merge = ps.len() > 1;
-    LogItem {
-        id: oid,
-        cid: idstr.chars().collect(),
-        time: format!("{}", ht).to_string(),
-        time_humanized: format!("{}", ht).to_string(),
-        author: n.to_string(),
-        message: c.message().unwrap().to_string(),
-        summary: c.summary().unwrap().to_string(),
-        parents: ps,
-        graph_lane: 0,
-        graph: vec![],
-        is_merge,
-        is_leaf: false // set by loggraph when parsing revwalk
+    match repo.find_commit(oid) {
+        Ok(c) => {
+            let fo = FixedOffset::east(tz_offset_sec);
+            let dt: DateTime<FixedOffset> = DateTime::from_utc(NaiveDateTime::from_timestamp(c.time().seconds(), 0), fo);
+            let ht = HumanTime::from(dt);
+            let a = c.author();
+            let n = unpack_opt_str(a.name());
+            let mesg = unpack_opt_str(c.message());
+            let summ = unpack_opt_str(c.summary());
+            let idstr = format!("{:?}", oid).to_string();
+            let ps: Vec<Oid> = c.parents().map(|x| x.id()).collect();
+            let is_merge = ps.len() > 1;
+            LogItem {
+                id: oid,
+                cid: idstr.chars().collect(),
+                time: format!("{}", ht).to_string(),
+                time_humanized: format!("{}", ht).to_string(),
+                author: n,
+                message: mesg,
+                summary: summ,
+                parents: ps,
+                graph_lane: 0,
+                graph: vec![],
+                is_merge,
+                is_leaf: false // set by loggraph when parsing revwalk
+            }
+        },
+        Err(..) => panic!("could not find commit {:?}", oid)
     }
 }
 
@@ -114,7 +127,12 @@ pub fn get_chan_revwalker(path: String, filter: String, max_count: usize) -> Rec
                 }
             } else {
                 match prv.next() {
-                    Some(r) => data.push(r.unwrap()),
+                    Some(r) => {
+                        match r {
+                            Ok(rr) => data.push(rr),
+                            Err(..) => panic!("unpacked none in get_chan_revwalker")
+                        }
+                    },
                     None => is_empty = true
                 }
             }
