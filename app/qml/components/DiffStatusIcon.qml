@@ -14,7 +14,7 @@ Item {
             case "Added":       return "#14892C";
             case "Deleted":     return "#D04437";
             case "Renamed":     return "#AC707A";
-            case "":            return "";
+            case "":            return Style.window;
             default:
                 throw new Error('mapGitStatusToColor hnhandled git status: ' + status);
         }
@@ -40,7 +40,7 @@ Item {
         x: 3
         y: 2.5
         color: mapGitStatusToColor(statusValue)
-
+        visible: statusValue
         TextItem {
             x: mapGitStatusToLetterOffset(statusValue)
             y: 1
