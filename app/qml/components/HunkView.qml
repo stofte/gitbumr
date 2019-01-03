@@ -340,6 +340,9 @@ Rectangle {
                                     readOnly: true
                                     selectByMouse: true
                                     text: hunk
+                                    // todo some font metrics stuff.
+                                    // Should equal a 4 space sized tab (at least for the adobefont+dpi settings, etc)
+                                    tabStopDistance: 17.5
                                 }
                             }
                             CustomScrollBar {
