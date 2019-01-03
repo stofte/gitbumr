@@ -75,7 +75,7 @@ Item {
                         statusValue: diffListViewRef.currentItem ? diffListViewRef.currentItem.statusText : ""
                         iconSize: rowHeight - 5
                     }
-                    TextItem {
+                    TextElement {
                         x: 20
                         y: 3
                         color: "white"
@@ -100,7 +100,7 @@ Item {
                     statusValue: status
                     iconSize: rowHeight - 5
                 }
-                TextItem {
+                TextElement {
                     x: 20
                     y: 3
                     text: filenameNewText

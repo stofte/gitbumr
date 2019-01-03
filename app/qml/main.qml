@@ -55,7 +55,6 @@ ApplicationWindow {
         background: Rectangle {
             color: "transparent"
         }
-
         anchors.fill: parent
         header: ToolBar {
             topPadding: 5
@@ -68,32 +67,22 @@ ApplicationWindow {
                 ToolButton {
                     font.family: Style.fontName
                     font.pointSize: Style.fontPointSize
-                    Layout.fillHeight: true
-                    Layout.preferredWidth: repoTextLabel.width + 10
-                    Layout.preferredHeight: repoTextLabel.height + 10
                     onClicked: {
                         repoMgr.show();
                     }
-                    TextItem {
-                        anchors.centerIn: parent
-                        id: repoTextLabel
-                        text: qsTr("Repositories")
-                    }
+                    text: "Repositories"
                 }
             }
         }
-
         GitView { id: gitView }
-
         Pane {
             id: noRepoView
             anchors.fill: parent
             visible: false
-            TextItem {
+            TextElement {
                 anchors.centerIn: parent
                 text: "No repository open"
             }
         }
     }
-
 }

@@ -41,11 +41,13 @@ Item {
         y: 2.5
         color: mapGitStatusToColor(statusValue)
         visible: statusValue
-        TextItem {
+        TextElement {
             x: mapGitStatusToLetterOffset(statusValue)
             y: 1
             color: "white"
             font.weight: Font.Bold
+            // the offsets above are for using native render
+            renderType: Text.NativeRendering
             text: mapGitStatusToLetter(statusValue)
         }
     }

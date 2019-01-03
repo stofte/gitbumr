@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/main.qml</file>
-        <file>qml/base/TextItem.qml</file>
         <file>qml/style/Style.qml</file>
         <file>qml/style/qmldir</file>
         <file>qml/components/RepositoryManager.qml</file>
@@ -11,7 +10,6 @@
         <file>qml/components/GitView.qml</file>
         <file>qml/components/GraphView.qml</file>
         <file>qml/base/JsonListModel.qml</file>
-        <file>qml/components/CommitView.qml</file>
         <file>qml/components/DiffsView.qml</file>
         <file>qml/components/HunkView.qml</file>
         <file>qml/components/DesktopScrollbar.qml</file>

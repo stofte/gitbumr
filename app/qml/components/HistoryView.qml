@@ -99,7 +99,7 @@ Rectangle {
                                 Layout.preferredWidth: parent.width - hlAuthorRectRef.width - hlTimeRectRef.width
                                 Layout.fillHeight: true
                                 color: "transparent"
-                                TextItem {
+                                TextElement {
                                     x: 4 // not sure why, but text can get chopped off otherwise
                                     color: "white"
                                     anchors.verticalCenter: parent.verticalCenter
@@ -112,7 +112,7 @@ Rectangle {
                                 Layout.preferredWidth: hlAuthorRef.contentWidth + 5
                                 Layout.fillHeight: true
                                 color: "transparent"
-                                TextItem {
+                                TextElement {
                                     id: hlAuthorRef
                                     color: "white"
                                     anchors.verticalCenter: parent.verticalCenter
@@ -125,7 +125,7 @@ Rectangle {
                                 Layout.preferredWidth: hlTimeRef.contentWidth + 5
                                 Layout.fillHeight: true
                                 color: "transparent"
-                                TextItem {
+                                TextElement {
                                     id: hlTimeRef
                                     color: "white"
                                     anchors.left: parent.left
@@ -224,7 +224,7 @@ Rectangle {
                                 Layout.preferredWidth: parent.width - graphViewSplitter.width - rowAuthorRectRef.width - rowTimeRectRef.width
                                 Layout.fillHeight: true
                                 color: "transparent"
-                                TextItem {
+                                TextElement {
                                     id: rowMessageRef
                                     x: 4 // not sure why, but text can get chopped off otherwise
                                     anchors.verticalCenter: parent.verticalCenter
@@ -237,7 +237,7 @@ Rectangle {
                                 Layout.preferredWidth: rowAuthorRef.contentWidth + 5
                                 Layout.fillHeight: true
                                 color: "transparent"
-                                TextItem {
+                                TextElement {
                                     id: rowAuthorRef
                                     color: Style.mid
                                     anchors.verticalCenter: parent.verticalCenter
@@ -250,7 +250,7 @@ Rectangle {
                                 Layout.preferredWidth: rowTimeRef.contentWidth + 5
                                 Layout.fillHeight: true
                                 color: "transparent"
-                                TextItem {
+                                TextElement {
                                     id: rowTimeRef
                                     color: Style.mid
                                     anchors.left: parent.left

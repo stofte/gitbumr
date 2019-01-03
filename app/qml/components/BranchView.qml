@@ -27,7 +27,7 @@ Pane {
                         anchors.fill: parent
                         anchors.margins: 5
                         color: "transparent"
-                        TextItem {
+                        TextElement {
                             text: name
                             verticalAlignment: Text.AlignVCenter
                             font.bold: checkedout
