@@ -481,13 +481,13 @@ extern "C" {
 extern "C" {
     void hunks_data_hunk(const Hunks::Private*, int, QString*, qstring_set);
     quint64 hunks_data_hunk_max_line_length(const Hunks::Private*, int);
+    quint64 hunks_data_lines_from(const Hunks::Private*, int);
     void hunks_data_lines_new(const Hunks::Private*, int, QByteArray*, qbytearray_set);
     quint64 hunks_data_lines_new_cols(const Hunks::Private*, int);
-    quint64 hunks_data_lines_new_from(const Hunks::Private*, int);
-    quint64 hunks_data_lines_new_to(const Hunks::Private*, int);
     void hunks_data_lines_old(const Hunks::Private*, int, QByteArray*, qbytearray_set);
     quint64 hunks_data_lines_old_cols(const Hunks::Private*, int);
     void hunks_data_lines_origin(const Hunks::Private*, int, QByteArray*, qbytearray_set);
+    quint64 hunks_data_lines_to(const Hunks::Private*, int);
     void hunks_sort(Hunks::Private*, unsigned char column, Qt::SortOrder order = Qt::AscendingOrder);
 
     int hunks_row_count(const Hunks::Private*);
@@ -569,6 +569,11 @@ quint64 Hunks::hunkMaxLineLength(int row) const
     return hunks_data_hunk_max_line_length(m_d, row);
 }
 
+quint64 Hunks::linesFrom(int row) const
+{
+    return hunks_data_lines_from(m_d, row);
+}
+
 QByteArray Hunks::linesNew(int row) const
 {
     QByteArray b;
@@ -579,16 +584,6 @@ QByteArray Hunks::linesNew(int row) const
 quint64 Hunks::linesNewCols(int row) const
 {
     return hunks_data_lines_new_cols(m_d, row);
-}
-
-quint64 Hunks::linesNewFrom(int row) const
-{
-    return hunks_data_lines_new_from(m_d, row);
-}
-
-quint64 Hunks::linesNewTo(int row) const
-{
-    return hunks_data_lines_new_to(m_d, row);
 }
 
 QByteArray Hunks::linesOld(int row) const
@@ -610,6 +605,11 @@ QByteArray Hunks::linesOrigin(int row) const
     return b;
 }
 
+quint64 Hunks::linesTo(int row) const
+{
+    return hunks_data_lines_to(m_d, row);
+}
+
 QVariant Hunks::data(const QModelIndex &index, int role) const
 {
     Q_ASSERT(rowCount(index.parent()) > index.row());
@@ -621,19 +621,19 @@ QVariant Hunks::data(const QModelIndex &index, int role) const
         case Qt::UserRole + 1:
             return QVariant::fromValue(hunkMaxLineLength(index.row()));
         case Qt::UserRole + 2:
-            return QVariant::fromValue(linesNew(index.row()));
+            return QVariant::fromValue(linesFrom(index.row()));
         case Qt::UserRole + 3:
-            return QVariant::fromValue(linesNewCols(index.row()));
+            return QVariant::fromValue(linesNew(index.row()));
         case Qt::UserRole + 4:
-            return QVariant::fromValue(linesNewFrom(index.row()));
+            return QVariant::fromValue(linesNewCols(index.row()));
         case Qt::UserRole + 5:
-            return QVariant::fromValue(linesNewTo(index.row()));
-        case Qt::UserRole + 6:
             return QVariant::fromValue(linesOld(index.row()));
-        case Qt::UserRole + 7:
+        case Qt::UserRole + 6:
             return QVariant::fromValue(linesOldCols(index.row()));
-        case Qt::UserRole + 8:
+        case Qt::UserRole + 7:
             return QVariant::fromValue(linesOrigin(index.row()));
+        case Qt::UserRole + 8:
+            return QVariant::fromValue(linesTo(index.row()));
         }
         break;
     }
@@ -655,13 +655,13 @@ QHash<int, QByteArray> Hunks::roleNames() const {
     QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
     names.insert(Qt::UserRole + 0, "hunk");
     names.insert(Qt::UserRole + 1, "hunkMaxLineLength");
-    names.insert(Qt::UserRole + 2, "linesNew");
-    names.insert(Qt::UserRole + 3, "linesNewCols");
-    names.insert(Qt::UserRole + 4, "linesNewFrom");
-    names.insert(Qt::UserRole + 5, "linesNewTo");
-    names.insert(Qt::UserRole + 6, "linesOld");
-    names.insert(Qt::UserRole + 7, "linesOldCols");
-    names.insert(Qt::UserRole + 8, "linesOrigin");
+    names.insert(Qt::UserRole + 2, "linesFrom");
+    names.insert(Qt::UserRole + 3, "linesNew");
+    names.insert(Qt::UserRole + 4, "linesNewCols");
+    names.insert(Qt::UserRole + 5, "linesOld");
+    names.insert(Qt::UserRole + 6, "linesOldCols");
+    names.insert(Qt::UserRole + 7, "linesOrigin");
+    names.insert(Qt::UserRole + 8, "linesTo");
     return names;
 }
 QVariant Hunks::headerData(int section, Qt::Orientation orientation, int role) const

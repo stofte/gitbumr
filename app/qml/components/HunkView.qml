@@ -19,12 +19,51 @@ Rectangle {
     //    we need to requery for what items is currently at the bottom
     // 4. All of compounded by a variable height header!
     id: root
+    color: "transparent"
     property string filenameOld: ""
     property string filenameNew: ""
     property string statusText: ""
     property string hunkId: "" // commitsha + idx
     property variant originList
-    color: "transparent"
+    property int floatScrollBarIndex: -1;
+    property real floatScrollBarOffset: 0;
+    property int hunkItemLineCount: 0
+    property real listContentHeight: 0
+    Keys.forwardTo: [hunksMainScrollRef]
+    onHeightChanged: floatScrollBarIndex = getBottomElementIndex()
+    onWidthChanged: floatScrollBarIndex = getBottomElementIndex()
+    onHunkIdChanged: {
+        if (!hunkId) {
+            listContentHeight = 0;
+            hunksMainScrollRef.position = 0;
+            return;
+        }
+        floatScrollBarIndex = getBottomElementIndex()
+        listContentHeight = getHeight();
+        hunkListViewRef.height = listContentHeight;
+    }
+    function getBottomElementIndex() {
+        // 4.5 is fudged value to mark as "bottom" when
+        // the scrollbar crosses the window bottom.
+        var scrollOffset = -hunkListViewRef.y;
+        var offset = -hunkListViewRef.y + (hunkListViewRectContainerRef.height + 4.5);
+        floatScrollBarOffset = offset - 20
+        return hunkListViewRef.indexAt(0, offset);
+    }
+    function getHeight() {
+        var h = 0;
+        var itemOtherH = 55;
+        var itemLineH = Style.fontFixedLineHeight;
+        hunkItemLineCount = 0;
+        for (var i = 0; i < gitModel.hunks.rowCount(); i++) {
+            var linesOrigin = LibHelper.modelValue(gitModel.hunks, i, LibHelper.hunks_linesOrigin);
+            var ba = new Uint8Array(linesOrigin);
+            hunkItemLineCount += ba.length;
+            h += ba.length * itemLineH;
+            h += itemOtherH;
+        }
+        return h;
+    }
     Rectangle {
         property bool isComparison: filenameOld !== filenameNew
         id: headerRectRef
@@ -74,75 +113,6 @@ Rectangle {
         color: Style.mid
         visible: false
     }
-    // see lib/src/implementation/hunk.rs for encoding of origin vals
-    function mapOriginToChar(val) {
-        switch (val) {
-            case 0: return ' ';
-            case 1: return '+';
-            case 2: return '-';
-            case 3: return '<';
-            case 4: return '>';
-            case 5: return '=';
-            default:
-                throw new Error("unhandled case: '" + val + "' in mapOriginToChar");
-        }
-    }
-    function mapOriginToColor(val) {
-        switch (val) {
-            case 1: return '#DDFFDD';
-            case 2: return '#FEE8E9';
-            case 0:
-            case 3:
-            case 4:
-            case 5:
-                return '#FFFFFF';
-            default:
-                throw new Error("unhandled case: '" + val + "' in mapOriginToChar");
-        }
-    }
-    property int floatScrollBarIndex: -1;
-    property real floatScrollBarOffset: 0;
-    property int hunkItemLineCount: 0
-    function getBottomElementIndex() {
-        // 4.5 is fudged value to mark as "bottom" when
-        // the scrollbar crosses the window bottom.
-        var scrollOffset = -hunkListViewRef.y;
-        var offset = -hunkListViewRef.y + (hunkListViewRectContainerRef.height + 4.5);
-        floatScrollBarOffset = offset - 20
-        return hunkListViewRef.indexAt(0, offset);
-    }
-    onHeightChanged: floatScrollBarIndex = getBottomElementIndex()
-    onWidthChanged: floatScrollBarIndex = getBottomElementIndex()
-    property real listContentHeight: 0
-    onHunkIdChanged: {
-        if (!hunkId) {
-            listContentHeight = 0;
-            hunksMainScrollRef.position = 0;
-            return;
-        }
-        floatScrollBarIndex = getBottomElementIndex()
-        listContentHeight = getHeight();
-        hunkListViewRef.height = listContentHeight;
-    }
-    function getHeight() {
-        var h = 0;
-        var itemOtherH = 55;
-        var itemLineH = 10;
-        hunkItemLineCount = 0;
-        for (var i = 0; i < gitModel.hunks.rowCount(); i++) {
-            var elmIdx = gitModel.hunks.index(i, 0);
-            // note the user role + offset, which is defined in Bindings.cpp.
-            // its the json properties sorted alphabetically (and not as defined
-            // in binding.json!)
-            var linesOrigin = gitModel.hunks.data(elmIdx, 0x0108);
-            var ba = new Uint8Array(linesOrigin);
-            hunkItemLineCount += ba.length;
-            h += ba.length * itemLineH;
-            h += itemOtherH;
-        }
-        return h;
-    }
-    Keys.forwardTo: [hunksMainScrollRef]
     Rectangle {
         // The hunkListViewRef listview contains variable height elements. Even
         // with just a few elements in the list, Qt will compute the full height,
@@ -172,7 +142,7 @@ Rectangle {
                 Item {
                     property bool isFloatingScrollBar: index === root.floatScrollBarIndex
                     id: hunkListRootItemRef
-                    height: diffRef.contentHeight + 10 + hunkBotScrollRef.height + hunkTitleRectRef.height
+                    height: diffRef.contentHeight + Style.fontFixedLineHeight + hunkBotScrollRef.height + hunkTitleRectRef.height
                     width: parent.width
                     Rectangle {
                         color: "transparent"
@@ -191,10 +161,10 @@ Rectangle {
                             height: 20
                             color: "transparent"
                             TextElement {
-                                property bool decodeError: linesNewTo === 0 && linesNewFrom === 0
+                                property bool decodeError: linesTo === 0 && linesFrom === 0
                                 function getLineText() {
                                     return decodeError ? " : failed to decode hunk as UTF-8"
-                                                       : " : " + (linesNewTo - linesNewFrom + 1) + " lines";
+                                                       : " : " + (linesTo - linesFrom + 1) + " lines";
                                 }
                                 x: 5
                                 y: 4
@@ -225,13 +195,13 @@ Rectangle {
                             Component {
                                 id: lineNumComponentRef
                                 Rectangle {
-                                    height: 10
+                                    height: Style.fontFixedLineHeight
                                     width: parent.width
                                     color: "transparent"
                                     TextElement {
                                         anchors.right: parent.right
                                         anchors.top: parent.top
-                                        height: 10
+                                        height: parent.height
                                         width: parent.width
                                         horizontalAlignment: Text.AlignRight
                                         font.pointSize: Style.fontPointSize - 2
@@ -284,9 +254,9 @@ Rectangle {
                                 interactive: false
                                 delegate: Component {
                                     Rectangle {
-                                        height: 10
+                                        height: Style.fontFixedLineHeight
                                         width: parent.width
-                                        color: mapOriginToColor(value)
+                                        color: Style.lineOriginColor(value)
                                     }
                                 }
                             }
@@ -304,16 +274,17 @@ Rectangle {
                                     interactive: false
                                     delegate: Component {
                                         Rectangle {
-                                            height: 10
+                                            height: Style.fontFixedLineHeight
                                             width: 15
-                                            color: mapOriginToColor(value)
+                                            color: Style.lineOriginColor(value)
                                             TextElement {
-                                                y: 0
+                                                y: -1.5
                                                 anchors.right: parent.right
                                                 anchors.rightMargin: 4
-                                                font.family: Style.fontNameFixedWidth
+                                                fixedWidthFont: true
                                                 opacity: 0.6
-                                                text: mapOriginToChar(value)
+                                                font.pointSize: Style.fontFixedPointSize + 2
+                                                text: Style.lineOriginSigil(value)
                                             }
                                         }
                                     }
@@ -324,13 +295,9 @@ Rectangle {
                                     y: 0
                                     // ensure the full width can always be selected
                                     width: hunkListingsRectRef.width
-                                    font.family: Style.fontNameFixedWidth
-                                    font.pointSize: Style.fontPointSize - 2
                                     selectableText: true
+                                    fixedWidthFont: true
                                     text: hunk
-                                    // todo some font metrics stuff.
-                                    // Should equal a 4 space sized tab (at least for the adobefont+dpi settings, etc)
-                                    tabStopDistance: 17.5
                                 }
                             }
                             CustomScrollBar {
@@ -373,7 +340,7 @@ Rectangle {
             // 20 is 2 * lineheights.
             // todo: if everything in the scroll container divided by 10,
             // scroll steps would always align with lines.
-            stepSize: 1 / (hunkListViewRef.height / 20)
+            stepSize: 1 / (hunkListViewRef.height / (Style.fontFixedLineHeight * 2))
             scrollContainerSize: parent.height
             scrollContentSize: hunkListViewRef.height
             captureMouseWheel: true

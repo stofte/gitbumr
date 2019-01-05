@@ -94,21 +94,21 @@
         "Commit": {
             "type": "Object",
             "properties": {
-                "cid": { "type": "QString" },
-                "time": { "type": "QString" },
                 "author": { "type": "QString" },
+                "cid": { "type": "QString" },
                 "committer": { "type": "QString" },
                 "message": { "type": "QString" },
+                "time": { "type": "QString" },
                 "tree": { "type": "QString" }
             }
         },
         "Diffs": {
             "type": "List",
             "itemProperties": {
-                "filenameOld": { "type": "QString" },
                 "filenameNew": { "type": "QString" },
-                "status": { "type": "QString" },
-                "patch": { "type": "QString" }
+                "filenameOld": { "type": "QString" },
+                "patch": { "type": "QString" },
+                "status": { "type": "QString" }
             },
             "properties": {
                 "commitOid": { "type": "QString" },
@@ -120,20 +120,20 @@
             "itemProperties": {
                 "hunk": { "type": "QString" },
                 "hunkMaxLineLength": { "type": "quint64" },
-                "linesNewFrom": { "type": "quint64" },
-                "linesNewTo": { "type": "quint64" },
-                "linesOrigin": { "type": "QByteArray" },
+                "linesFrom": { "type": "quint64" },
                 "linesNew": { "type": "QByteArray" },
                 "linesNewCols": { "type": "quint64" },
                 "linesOld": { "type": "QByteArray" },
-                "linesOldCols": { "type": "quint64" }
+                "linesOldCols": { "type": "quint64" },
+                "linesOrigin": { "type": "QByteArray" },
+                "linesTo": { "type": "quint64" }
             }
         },
         "Branches": {
             "type": "List",
             "itemProperties": {
-                "name": { "type": "QString" },
                 "checkedout": { "type": "bool" },
+                "name": { "type": "QString" },
                 "oid": { "type": "QString" }
             }
         },

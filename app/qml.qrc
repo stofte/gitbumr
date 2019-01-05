@@ -17,5 +17,7 @@
         <file>qml/base/TypedArrayListModel.qml</file>
         <file>qml/components/CustomScrollBar.qml</file>
         <file>qml/base/TextElement.qml</file>
+        <file>qml/base/LibHelper.qml</file>
+        <file>qml/base/qmldir</file>
     </qresource>
 </RCC>

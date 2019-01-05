@@ -5,47 +5,72 @@ import QtQuick.Layouts 1.3
 import "../base"
 import "../style"
 
-Item {
+Rectangle {
     id: root
     property int rowHeight: 18
-    property bool reload: false
+    property int scrollBarWidth: 15
+    property string commitId: ""
+    property real computedCellWidth: 0
+    property variant textWidths: []
     signal diffChanged(string commitOid, int index, string status, string filenameOld, string filenameNew)
+    function updateGridDimensions() {
+        var gridItemWidth = 0;
+        var ws = textWidths;
+        var rowCount =  gitModel.diffs.rowCount();
+        if (ws.length !== rowCount) {
+            // ideally, we only do this once in "onCommitIdChanged"
+            for (var i = 0; i < gitModel.diffs.rowCount(); i++) {
+                var filename = LibHelper.modelValue(gitModel.diffs, i, LibHelper.diffs_filenameNew);
+                var fnWidth = Style.getTextDims(filename).width;
+                ws.push(fnWidth);
+            }
+            ws = ws.sort(function (a, b) { return  a - b }); // assumes all numbers
+        }
+        if (ws.length > 0) {
+            var rootWidth = root.width;
+            var rootHeight = Math.max(root.height - 15, root.rowHeight);
+            // grab the largest width, could do something where we cut off some items
+            // if that yields to more columns, etc.
+            var itemMaxSize = ws[ws.length - 1] + 25; // icon space + padding
+            var ratio = rootWidth / itemMaxSize;
+            var columnsRequiredNoScroll = Math.ceil(rowCount / Math.floor(rootHeight / root.rowHeight));
+            var expectedOverflow = columnsRequiredNoScroll * itemMaxSize > rootWidth;
+            if (expectedOverflow) {
+                gridItemWidth = itemMaxSize
+            } else {
+                gridItemWidth = rootWidth / columnsRequiredNoScroll
+            }
+        }
+        textWidths = ws;
+        computedCellWidth = gridItemWidth;
+    }
+    onCommitIdChanged: {
+        textWidths = [];
+        diffListViewRef.currentIndex = 0;
+        updateGridDimensions();
+    }
+    onHeightChanged: updateGridDimensions()
+    onWidthChanged: updateGridDimensions()
+    color: "transparent"
+    clip: true
+    height: parent.heigt
     GridView {
         id: diffListViewRef
-        // computes an adjusted column width based on the number of chars in a filepath.
-        function computeGridWidth() {
-            var pw = parent.width - 15; // 15 is for the scrollbar, visible or not
-            var max_len = gitModel.diffs.maxFilenameLength * 7 + 15;
-            var times = Math.max(Math.floor(pw / max_len), 1);
-            var adjusted_len = (pw) / times;
-            return isNaN(adjusted_len) ? 0 : adjusted_len;
-        }
-        property bool reloadFirst: true
-        property int gridItemWidth: computeGridWidth()
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        anchors.right: diffScrollRef.left
+        x: 0
         currentIndex: 0
-        // todo: must be a better way to detect list has been reloaded/rebound.
-        // this relies on the fact that currentIndex fires before currentItem,
-        // but at least this resets the selected row when changing commits.
-        property bool indexChanged: false
-        onCurrentIndexChanged: {
-            indexChanged = true
-        }
+        width: parent.width
+        height: parent.height - 15
+        cellHeight: rowHeight
+        cellWidth: computedCellWidth
+        model: gitModel.diffs
+        flow: GridView.FlowTopToBottom
+        interactive: false
+        keyNavigationEnabled: true
+        highlightMoveDuration: 1
+        highlightFollowsCurrentItem: true
         onCurrentItemChanged: {
-            if (!indexChanged) {
-                currentIndex = 0
-            } else {
-                indexChanged = false
-            }
-            if (reload && !reloadFirst) {
-                reload = false;
-            } else {
-                if (reloadFirst) {
-                    reload = reloadFirst = false;
-                }
+            if (currentItem) {
+                // todo: yields a few extra signals when switching list contents, etc
                 root.diffChanged(
                     gitModel.diffs.commitOid,
                     currentIndex,
@@ -55,14 +80,30 @@ Item {
                 );
             }
         }
-        clip: true
-        cellHeight: rowHeight
-        cellWidth: gridItemWidth
-        model: gitModel.diffs
-        interactive: false
-        highlightMoveDuration: 1
-        keyNavigationEnabled: true
-        highlightFollowsCurrentItem: true
+        Keys.onPressed: {
+            if (event.key === Qt.Key_PageDown) {
+                console.log("page down");
+            } else {
+                event.accepted = false;
+            }
+        }
+        ScrollBar.horizontal: CustomScrollBar {
+            id: gridScrollRef
+            transform: Translate { y: 15 }
+            policy: ScrollBar.AlwaysOn
+            orientation: Qt.Horizontal
+            adjustPositionOnResize: false
+            height: 15
+            enabled: size < 1
+            stepSize: root.rowHeight / diffListViewRef.contentWidth
+            captureMouseWheel: true
+            capturePositiveSide: true
+            containerOtherSize: parent.height + 15
+            scrollContainerSize: parent.width
+            scrollContentSize: diffListViewRef.contentWidth
+            // custom page step according to cell width
+            pageScrollStepSize: computedCellWidth / diffListViewRef.contentWidth
+        }
         highlight: Component{
             Item {
                 z: 2
@@ -84,17 +125,14 @@ Item {
                 }
             }
         }
-        ScrollBar.vertical: ScrollBar {
-            id: diffRealScrollRef
-            width: 0
-        }
         delegate: Component {
-            Item {
+            Rectangle {
+                color: "transparent"
                 height: rowHeight
                 property string filenameOldText: filenameOld
                 property string filenameNewText: filenameNew
                 property string statusText: status
-                width: diffListViewRef.gridItemWidth
+                width: root.computedCellWidth
                 clip: true
                 DiffStatusIcon {
                     statusValue: status
@@ -111,30 +149,8 @@ Item {
                         diffListViewRef.currentIndex = index;
                         diffListViewRef.forceActiveFocus();
                     }
-                    onWheel: {
-                        var isDown = wheel.angleDelta.y < 0;
-                        var topIdx = Math.max(0, diffListViewRef.indexAt(1, diffListViewRef.contentY + 1) + 3 * (isDown ? 1 : -1));
-                        diffListViewRef.positionViewAtIndex(topIdx, ListView.Beginning);
-                    }
                 }
             }
-        }
-    }
-
-    DesktopScrollbar {
-        id: diffScrollRef
-        anchors.top: parent.top
-        anchors.right: parent.right
-        scrollHeight: parent.height
-        scrollSize: diffRealScrollRef.size
-        scrollPosition: diffRealScrollRef.position
-        onPositionChanged: {
-            diffRealScrollRef.position = position
-        }
-        onStep: {
-            var stepVal = down ? 1 : -1;
-            var topIdx = Math.max(0, diffListViewRef.indexAt(1, diffListViewRef.contentY + 1) + stepVal);
-            diffListViewRef.positionViewAtIndex(topIdx, ListView.Beginning);
         }
     }
 }

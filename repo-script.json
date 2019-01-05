@@ -1,0 +1,11 @@
+[
+	"git:init",
+    "file:a:add",
+    "git:commit",
+    "file:a:add",
+    "git:commit",
+    "file:a:update",
+    "git:commit",
+    "file:b:hugefile10000",
+    "git:commit"
+]

@@ -8,17 +8,6 @@ import "../style"
 Item {
     property string statusValue: "Unknown"
     property int iconSize: 18
-    function mapGitStatusToColor(status) {
-        switch (status) {
-            case "Modified":    return "#F6C342";
-            case "Added":       return "#14892C";
-            case "Deleted":     return "#D04437";
-            case "Renamed":     return "#AC707A";
-            case "":            return Style.window;
-            default:
-                throw new Error('mapGitStatusToColor hnhandled git status: ' + status);
-        }
-    }
     function mapGitStatusToLetterOffset(status) {
         switch (status) {
             case "Modified":    return 3;
@@ -39,7 +28,7 @@ Item {
         width: iconSize
         x: 3
         y: 2.5
-        color: mapGitStatusToColor(statusValue)
+        color: Style.gitStatusColor(statusValue)
         visible: statusValue
         TextElement {
             x: mapGitStatusToLetterOffset(statusValue)

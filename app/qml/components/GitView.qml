@@ -54,9 +54,8 @@ QQC14.SplitView {
             width: parent.width * 0.5
             clip: true
             onSelectedChanged: {
-                // assume index updates first, so it is safe to read here
-                diffsViewRef.reload = true;
                 gitModel.loadCommit(selected);
+                diffsViewRef.commitId = selected;
             }
         }
         QQC14.SplitView {
@@ -69,6 +68,7 @@ QQC14.SplitView {
             DiffsView {
                 id: diffsViewRef
                 height: 150
+                width: parent.width
                 onDiffChanged: {
                     hunkViewRef.hunkId = null;
                     gitModel.loadDiff(commitOid, index);
