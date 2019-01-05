@@ -33,17 +33,17 @@ def execute_cmd(cmd_type, cmd, cmd_arg):
     print(cmd, cmd_arg)
     if cmd_type == "git":
         if cmd_arg == "init":
-            os.makedirs(args.path)
-            os.chdir(args.path)
+            
             run(["git.exe", "init"])
             return True
         elif cmd_arg == "commit":
             run(["git.exe", "add", "-A"])
-            run(["git.exe", "commit", "-m", "'" + commit_msg() + "'"])
+            run(["git.exe", "commit", "-m", commit_msg()])
             return True
     if cmd_type == "file":
         filename = cmd + '.txt'
         fo_mode = 'r+' if os.path.exists(filename) else 'w+'
+
         fo = open(filename, fo_mode)
         file_lines = fo.readlines() # goto eof
         if cmd_arg == "add":
@@ -63,10 +63,25 @@ def execute_cmd(cmd_type, cmd, cmd_arg):
                 fo.write("Line nr " + str(i + 1) + "\n")
             fo.close()
             return True
+        if cmd_arg == "unicode":
+            fo.close() # reopen for binary
+            fo = open(filename, 'w+b')
+            fo.write(b''.join([bytearray("".join(file_lines), "utf-8"), unicode_data]))
+            fo.close()
+            return True
     return False
+
 
 json_content = Path(args.cmds).read_text()
 cmd_script = json.loads(json_content)
+
+ufo = open('unicode.txt', 'rb')
+unicode_data = ufo.read()
+ufo.close()
+
+# goto folder for cmds
+os.makedirs(args.path)
+os.chdir(args.path)
 
 regex = re.compile("^([^:]+):([^:]+):?([^:]+)?$")
 # Normal processing starts

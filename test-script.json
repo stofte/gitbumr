@@ -7,5 +7,7 @@
     "file:a:update",
     "git:commit",
     "file:b:hugefile10000",
+    "git:commit",
+    "file:a:unicode",
     "git:commit"
 ]

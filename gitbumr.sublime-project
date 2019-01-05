@@ -13,7 +13,7 @@
             "name": "lib"
         },
         {
-            "file_include_patterns": ["*.json", "*.sublime-project", "readme.md", "appveyor.yml", "*.pro", "*.py"],
+            "file_include_patterns": ["*.json", "*.txt", "*.sublime-project", "readme.md", "appveyor.yml", "*.pro", "*.py"],
             "folder_exclude_patterns": ["*"],
             "name": "project",
             "path": "."
