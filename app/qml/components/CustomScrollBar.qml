@@ -32,7 +32,6 @@ ScrollBar {
     property real scrollBarMinimumSize: 18
     // if the scrollbar is attached, the container will do this by itself
     property bool adjustPositionOnResize: true
-    property real scrollPageStepSize: 0.2
     // scrollTarget is assumed to point to the content being scrolled,
     // so we can detect when it changes, to reset the scroll position.
     property variant scrollTarget
@@ -109,7 +108,7 @@ ScrollBar {
         // location, if the user is still holding the button.
         property bool scrollCheck: false
         property real scrollPosition: 0
-        interval: 60;
+        interval: 40;
         running: false;
         repeat: true
         triggeredOnStart: true

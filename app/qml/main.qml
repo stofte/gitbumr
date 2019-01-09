@@ -12,7 +12,7 @@ ApplicationWindow {
     width: 1000
     x: 100
     y: 25
-    height: 500
+    height: 450
     color: Style.window
     property variant repoMgr;
     // Some basic handling of selected text. this isn't perfect, but at least

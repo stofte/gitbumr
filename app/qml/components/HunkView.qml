@@ -23,24 +23,29 @@ Rectangle {
     property string filenameOld: ""
     property string filenameNew: ""
     property string statusText: ""
-    property string hunkId: "" // commitsha + idx
+    // commitsha + idx, "x" as default value to detect when GitView
+    // initially resets the model for the first diff.
+    property string hunkId: "x"
     property variant originList
     property int floatScrollBarIndex: -1;
     property real floatScrollBarOffset: 0;
     property int hunkItemLineCount: 0
     property real listContentHeight: 0
     Keys.forwardTo: [hunksMainScrollRef]
-    onHeightChanged: floatScrollBarIndex = getBottomElementIndex()
-    onWidthChanged: floatScrollBarIndex = getBottomElementIndex()
+    //onHeightChanged: floatScrollBarIndex = getBottomElementIndex()
+    //onWidthChanged: floatScrollBarIndex = getBottomElementIndex()
     onHunkIdChanged: {
+        //console.log("hunkid changed", hunkId, hunkListViewRef.loadingModel)
         if (!hunkId) {
+            hunkListViewRef.loadingModel = true;
             listContentHeight = 0;
             hunksMainScrollRef.position = 0;
-            return;
+        } else {
+            hunkListViewRef.loadingModel = false;
         }
-        floatScrollBarIndex = getBottomElementIndex()
-        listContentHeight = getHeight();
-        hunkListViewRef.height = listContentHeight;
+        //floatScrollBarIndex = getBottomElementIndex()
+        //listContentHeight = getHeight();
+        //hunkListViewRef.height = listContentHeight;
     }
     function getBottomElementIndex() {
         // 4.5 is fudged value to mark as "bottom" when
@@ -129,202 +134,29 @@ Rectangle {
         anchors.right: parent.right
         color: "transparent"
         clip: true
-        ListView {
+        VirtualListView {
             id: hunkListViewRef
-            model: gitModel.hunks
-            y: -hunksMainScrollRef.position * height
-            x: 0
             width: parent.width - hunksMainScrollRef.width
-            onYChanged: root.floatScrollBarIndex = getBottomElementIndex()
-            clip: true
-            interactive: false
-            delegate: Component {
-                Item {
-                    property bool isFloatingScrollBar: index === root.floatScrollBarIndex
-                    id: hunkListRootItemRef
-                    height: diffRef.contentHeight + Style.fontFixedLineHeight + hunkBotScrollRef.height + hunkTitleRectRef.height
-                    width: parent.width
-                    Rectangle {
-                        color: "transparent"
-                        clip: true
-                        width: parent.width
-                        height: parent.height
-                        TypedArrayListModel {
-                            id: originsJsonModel
-                            jsonArray: linesOrigin
-                        }
-                        Rectangle {
-                            id: hunkTitleRectRef
-                            anchors.top: parent.top
-                            anchors.left: parent.left
-                            width: parent.width
-                            height: 20
-                            color: "transparent"
-                            TextElement {
-                                property bool decodeError: linesTo === 0 && linesFrom === 0
-                                function getLineText() {
-                                    return decodeError ? " : failed to decode hunk as UTF-8"
-                                                       : " : " + (linesTo - linesFrom + 1) + " lines";
-                                }
-                                x: 5
-                                y: 4
-                                opacity: 0.6
-                                color: decodeError ? "red" : "black"
-                                text: "Hunk " + (index + 1) + getLineText()
-                            }
-                        }
-                        Rectangle {
-                            id: hunkLinesViewRef
-                            anchors.top: hunkTitleRectRef.bottom
-                            anchors.left: parent.left
-                            width: linesOldListRef.width + linesNewListRef.width + 5
-                            height: parent.height
-                            anchors.margins: 5
-                            TypedArrayListModel {
-                                id: linesOldJsonModel
-                                byteSize: 32
-                                jsonArray: linesOld
-                            }
-                            TypedArrayListModel {
-                                id: linesNewJsonModel
-                                byteSize: 32
-                                jsonArray: linesNew
-                            }
-                            color: "transparent"
-                            clip: true
-                            Component {
-                                id: lineNumComponentRef
-                                Rectangle {
-                                    height: Style.fontFixedLineHeight
-                                    width: parent.width
-                                    color: "transparent"
-                                    TextElement {
-                                        anchors.right: parent.right
-                                        anchors.top: parent.top
-                                        height: parent.height
-                                        width: parent.width
-                                        horizontalAlignment: Text.AlignRight
-                                        font.pointSize: Style.fontPointSize - 2
-                                        font.family: Style.fontNameFixedWidth
-                                        text: value === MAX_U32_INT ? " " : value
-                                    }
-                                }
-                            }
-                            ListView {
-                                id: linesOldListRef
-                                anchors.top: parent.top
-                                anchors.left: parent.left
-                                spacing: 0
-                                opacity: 0.6
-                                width: 7 + linesOldCols * 6
-                                height: diffRef.height
-                                model: linesOldJsonModel.model
-                                interactive: false
-                                delegate: lineNumComponentRef
-                            }
-                            ListView {
-                                id: linesNewListRef
-                                anchors.top: parent.top
-                                anchors.left: linesOldListRef.right
-                                spacing: 0
-                                width: 7 + linesNewCols * 6
-                                opacity: 0.6
-                                height: diffRef.height
-                                model: linesNewJsonModel.model
-                                interactive: false
-                                delegate: lineNumComponentRef
-                            }
-                        }
-                        Rectangle {
-                            id: hunkListingsRectRef
-                            anchors.top: hunkTitleRectRef.bottom
-                            anchors.left: hunkLinesViewRef.right
-                            height: diffRef.contentHeight + 15
-                            width: parent.width - hunkLinesViewRef.width - 10
-                            anchors.topMargin: 5
-                            color: "white"
-                            clip: true
-                            ListView {
-                                x: 0
-                                y: 0
-                                spacing: 0
-                                width: parent.width
-                                height: parent.height
-                                model: originsJsonModel.model
-                                interactive: false
-                                delegate: Component {
-                                    Rectangle {
-                                        height: Style.fontFixedLineHeight
-                                        width: parent.width
-                                        color: Style.lineOriginColor(value)
-                                    }
-                                }
-                            }
-                            Rectangle {
-                                id: diffContainerRectRef
-                                width: diffRef.contentWidth + 15
-                                height: diffRef.contentHeight
-                                color: "transparent"
-                                x: -hunkBotScrollRef.position * width
-                                y: 0
-                                ListView {
-                                    anchors.fill: parent
-                                    spacing: 0
-                                    model: originsJsonModel.model
-                                    interactive: false
-                                    delegate: Component {
-                                        Rectangle {
-                                            height: Style.fontFixedLineHeight
-                                            width: 15
-                                            color: Style.lineOriginColor(value)
-                                            TextElement {
-                                                y: -1.5
-                                                anchors.right: parent.right
-                                                anchors.rightMargin: 4
-                                                fixedWidthFont: true
-                                                opacity: 0.6
-                                                font.pointSize: Style.fontFixedPointSize + 2
-                                                text: Style.lineOriginSigil(value)
-                                            }
-                                        }
-                                    }
-                                }
-                                TextElement {
-                                    id: diffRef
-                                    x: 15
-                                    y: 0
-                                    // ensure the full width can always be selected
-                                    width: hunkListingsRectRef.width
-                                    selectableText: true
-                                    fixedWidthFont: true
-                                    text: hunk
-                                }
-                            }
-                            CustomScrollBar {
-                                id: hunkBotScrollRef
-                                x: 0
-                                z: 2
-                                function getYOffset() {
-                                    if (isFloatingScrollBar && enabled) {
-                                        var mappedY = hunkListRootItemRef.mapFromItem(hunkListViewRef, 0, floatScrollBarOffset).y;
-                                        var offset = mappedY - height - 9 + hunkListViewRef.contentY;
-                                        return Math.max(10, offset);
-                                    }
-                                    return parent.height - height;
-                                }
-                                y: getYOffset()
-                                policy: ScrollBar.AlwaysOn
-                                orientation: Qt.Horizontal
-                                height: 15
-                                enabled: size < 1
-                                width: parent.width
-                                size: hunkListingsRectRef.width / diffContainerRectRef.width
-                                stepSize: 1 / (hunkMaxLineLength * 0.5)
-                                scrollContainerSize: parent.width
-                                scrollContentSize: diffContainerRectRef.width
-                            }
+            height: parent.height
+            debug: true
+            viewPosition: hunksMainScrollRef.position
+            heightColumn: LibHelper.hunks_lines
+            heightValueFactor: Style.fontFixedLineHeight
+            items: ListView { model: gitModel.hunks; delegate: Component { Item { } } }
+            itemDelegate: Component{
+                TextElement {
+                    function index(elmId, index) {
+                        if (index > -1) {
+                            console.log("hunks", elmId, 'loading', index);
+                            var txt = LibHelper.modelValue(gitModel.hunks, index, LibHelper.hunks_hunk);
+                            text = txt;
+                        } else {
+                            console.log("hunks", elmId, 'unloading');
+                            text = '';
                         }
                     }
+                    selectableText: true
+                    fixedWidthFont: true
                 }
             }
         }
@@ -336,13 +168,11 @@ Rectangle {
             visible: size < 1
             height: parent.height
             orientation: Qt.Vertical
-            size: height / hunkListViewRef.height
-            // 20 is 2 * lineheights.
-            // todo: if everything in the scroll container divided by 10,
-            // scroll steps would always align with lines.
-            stepSize: 1 / (hunkListViewRef.height / (Style.fontFixedLineHeight * 2))
-            scrollContainerSize: parent.height
-            scrollContentSize: hunkListViewRef.height
+            size: height / hunkListViewRef.contentHeight
+            stepSize: 1 / (hunkListViewRef.contentHeight / (Style.fontFixedLineHeight * 2))
+            pageScrollOverlapSize: Style.fontFixedLineHeight * 2
+            scrollContainerSize: height
+            scrollContentSize: hunkListViewRef.contentHeight
             captureMouseWheel: true
             capturePositiveSide: false
             containerOtherSize: parent.width

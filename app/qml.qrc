@@ -19,5 +19,9 @@
         <file>qml/base/TextElement.qml</file>
         <file>qml/base/LibHelper.qml</file>
         <file>qml/base/qmldir</file>
+        <file>qml/components/VirtualListView.qml</file>
+        <file>qml/components/VirtualListItem.qml</file>
+        <file>qml/components/VirtualListShared.qml</file>
+        <file>qml/base/LayoutHelper.qml</file>
     </qresource>
 </RCC>

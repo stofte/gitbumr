@@ -54,103 +54,109 @@ Rectangle {
     color: "transparent"
     clip: true
     height: parent.heigt
-    GridView {
-        id: diffListViewRef
-        x: 0
-        currentIndex: 0
+    LayoutHelper {
+        height: parent.height
         width: parent.width
-        height: parent.height - 15
-        cellHeight: rowHeight
-        cellWidth: computedCellWidth
-        model: gitModel.diffs
-        flow: GridView.FlowTopToBottom
-        interactive: false
-        keyNavigationEnabled: true
-        highlightMoveDuration: 1
-        highlightFollowsCurrentItem: true
-        onCurrentItemChanged: {
-            if (currentItem) {
-                // todo: yields a few extra signals when switching list contents, etc
-                root.diffChanged(
-                    gitModel.diffs.commitOid,
-                    currentIndex,
-                    currentItem.statusText,
-                    currentItem.filenameOldText,
-                    currentItem.filenameNewText
-                );
+        enabled: true
+        GridView {
+            id: diffListViewRef
+            x: 0
+            currentIndex: 0
+            width: parent.width
+            height: parent.height - 15
+            cellHeight: rowHeight
+            cellWidth: computedCellWidth
+            model: gitModel.diffs
+            flow: GridView.FlowTopToBottom
+            interactive: false
+            keyNavigationEnabled: true
+            highlightMoveDuration: 1
+            highlightFollowsCurrentItem: true
+            onCurrentItemChanged: {
+                if (currentItem) {
+                    // todo: yields a few extra signals when switching list contents, etc
+                    root.diffChanged(
+                        gitModel.diffs.commitOid,
+                        currentIndex,
+                        currentItem.statusText,
+                        currentItem.filenameOldText,
+                        currentItem.filenameNewText
+                    );
+                }
             }
-        }
-        Keys.onPressed: {
-            if (event.key === Qt.Key_PageDown) {
-                console.log("page down");
-            } else {
-                event.accepted = false;
+            Keys.onPressed: {
+                if (event.key === Qt.Key_PageDown) {
+                    console.log("page down");
+                } else {
+                    event.accepted = false;
+                }
             }
-        }
-        ScrollBar.horizontal: CustomScrollBar {
-            id: gridScrollRef
-            transform: Translate { y: 15 }
-            policy: ScrollBar.AlwaysOn
-            orientation: Qt.Horizontal
-            adjustPositionOnResize: false
-            height: 15
-            enabled: size < 1
-            stepSize: root.rowHeight / diffListViewRef.contentWidth
-            captureMouseWheel: true
-            capturePositiveSide: true
-            containerOtherSize: parent.height + 15
-            scrollContainerSize: parent.width
-            scrollContentSize: diffListViewRef.contentWidth
-            // custom page step according to cell width
-            pageScrollStepSize: computedCellWidth / diffListViewRef.contentWidth
-        }
-        highlight: Component{
-            Item {
-                z: 2
-                height: rowHeight
-                clip: true
-                Rectangle{
-                    anchors.fill: parent
-                    color: Style.selection
+            ScrollBar.horizontal: CustomScrollBar {
+                id: gridScrollRef
+                transform: Translate { y: 15 }
+                policy: ScrollBar.AlwaysOn
+                orientation: Qt.Horizontal
+                adjustPositionOnResize: false
+                height: 15
+                enabled: size < 1
+                stepSize: root.rowHeight / diffListViewRef.contentWidth
+                captureMouseWheel: true
+                capturePositiveSide: true
+                containerOtherSize: parent.height + 15
+                scrollContainerSize: parent.width
+                scrollContentSize: diffListViewRef.contentWidth
+                // custom page step according to cell width
+                pageScrollStepSize: computedCellWidth / diffListViewRef.contentWidth
+            }
+            highlight: Component{
+                Item {
+                    z: 2
+                    height: rowHeight
+                    clip: true
+                    Rectangle{
+                        anchors.fill: parent
+                        color: Style.selection
+                        DiffStatusIcon {
+                            statusValue: diffListViewRef.currentItem ? diffListViewRef.currentItem.statusText : ""
+                            iconSize: rowHeight - 5
+                        }
+                        TextElement {
+                            x: 20
+                            y: 3
+                            color: "white"
+                            text: diffListViewRef.currentItem && diffListViewRef.currentItem.filenameNewText
+                        }
+                    }
+                }
+            }
+            delegate: Component {
+                Rectangle {
+                    color: "transparent"
+                    height: rowHeight
+                    property string filenameOldText: filenameOld
+                    property string filenameNewText: filenameNew
+                    property string statusText: status
+                    width: root.computedCellWidth
+                    clip: true
                     DiffStatusIcon {
-                        statusValue: diffListViewRef.currentItem ? diffListViewRef.currentItem.statusText : ""
+                        statusValue: status
                         iconSize: rowHeight - 5
                     }
                     TextElement {
                         x: 20
                         y: 3
-                        color: "white"
-                        text: diffListViewRef.currentItem && diffListViewRef.currentItem.filenameNewText
+                        text: filenameNewText
                     }
-                }
-            }
-        }
-        delegate: Component {
-            Rectangle {
-                color: "transparent"
-                height: rowHeight
-                property string filenameOldText: filenameOld
-                property string filenameNewText: filenameNew
-                property string statusText: status
-                width: root.computedCellWidth
-                clip: true
-                DiffStatusIcon {
-                    statusValue: status
-                    iconSize: rowHeight - 5
-                }
-                TextElement {
-                    x: 20
-                    y: 3
-                    text: filenameNewText
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    onPressed: {
-                        diffListViewRef.currentIndex = index;
-                        diffListViewRef.forceActiveFocus();
+                    MouseArea {
+                        anchors.fill: parent
+                        onPressed: {
+                            diffListViewRef.currentIndex = index;
+                            diffListViewRef.forceActiveFocus();
+                        }
                     }
                 }
             }
         }
     }
+
 }

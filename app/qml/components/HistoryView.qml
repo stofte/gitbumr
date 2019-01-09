@@ -166,7 +166,7 @@ Rectangle {
                                 //anchors.fill: parent
                                 font.pointSize: Style.fontPointSize
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                                text: historyListView.currentItem && historyListView.currentItem.messageText
+                                text: historyListView.currentItem && historyListView.currentItem.commitId + "\n\n" + historyListView.currentItem.messageText
                             }
                         }
                         CustomScrollBar {

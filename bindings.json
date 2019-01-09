@@ -120,6 +120,7 @@
             "itemProperties": {
                 "hunk": { "type": "QString" },
                 "hunkMaxLineLength": { "type": "quint64" },
+                "lines": { "type": "quint64" },
                 "linesFrom": { "type": "quint64" },
                 "linesNew": { "type": "QByteArray" },
                 "linesNewCols": { "type": "quint64" },

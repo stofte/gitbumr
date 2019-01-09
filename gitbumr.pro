@@ -67,5 +67,5 @@ rust_cargo.input = RUST_FILES
 # we work around this by adding a bogus file, and then adding the cargo clean cmd.
 # again, qmake/qtcreator can't see the full build graph, but at least this will 
 # allow a clean build.
-rust_cargo.clean = this_file_is_not_here & cargo clean --manifest-path="$$PWD/lib/Cargo.toml"
+# rust_cargo.clean = this_file_is_not_here & cargo clean --manifest-path="$$PWD/lib/Cargo.toml"
 QMAKE_EXTRA_COMPILERS += rust_cargo

@@ -6,6 +6,7 @@ use utils::MAX_U32_INT;
 pub struct HunksItem {
     pub hunk: String,
     pub hunk_max_line_length: u64,
+    pub lines: u64,
     pub lines_origin: Vec<u8>,
     pub lines_old: Vec<u8>,
     pub lines_old_cols: u64,
@@ -71,6 +72,7 @@ fn map_from_diff_to_hunk_list(hunk: &str, status: &str, hunk_max_line_length: us
     }
     HunksItem {
         hunk: hunk.to_string(),
+        lines: lines_origin.len() as u64,
         hunk_max_line_length: hunk_max_line_length as u64,
         lines_origin: l_origins_as_ints,
         lines_old: split_into_bytes(l_old_as_ints),
@@ -119,6 +121,9 @@ impl HunksTrait for Hunks {
     }
     fn hunk(&self, index: usize) -> &str {
         &self.list[index].hunk
+    }
+    fn lines(&self, index: usize) -> u64 {
+        self.list[index].lines
     }
     fn lines_origin(&self, index: usize) -> &[u8] {
         &self.list[index].lines_origin

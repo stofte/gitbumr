@@ -1095,6 +1095,7 @@ pub trait HunksTrait {
     fn sort(&mut self, u8, SortOrder) {}
     fn hunk(&self, index: usize) -> &str;
     fn hunk_max_line_length(&self, index: usize) -> u64;
+    fn lines(&self, index: usize) -> u64;
     fn lines_from(&self, index: usize) -> u64;
     fn lines_new(&self, index: usize) -> &[u8];
     fn lines_new_cols(&self, index: usize) -> u64;
@@ -1192,6 +1193,12 @@ pub unsafe extern "C" fn hunks_data_hunk(
 pub unsafe extern "C" fn hunks_data_hunk_max_line_length(ptr: *const Hunks, row: c_int) -> u64 {
     let o = &*ptr;
     o.hunk_max_line_length(to_usize(row)).into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_data_lines(ptr: *const Hunks, row: c_int) -> u64 {
+    let o = &*ptr;
+    o.lines(to_usize(row)).into()
 }
 
 #[no_mangle]

@@ -70,6 +70,7 @@ QQC14.SplitView {
                 height: 150
                 width: parent.width
                 onDiffChanged: {
+                    console.log("DIFF CHANGED");
                     hunkViewRef.hunkId = null;
                     gitModel.loadDiff(commitOid, index);
                     hunkViewRef.hunkId = ""+commitOid+index;
