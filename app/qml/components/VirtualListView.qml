@@ -23,6 +23,7 @@ Rectangle {
         debug: root.debug
         itemOffsets: []
         itemHeights: []
+        itemLineHeights: []
         vliCount: 10
         itemDelegate: root.itemDelegate
         contentOffset: root.viewPosition * contentHeight
@@ -48,17 +49,22 @@ Rectangle {
         var ih;
         var newHeights = [];
         var newOffsets = [];
+        var newLineHeights = [];
         for(var i = 0; i < items.model.rowCount(); i++) {
             var content = LibHelper.modelValue(items.model, i, textContentColumn);
-            ih = Style.getTextDims(content, true).height + extraItemHeight;
+            var listModel = listModelRef.createObject(null);
+            var txtDims = Style.getTextDims(content, true, listModel);
+            ih = txtDims.height + extraItemHeight;
             newHeights.push(ih);
             newOffsets.push(h);
+            newLineHeights.push(listModel);
             h += ih;
         }
         return {
             contentHeight: h,
             heights: newHeights,
-            offsets: newOffsets
+            offsets: newOffsets,
+            lineHeights: newLineHeights
         };
     }
     function update(offset, isIncrease, includeMetrics) {
@@ -73,6 +79,7 @@ Rectangle {
             shared.contentHeight = metrics.contentHeight;
             shared.itemHeights = metrics.heights;
             shared.itemOffsets = metrics.offsets;
+            shared.itemLineHeights = metrics.lineHeights;
         }
         var fromIdx = -1;
         var toIdx = -1;
@@ -110,6 +117,10 @@ Rectangle {
         shared.vlEnd = vlEnd;
         shared.updating = false;
 //        if (wrote) console.log("INDEX updated");
+    }
+    Component {
+        id: listModelRef
+        ListModel { }
     }
     Component.onCompleted: {
         root.virtualItems = [];

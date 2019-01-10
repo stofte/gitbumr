@@ -147,18 +147,24 @@ Rectangle {
             items: ListView { model: gitModel.hunks; delegate: Component { Item { } } }
             itemDelegate: Component {
                 Item {
+                    id: hunkComp
                     height: hunkTitleRectRef.height + compTxt.contentHeight
+                    width: hunkListViewRef.width
                     property int index
                     property int linesTo
                     property int linesFrom
-                    function load(elmId, idx) {
+                    property ListModel lineHeights
+                    function load(elmId, idx, lineHeightValues) {
                         if (idx > -1) {
                             var txt = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_hunk);
                             linesFrom = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesFrom);
                             linesTo = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesTo);
+                            lineHeights = lineHeightValues;
                             if (!txt) {
                                 throw new Error('undefined text for ', idx)
                             }
+                            lineCanvas.render = true;
+                            lineCanvas.requestPaint();
                             compTxt.text = txt;
                             index = idx;
                         } else {
@@ -185,10 +191,32 @@ Rectangle {
                             text: "Hunk " + (index + 1) + getLineText()
                         }
                     }
+                    Canvas {
+                        id: lineCanvas
+                        x: 0
+                        y: 20
+                        height: compTxt.contentHeight
+                        width: parent.width
+                        property bool render: false
+                        onPaint: {
+                            if (render && lineHeights) {
+                                render = false;
+                                var y = 0;
+                                var ctx = getContext("2d");
+                                for(var i = 0; i < lineHeights.count; i++) {
+                                    var l = hunkComp.lineHeights.get(i);
+                                    ctx.fillStyle = l.value === 10 ? Qt.rgba(1,0,0,0) : Qt.rgba(1,0,0,0.5);
+                                    ctx.fillRect(0, y, width, l.value);
+                                    y += l.value;
+                                }
+                            }
+                        }
+                    }
                     TextElement {
                         x: 0
                         y: 20
                         id: compTxt
+                        width: parent.width
                         selectableText: true
                         fixedWidthFont: true
                     }

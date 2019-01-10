@@ -41,12 +41,25 @@ Item {
                 throw new Error("unhandled case: '" + val + "' in lineOriginColor");
         }
     }
-    function getTextDims(txt, useFixedWidthFont) {
+    function getTextDims(txt, useFixedWidthFont, lineModel) {
         var txtElm = useFixedWidthFont ? txtFixedSizeRef : txtSizeRef;
         txtElm.text = txt;
         var w = txtElm.contentWidth;
         var h = txtElm.contentHeight;
         var lh = txtElm.contentHeight / txtElm.lineCount;
+        var y = 2;
+        var pos = -1;
+        var lineHeights = [];
+        while (lineModel && true) {
+            var newPos = txtElm.positionAt(10000, y);
+            var rect = txtElm.positionToRectangle(newPos)
+            if (newPos === pos) {
+                break;
+            }
+            y += rect.height;
+            lineModel.append({value: rect.height});
+            pos = newPos;
+        }
         return {
             width: w,
             height: h,
