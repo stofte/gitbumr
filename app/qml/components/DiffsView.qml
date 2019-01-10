@@ -57,7 +57,7 @@ Rectangle {
     LayoutHelper {
         height: parent.height
         width: parent.width
-        enabled: true
+        enabled: false
         GridView {
             id: diffListViewRef
             x: 0

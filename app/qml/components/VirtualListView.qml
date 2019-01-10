@@ -1,5 +1,6 @@
 import QtQuick 2.11
 import "../base"
+import "../style"
 
 Rectangle {
     id: root
@@ -9,8 +10,10 @@ Rectangle {
     property bool debug: false
     property real preloadSize: 100
     property real contentHeight: shared.contentHeight
+    property int textContentColumn
     property int heightColumn
     property int heightValueFactor: 1
+    property int extraItemHeight: 0
     property real viewPosition: 0
     property bool loadingModel: true
     property ListView items
@@ -25,38 +28,51 @@ Rectangle {
         contentOffset: root.viewPosition * contentHeight
         property real prevOffset
         onContentOffsetChanged: {
-            root.updateIndexes(contentOffset, prevOffset < contentOffset);
+            root.update(contentOffset, prevOffset < contentOffset, false);
             prevOffset = contentOffset;
         }
     }
     onLoadingModelChanged: {
         if (!loadingModel) {
-            var i;
-            // iterate model and get heights of each element ...
-            var h = 0;
-            for(i = 0; i < items.model.rowCount(); i++) {
-                var ih = LibHelper.modelValue(items.model, i, heightColumn) * heightValueFactor;
-                shared.itemHeights.push(ih);
-                shared.itemOffsets.push(h);
-                h += ih;
-            }
-            shared.contentHeight = h;
-            updateIndexes(0, false);
+            update(0, false, true);
             shared.reloading = false;
         } else {
-            shared.itemHeights = [];
-            shared.itemOffsets = [];
             shared.reloading = true;
         }
     }
     onHeightChanged: {
-        updateIndexes(shared.contentOffset, false)
+        update(shared.contentOffset, false, false)
     }
-    function updateIndexes(offset, isIncrease) {
+    function getMetrics() {
+        var h = 0;
+        var ih;
+        var newHeights = [];
+        var newOffsets = [];
+        for(var i = 0; i < items.model.rowCount(); i++) {
+            var content = LibHelper.modelValue(items.model, i, textContentColumn);
+            ih = Style.getTextDims(content, true).height + extraItemHeight;
+            newHeights.push(ih);
+            newOffsets.push(h);
+            h += ih;
+        }
+        return {
+            contentHeight: h,
+            heights: newHeights,
+            offsets: newOffsets
+        };
+    }
+    function update(offset, isIncrease, includeMetrics) {
         shared.itemCount = items.model.rowCount();
         if (shared.itemCount === 0) {
             shared.itemIndex = 0;
             return;
+        }
+        shared.updating = true;
+        if (includeMetrics) {
+            var metrics = getMetrics();
+            shared.contentHeight = metrics.contentHeight;
+            shared.itemHeights = metrics.heights;
+            shared.itemOffsets = metrics.offsets;
         }
         var fromIdx = -1;
         var toIdx = -1;
@@ -76,7 +92,7 @@ Rectangle {
         }
         var loadCount = toIdx - fromIdx + 1;
         if (loadCount > shared.vliCount) {
-            throw new Error('too few virtuel items')
+            throw new Error('too few virtuel items');
         }
         var idxDiff = (fromIdx - shared.itemIndex) % shared.vliCount;
         var vlIndex = (shared.vlIndex + idxDiff) % shared.vliCount;
@@ -89,7 +105,6 @@ Rectangle {
         }
         var wrote = shared.vlIndex !== vlIndex || shared.vlEnd !== vlEnd || shared.itemIndex !== fromIdx;
 //        if (wrote) console.log("INDEX", fromIdx, "count", loadCount, "\t", vlIndex, "to", vlEnd);
-        shared.updating = true;
         shared.itemIndex = fromIdx;
         shared.vlIndex = vlIndex;
         shared.vlEnd = vlEnd;

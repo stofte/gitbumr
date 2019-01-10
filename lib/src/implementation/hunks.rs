@@ -45,7 +45,7 @@ fn split_into_bytes(inp: Vec<u32>) -> Vec<u8> {
     outp
 }
 
-fn map_from_diff_to_hunk_list(hunk: &str, status: &str, hunk_max_line_length: usize, lines_origin: &Vec<char>, lines_old: &Vec<Option<u32>>, lines_new: &Vec<Option<u32>>) -> HunksItem {
+fn map_from_diff_to_hunk_list(hunk: &str, line_count: usize, status: &str, hunk_max_line_length: usize, lines_origin: &Vec<char>, lines_old: &Vec<Option<u32>>, lines_new: &Vec<Option<u32>>) -> HunksItem {
     let l_origins_as_ints: Vec<u8> = lines_origin.iter().map(|c| map_git_origin_sigil(*c)).collect();
     let l_old_as_ints: Vec<u32> = lines_old.iter().map(|c| match c { Some(cv) => *cv, None => MAX_U32_INT }).collect();
     let l_new_as_ints: Vec<u32> = lines_new.iter().map(|c| match c { Some(cv) => *cv, None => MAX_U32_INT }).collect();
@@ -72,7 +72,7 @@ fn map_from_diff_to_hunk_list(hunk: &str, status: &str, hunk_max_line_length: us
     }
     HunksItem {
         hunk: hunk.to_string(),
-        lines: lines_origin.len() as u64,
+        lines: line_count as u64, // lines_origin.len() as u64 + newline_add_one,
         hunk_max_line_length: hunk_max_line_length as u64,
         lines_origin: l_origins_as_ints,
         lines_old: split_into_bytes(l_old_as_ints),
@@ -93,6 +93,7 @@ pub fn fill_hunks(hunks: &mut Hunks, diffs: &Diffs, index: u64, oid: &str) {
     for h_idx in 0..diff.hunks.len() {
         hv.push(map_from_diff_to_hunk_list(
             &diff.hunks[h_idx],
+            diff.hunk_lines[h_idx],
             &diff.status,
             diff.hunks_max_line_length[h_idx],
             &diff.lines_origin[h_idx],

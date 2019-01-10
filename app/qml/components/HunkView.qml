@@ -138,25 +138,60 @@ Rectangle {
             id: hunkListViewRef
             width: parent.width - hunksMainScrollRef.width
             height: parent.height
-            debug: true
+            debug: false
             viewPosition: hunksMainScrollRef.position
+            textContentColumn: LibHelper.hunks_hunk
             heightColumn: LibHelper.hunks_lines
             heightValueFactor: Style.fontFixedLineHeight
+            extraItemHeight: 20
             items: ListView { model: gitModel.hunks; delegate: Component { Item { } } }
-            itemDelegate: Component{
-                TextElement {
-                    function index(elmId, index) {
-                        if (index > -1) {
-                            console.log("hunks", elmId, 'loading', index);
-                            var txt = LibHelper.modelValue(gitModel.hunks, index, LibHelper.hunks_hunk);
-                            text = txt;
+            itemDelegate: Component {
+                Item {
+                    height: hunkTitleRectRef.height + compTxt.contentHeight
+                    property int index
+                    property int linesTo
+                    property int linesFrom
+                    function load(elmId, idx) {
+                        if (idx > -1) {
+                            var txt = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_hunk);
+                            linesFrom = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesFrom);
+                            linesTo = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesTo);
+                            if (!txt) {
+                                throw new Error('undefined text for ', idx)
+                            }
+                            compTxt.text = txt;
+                            index = idx;
                         } else {
-                            console.log("hunks", elmId, 'unloading');
-                            text = '';
+                            compTxt.text = '';
                         }
                     }
-                    selectableText: true
-                    fixedWidthFont: true
+                    Rectangle {
+                        id: hunkTitleRectRef
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        width: parent.width
+                        height: 20
+                        color: "transparent"
+                        TextElement {
+                            property bool decodeError: linesTo === 0 && linesFrom === 0
+                            function getLineText() {
+                                return decodeError ? " : failed to decode hunk as UTF-8"
+                                                   : " : " + (linesTo - linesFrom + 1) + " lines";
+                            }
+                            x: 5
+                            y: 4
+                            opacity: 0.6
+                            color: decodeError ? "red" : "black"
+                            text: "Hunk " + (index + 1) + getLineText()
+                        }
+                    }
+                    TextElement {
+                        x: 0
+                        y: 20
+                        id: compTxt
+                        selectableText: true
+                        fixedWidthFont: true
+                    }
                 }
             }
         }
@@ -164,8 +199,7 @@ Rectangle {
             id: hunksMainScrollRef
             x: parent.width - width
             y: 0
-            width: visible ? 15 : 0
-            visible: size < 1
+            width: size < 1 ? 15 : 0
             height: parent.height
             orientation: Qt.Vertical
             size: height / hunkListViewRef.contentHeight

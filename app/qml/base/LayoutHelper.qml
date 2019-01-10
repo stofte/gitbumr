@@ -11,7 +11,7 @@ Item {
     property string debugText
     property real debugPointSize: 20
     Rectangle {
-        visible: enabled
+        visible: root.enabled
         property string debugColor: parent.color
         property real lineOpacity: 0.15
         property real textOpacity: 0.5

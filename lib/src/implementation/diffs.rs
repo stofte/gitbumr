@@ -24,6 +24,7 @@ pub struct DiffsItem {
     // via git.rs. Some minimal parsing is done to convert vectors to bytearrays
     // (which becomes a typed array in qml/js), when the list is loaded into hunks.
     pub hunks: Vec<String>,
+    pub hunk_lines: Vec<usize>,
     pub hunks_max_line_length: Vec<usize>,
     pub lines_origin: Vec<Vec<char>>,
     pub lines_new: Vec<Vec<Option<u32>>>,

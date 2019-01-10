@@ -13,7 +13,4 @@ TextEdit {
     readOnly: true
     selectByMouse: selectableText
     tabStopDistance: fixedWidthFont ? Style.tabStopFixedSize : Style.tabStopSize
-    onTextChanged: {
-        //console.log(Style.getTextWidth(text, false));
-    }
 }

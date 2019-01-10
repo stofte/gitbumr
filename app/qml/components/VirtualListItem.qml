@@ -8,17 +8,24 @@ Rectangle {
     // The index of the item being displayed from the model.
     property int itemIndex: getItemIndex()
     // The offset of the item relative to all previous items.
-    property real itemOffset: shared.itemOffsets[itemIndex] || 0
+    property real itemOffset: 0
     property VirtualListShared shared
     onItemIndexChanged: {
         // lets the component know what to do, either load the index,
         // if index >= 0 or otherwise unload its contents
-        loader.item.index(vIndex, itemIndex);
+        itemOffset = shared.itemOffsets[itemIndex] || 0;
+        loader.item.load(vIndex, itemIndex);
     }
+    color: "transparent"
     y: -shared.contentOffset + itemOffset
     height: shared.itemHeights[itemIndex] || 0
+    onHeightChanged: {
+        if (height == 0) return; // assume we're reloading or whatever
+        if (height !== loader.height) {
+            throw new Error('mismatched heights for index', itemIndex, 'expected', height, 'found', loader.height);
+        }
+    }
     width: parent && parent.width || 0
-    color: "transparent"
     visible: getLoaded()
     LayoutHelper {
         height: parent.height

@@ -45,9 +45,11 @@ Item {
         var txtElm = useFixedWidthFont ? txtFixedSizeRef : txtSizeRef;
         txtElm.text = txt;
         var w = txtElm.contentWidth;
+        var h = txtElm.contentHeight;
         var lh = txtElm.contentHeight / txtElm.lineCount;
         return {
             width: w,
+            height: h,
             lineHeight: lh,
         };
     }
@@ -85,23 +87,23 @@ Item {
         Component.onCompleted: {
             onceTabStopSize = getTextDims("\t", false).width;
             onceTabStopFixedSize = getTextDims("1234", true).width;
-            // include chars that blow up lineheight in most fonts
-            var testStr = "korean힌트동작chinese您尚未结";
-            oncFontFixedLineHeight = getTextDims("testStr", true).lineHeight;
+            oncFontFixedLineHeight = getTextDims("1234", true).lineHeight;
         }
     }
-    Text {
+    TextEdit {
         id: txtSizeRef
         renderType: fontRendering
         font.family: fontName
         font.pointSize: fontPointSize
+        textFormat: TextEdit.PlainText
         text: ""
     }
-    Text {
+    TextEdit {
         id: txtFixedSizeRef
         renderType: fontRendering
         font.family: fontNameFixedWidth
         font.pointSize: fontFixedPointSize
+        textFormat: TextEdit.PlainText
         text: "1234"
     }
 }
