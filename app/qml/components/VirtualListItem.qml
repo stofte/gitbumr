@@ -9,13 +9,11 @@ Rectangle {
     property int itemIndex: getItemIndex()
     // The offset of the item relative to all previous items.
     property real itemOffset: 0
-    property variant itemLineHeights
     property VirtualListShared shared
     onItemIndexChanged: {
         // lets the component know what to do, either load the index,
         // if index >= 0 or otherwise unload its contents
         itemOffset = shared.itemOffsets[itemIndex] || 0;
-        itemLineHeights = shared.itemLineHeights[itemIndex];
         loader.item.load(vIndex, itemIndex);
     }
     color: "transparent"

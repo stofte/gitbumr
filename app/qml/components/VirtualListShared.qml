@@ -5,7 +5,6 @@ Item {
     property real contentOffset
     property variant itemOffsets
     property variant itemHeights
-    property variant itemLineHeights
     property real contentHeight
     property Component itemDelegate
     // used in VirtualListItem to guard against partially updated values.

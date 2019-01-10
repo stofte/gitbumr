@@ -153,7 +153,6 @@ Rectangle {
                     var ih;
                     var newHeights = [];
                     var newOffsets = [];
-                    var newLineHeights = [];
                     var ts = Utils.now();
                     for(var i = 0; i < gitModel.hunks.rowCount(); i++) {
                         var content = LibHelper.modelValue(gitModel.hunks, i, LibHelper.hunks_hunk);
@@ -163,15 +162,13 @@ Rectangle {
                         ih = txtDims.height + hunkListViewRef.extraItemHeight;
                         newHeights.push(ih);
                         newOffsets.push(h);
-                        newLineHeights.push(listModel);
                         h += ih;
                     }
                     console.log("metrics duration", Utils.duration(ts))
                     return {
                         contentHeight: h,
                         heights: newHeights,
-                        offsets: newOffsets,
-                        lineHeights: newLineHeights
+                        offsets: newOffsets
                     };
                 }
             }
@@ -230,11 +227,11 @@ Rectangle {
                     linesTo = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesTo);
                     var linesData = hunkLineCache.get(idx);
                     lineHeights = linesData.list;
+                    compTxt.text = txt;
+                    index = idx;
                     if (linesData.ready) {
                         notify()
                     }
-                    compTxt.text = txt;
-                    index = idx;
                 } else {
                     compTxt.text = '';
                 }
@@ -271,7 +268,7 @@ Rectangle {
                 width: parent.width
                 property bool render: false
                 onPaint: {
-                    if (render && lineHeights) {
+                    if (render && lineHeights && available) {
                         render = false;
                         var y = 0;
                         var ctx = getContext("2d");

@@ -45,7 +45,6 @@ Rectangle {
         debug: root.debug
         itemOffsets: []
         itemHeights: []
-        itemLineHeights: []
         vliCount: 10
         itemDelegate: root.itemDelegate
         contentOffset: root.viewPosition * contentHeight
@@ -78,7 +77,6 @@ Rectangle {
             shared.contentHeight = metrics.contentHeight;
             shared.itemHeights = metrics.heights;
             shared.itemOffsets = metrics.offsets;
-            shared.itemLineHeights = metrics.lineHeights;
         }
         var fromIdx = -1;
         var toIdx = -1;
