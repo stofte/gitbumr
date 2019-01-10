@@ -69,3 +69,7 @@ rust_cargo.input = RUST_FILES
 # allow a clean build.
 # rust_cargo.clean = this_file_is_not_here & cargo clean --manifest-path="$$PWD/lib/Cargo.toml"
 QMAKE_EXTRA_COMPILERS += rust_cargo
+
+DISTFILES += \
+    app/qml/scripts/jsonParser.mjs \
+    app/qml/scripts/jsonParser.mjs

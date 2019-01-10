@@ -26,4 +26,11 @@ Item {
     property int itemIndex: 0
     // number of items in the model
     property int itemCount: 0
+    function getVirtualListActiveCount() {
+        if (vlIndex <= vlEnd) {
+            return vlEnd - vlIndex + 1;
+        } else {
+            return vliCount - vlIndex + vlEnd + 1;
+        }
+    }
 }

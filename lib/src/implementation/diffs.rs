@@ -24,6 +24,11 @@ pub struct DiffsItem {
     // via git.rs. Some minimal parsing is done to convert vectors to bytearrays
     // (which becomes a typed array in qml/js), when the list is loaded into hunks.
     pub hunks: Vec<String>,
+    // single string for all hunk listings in a single file. the format is:
+    // [hunk_index:number]\n
+    // [old_line];[new_line];[sigil]\n
+    // ... for each line in hunk
+    pub hunk_listings: String,
     pub hunk_lines: Vec<usize>,
     pub hunks_max_line_length: Vec<usize>,
     pub lines_origin: Vec<Vec<char>>,

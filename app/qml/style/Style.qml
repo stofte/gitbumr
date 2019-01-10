@@ -41,7 +41,7 @@ Item {
                 throw new Error("unhandled case: '" + val + "' in lineOriginColor");
         }
     }
-    function getTextDims(txt, useFixedWidthFont, lineModel) {
+    function getTextDims(txt, useFixedWidthFont, exactLines) {
         var txtElm = useFixedWidthFont ? txtFixedSizeRef : txtSizeRef;
         txtElm.text = txt;
         var w = txtElm.contentWidth;
@@ -50,20 +50,22 @@ Item {
         var y = 2;
         var pos = -1;
         var lineHeights = [];
-        while (lineModel && true) {
+        while (exactLines) {
             var newPos = txtElm.positionAt(10000, y);
             var rect = txtElm.positionToRectangle(newPos)
             if (newPos === pos) {
                 break;
             }
             y += rect.height;
-            lineModel.append({value: rect.height});
+            lineHeights.push(rect.height);
+//            lineModel.append({value: rect.height});
             pos = newPos;
         }
         return {
             width: w,
             height: h,
             lineHeight: lh,
+            lineHeights: lineHeights
         };
     }
     FontLoader { id: mainFont; name: "Roboto" }

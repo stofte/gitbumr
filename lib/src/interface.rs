@@ -837,6 +837,7 @@ pub extern "C" fn git_new(
     diffs_begin_remove_rows: fn(*mut DiffsQObject, usize, usize),
     diffs_end_remove_rows: fn(*mut DiffsQObject),
     hunks: *mut HunksQObject,
+    hunks_hunk_listings_changed: fn(*mut HunksQObject),
     hunks_new_data_ready: fn(*mut HunksQObject),
     hunks_layout_about_to_be_changed: fn(*mut HunksQObject),
     hunks_layout_changed: fn(*mut HunksQObject),
@@ -903,6 +904,7 @@ pub extern "C" fn git_new(
     let d_diffs = Diffs::new(diffs_emit, model);
     let hunks_emit = HunksEmitter {
         qobject: Arc::new(AtomicPtr::new(hunks)),
+        hunk_listings_changed: hunks_hunk_listings_changed,
         new_data_ready: hunks_new_data_ready,
     };
     let model = HunksList {
@@ -1000,6 +1002,7 @@ pub struct HunksQObject {}
 
 pub struct HunksEmitter {
     qobject: Arc<AtomicPtr<HunksQObject>>,
+    hunk_listings_changed: fn(*mut HunksQObject),
     new_data_ready: fn(*mut HunksQObject),
 }
 
@@ -1015,12 +1018,19 @@ impl HunksEmitter {
     pub fn clone(&mut self) -> HunksEmitter {
         HunksEmitter {
             qobject: self.qobject.clone(),
+            hunk_listings_changed: self.hunk_listings_changed,
             new_data_ready: self.new_data_ready,
         }
     }
     fn clear(&self) {
         let n: *const HunksQObject = null();
         self.qobject.store(n as *mut HunksQObject, Ordering::SeqCst);
+    }
+    pub fn hunk_listings_changed(&mut self) {
+        let ptr = self.qobject.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            (self.hunk_listings_changed)(ptr);
+        }
     }
     pub fn new_data_ready(&mut self) {
         let ptr = self.qobject.load(Ordering::SeqCst);
@@ -1085,6 +1095,7 @@ impl HunksList {
 pub trait HunksTrait {
     fn new(emit: HunksEmitter, model: HunksList) -> Self;
     fn emit(&mut self) -> &mut HunksEmitter;
+    fn hunk_listings(&self) -> &str;
     fn row_count(&self) -> usize;
     fn insert_rows(&mut self, _row: usize, _count: usize) -> bool { false }
     fn remove_rows(&mut self, _row: usize, _count: usize) -> bool { false }
@@ -1108,6 +1119,7 @@ pub trait HunksTrait {
 #[no_mangle]
 pub extern "C" fn hunks_new(
     hunks: *mut HunksQObject,
+    hunks_hunk_listings_changed: fn(*mut HunksQObject),
     hunks_new_data_ready: fn(*mut HunksQObject),
     hunks_layout_about_to_be_changed: fn(*mut HunksQObject),
     hunks_layout_changed: fn(*mut HunksQObject),
@@ -1123,6 +1135,7 @@ pub extern "C" fn hunks_new(
 ) -> *mut Hunks {
     let hunks_emit = HunksEmitter {
         qobject: Arc::new(AtomicPtr::new(hunks)),
+        hunk_listings_changed: hunks_hunk_listings_changed,
         new_data_ready: hunks_new_data_ready,
     };
     let model = HunksList {
@@ -1146,6 +1159,18 @@ pub extern "C" fn hunks_new(
 #[no_mangle]
 pub unsafe extern "C" fn hunks_free(ptr: *mut Hunks) {
     Box::from_raw(ptr).emit().clear();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn hunks_hunk_listings_get(
+    ptr: *const Hunks,
+    p: *mut QString,
+    set: fn(*mut QString, *const c_char, c_int),
+) {
+    let o = &*ptr;
+    let v = o.hunk_listings();
+    let s: *const c_char = v.as_ptr() as (*const c_char);
+    set(p, s, to_c_int(v.len()));
 }
 
 #[no_mangle]

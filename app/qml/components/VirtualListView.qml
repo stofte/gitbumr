@@ -18,7 +18,29 @@ Rectangle {
     property bool loadingModel: true
     property ListView items
     property Component itemDelegate
+    property Item metricsHelper
     property variant virtualItems
+    function notify(index) {
+        var vi = getVirtualItem(index);
+        if (vi) {
+            vi.notify();
+        }
+    }
+    function getVirtualItem(index) {
+        if (shared.itemIndex <= index) {
+            var c = shared.getVirtualListActiveCount();
+            var idxDiff = index - shared.itemIndex;
+            if (idxDiff < c) {
+                if (shared.vlIndex <= shared.vlEnd || shared.vlIndex + idxDiff < shared.vliCount) {
+                    return virtualItems[shared.vlIndex + idxDiff];
+                } else {
+                    idxDiff = idxDiff - (shared.vliCount - shared.vlIndex);
+                    return virtualItems[idxDiff];
+                }
+            }
+        }
+        return null;
+    }
     property VirtualListShared shared: VirtualListShared {
         debug: root.debug
         itemOffsets: []
@@ -44,29 +66,6 @@ Rectangle {
     onHeightChanged: {
         update(shared.contentOffset, false, false)
     }
-    function getMetrics() {
-        var h = 0;
-        var ih;
-        var newHeights = [];
-        var newOffsets = [];
-        var newLineHeights = [];
-        for(var i = 0; i < items.model.rowCount(); i++) {
-            var content = LibHelper.modelValue(items.model, i, textContentColumn);
-            var listModel = listModelRef.createObject(null);
-            var txtDims = Style.getTextDims(content, true, listModel);
-            ih = txtDims.height + extraItemHeight;
-            newHeights.push(ih);
-            newOffsets.push(h);
-            newLineHeights.push(listModel);
-            h += ih;
-        }
-        return {
-            contentHeight: h,
-            heights: newHeights,
-            offsets: newOffsets,
-            lineHeights: newLineHeights
-        };
-    }
     function update(offset, isIncrease, includeMetrics) {
         shared.itemCount = items.model.rowCount();
         if (shared.itemCount === 0) {
@@ -75,7 +74,7 @@ Rectangle {
         }
         shared.updating = true;
         if (includeMetrics) {
-            var metrics = getMetrics();
+            var metrics = metricsHelper.get(); // getMetrics();
             shared.contentHeight = metrics.contentHeight;
             shared.itemHeights = metrics.heights;
             shared.itemOffsets = metrics.offsets;

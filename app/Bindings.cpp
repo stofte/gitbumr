@@ -74,6 +74,10 @@ namespace {
     {
         Q_EMIT o->revwalkFilterChanged();
     }
+    inline void hunksHunkListingsChanged(Hunks* o)
+    {
+        Q_EMIT o->hunkListingsChanged();
+    }
     inline void repositoriesActiveRepositoryChanged(Repositories* o)
     {
         Q_EMIT o->activeRepositoryChanged();
@@ -454,7 +458,7 @@ extern "C" {
         void (*)(Diffs*, int, int, int),
         void (*)(Diffs*),
         void (*)(Diffs*, int, int),
-        void (*)(Diffs*), Hunks*,
+        void (*)(Diffs*), Hunks*, void (*)(Hunks*),
         void (*)(const Hunks*),
         void (*)(Hunks*),
         void (*)(Hunks*),
@@ -691,7 +695,7 @@ bool Hunks::setHeaderData(int section, Qt::Orientation orientation, const QVaria
 }
 
 extern "C" {
-    Hunks::Private* hunks_new(Hunks*,
+    Hunks::Private* hunks_new(Hunks*, void (*)(Hunks*),
         void (*)(const Hunks*),
         void (*)(Hunks*),
         void (*)(Hunks*),
@@ -705,6 +709,7 @@ extern "C" {
         void (*)(Hunks*, int, int),
         void (*)(Hunks*));
     void hunks_free(Hunks::Private*);
+    void hunks_hunk_listings_get(const Hunks::Private*, QString*, qstring_set);
 };
 
 extern "C" {
@@ -1399,6 +1404,7 @@ Git::Git(QObject *parent):
             o->endRemoveRows();
         }
 , m_hunks,
+        hunksHunkListingsChanged,
         [](const Hunks* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -1522,6 +1528,7 @@ Hunks::Hunks(bool /*owned*/, QObject *parent):
 Hunks::Hunks(QObject *parent):
     QAbstractItemModel(parent),
     m_d(hunks_new(this,
+        hunksHunkListingsChanged,
         [](const Hunks* o) {
             Q_EMIT o->newDataReady(QModelIndex());
         },
@@ -1575,6 +1582,12 @@ Hunks::~Hunks() {
     }
 }
 void Hunks::initHeaderData() {
+}
+QString Hunks::hunkListings() const
+{
+    QString v;
+    hunks_hunk_listings_get(m_d, &v, set_qstring);
+    return v;
 }
 Log::Log(bool /*owned*/, QObject *parent):
     QAbstractItemModel(parent),

@@ -192,10 +192,12 @@ public:
 private:
     Private * m_d;
     bool m_ownsPrivate;
+    Q_PROPERTY(QString hunkListings READ hunkListings NOTIFY hunkListingsChanged FINAL)
     explicit Hunks(bool owned, QObject *parent);
 public:
     explicit Hunks(QObject *parent = nullptr);
     ~Hunks();
+    QString hunkListings() const;
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -232,6 +234,7 @@ private:
     void initHeaderData();
     void updatePersistentIndexes();
 Q_SIGNALS:
+    void hunkListingsChanged();
 };
 
 class Log : public QAbstractItemModel

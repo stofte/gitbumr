@@ -20,6 +20,7 @@ pub struct Hunks {
     emit: HunksEmitter,
     model: HunksList,
     list: Vec<HunksItem>,
+    pub hunk_listings: String,
 }
 
 fn map_git_origin_sigil(c: char) -> u8 {
@@ -103,6 +104,7 @@ pub fn fill_hunks(hunks: &mut Hunks, diffs: &Diffs, index: u64, oid: &str) {
     }
     hunks.model.begin_reset_model();
     hunks.list = hv;
+    hunks.hunk_listings = diff.hunk_listings.clone();
     hunks.model.end_reset_model();
 }
 
@@ -111,7 +113,8 @@ impl HunksTrait for Hunks {
         Hunks {
             emit,
             model,
-            list: vec![]
+            list: vec![],
+            hunk_listings: "".to_string(),
         }
     }
     fn emit(&mut self) -> &mut HunksEmitter {
@@ -149,5 +152,8 @@ impl HunksTrait for Hunks {
     }
     fn lines_to(&self, index: usize) -> u64 {
         self.list[index].lines_to as u64
+    }
+    fn hunk_listings(&self) -> &str {
+        &self.hunk_listings
     }
 }

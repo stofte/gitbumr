@@ -23,5 +23,8 @@
         <file>qml/components/VirtualListItem.qml</file>
         <file>qml/components/VirtualListShared.qml</file>
         <file>qml/base/LayoutHelper.qml</file>
+        <file>qml/scripts/jsonParser.mjs</file>
+        <file>qml/base/HunkLineModelCache.qml</file>
+        <file>qml/scripts/utils.js</file>
     </qresource>
 </RCC>

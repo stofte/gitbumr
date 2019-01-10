@@ -16,7 +16,7 @@ Rectangle {
         // if index >= 0 or otherwise unload its contents
         itemOffset = shared.itemOffsets[itemIndex] || 0;
         itemLineHeights = shared.itemLineHeights[itemIndex];
-        loader.item.load(vIndex, itemIndex, itemLineHeights);
+        loader.item.load(vIndex, itemIndex);
     }
     color: "transparent"
     y: -shared.contentOffset + itemOffset
@@ -38,6 +38,9 @@ Rectangle {
             id: loader
             sourceComponent: shared.itemDelegate
         }
+    }
+    function notify() {
+        loader.item.notify();
     }
     function getLoaded() {
         return shared.vlIndex <= shared.vlEnd ?
