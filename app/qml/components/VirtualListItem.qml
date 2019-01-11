@@ -9,16 +9,19 @@ Rectangle {
     property int itemIndex: getItemIndex()
     // The offset of the item relative to all previous items.
     property real itemOffset: 0
+    property variant itemLineHeights
     property VirtualListShared shared
     onItemIndexChanged: {
         // lets the component know what to do, either load the index,
         // if index >= 0 or otherwise unload its contents
         itemOffset = shared.itemOffsets[itemIndex] || 0;
-        loader.item.load(vIndex, itemIndex);
+        if (loader.item) {
+            loader.item.load(vIndex, itemIndex);
+        }
     }
     color: "transparent"
-    y: -shared.contentOffset + itemOffset
-    height: shared.itemHeights[itemIndex] || 0
+
+
     onHeightChanged: {
         if (height == 0) return; // assume we're reloading or whatever
         if (height !== loader.height) {
@@ -27,15 +30,22 @@ Rectangle {
     }
     width: parent && parent.width || 0
     visible: getLoaded()
+    Loader {
+        id: loader
+        x: 0
+        y: -shared.contentOffset + itemOffset
+        height: shared.itemHeights[itemIndex] || 0
+        width: parent && parent.width || 0
+        sourceComponent: shared.itemDelegate
+    }
     LayoutHelper {
-        height: parent.height
-        width: parent.width
+        x: loader.x
+        y: loader.y
+        height: loader.height
+        width: loader.width
         enabled: shared.debug
         debugText: "elm:" + root.vIndex + ",index:" + root.itemIndex + "\ny:" + (-shared.contentOffset + itemOffset).toFixed(3)
-        Loader {
-            id: loader
-            sourceComponent: shared.itemDelegate
-        }
+         + "\ncontentOffset:" + (shared.contentOffset.toFixed(3))
     }
     function notify() {
         loader.item.notify();

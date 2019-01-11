@@ -33,8 +33,6 @@ Rectangle {
     property int hunkItemLineCount: 0
     property real listContentHeight: 0
     Keys.forwardTo: [hunksMainScrollRef]
-    //onHeightChanged: floatScrollBarIndex = getBottomElementIndex()
-    //onWidthChanged: floatScrollBarIndex = getBottomElementIndex()
     onHunkIdChanged: {
         //console.log("hunkid changed", hunkId, hunkListViewRef.loadingModel)
         if (!hunkId) {
@@ -44,31 +42,6 @@ Rectangle {
         } else {
             hunkListViewRef.loadingModel = false;
         }
-        //floatScrollBarIndex = getBottomElementIndex()
-        //listContentHeight = getHeight();
-        //hunkListViewRef.height = listContentHeight;
-    }
-    function getBottomElementIndex() {
-        // 4.5 is fudged value to mark as "bottom" when
-        // the scrollbar crosses the window bottom.
-        var scrollOffset = -hunkListViewRef.y;
-        var offset = -hunkListViewRef.y + (hunkListViewRectContainerRef.height + 4.5);
-        floatScrollBarOffset = offset - 20
-        return hunkListViewRef.indexAt(0, offset);
-    }
-    function getHeight() {
-        var h = 0;
-        var itemOtherH = 55;
-        var itemLineH = Style.fontFixedLineHeight;
-        hunkItemLineCount = 0;
-        for (var i = 0; i < gitModel.hunks.rowCount(); i++) {
-            var linesOrigin = LibHelper.modelValue(gitModel.hunks, i, LibHelper.hunks_linesOrigin);
-            var ba = new Uint8Array(linesOrigin);
-            hunkItemLineCount += ba.length;
-            h += ba.length * itemLineH;
-            h += itemOtherH;
-        }
-        return h;
     }
     Rectangle {
         property bool isComparison: filenameOld !== filenameNew
@@ -144,7 +117,7 @@ Rectangle {
             textContentColumn: LibHelper.hunks_hunk
             heightColumn: LibHelper.hunks_lines
             heightValueFactor: Style.fontFixedLineHeight
-            extraItemHeight: 20
+            bottomIndexTopOffset: 45 // headers and scrollbar space
             items: ListView { model: gitModel.hunks; delegate: Component { Item { } } }
             metricsHelper: Item {
                 function get() {
@@ -159,12 +132,12 @@ Rectangle {
                         var listModel = hunkLineCache.get(i);
                         var txtDims = Style.getTextDims(content, true, true);
                         hunkLineCache.updateLines(i, txtDims.lineHeights);
-                        ih = txtDims.height + hunkListViewRef.extraItemHeight;
+                        ih = txtDims.height + 20 + 15;
                         newHeights.push(ih);
                         newOffsets.push(h);
                         h += ih;
                     }
-                    console.log("metrics duration", Utils.duration(ts))
+//                    console.log("metrics duration", Utils.duration(ts))
                     return {
                         contentHeight: h,
                         heights: newHeights,
@@ -199,23 +172,24 @@ Rectangle {
             root.forceActiveFocus();
         }
     }
-    Component {
-        id: listModelRef
-        ListModel { }
-    }
     HunkLineModelCache {
         id: hunkLineCache
         onLinesModelReady: hunkListViewRef.notify(index)
     }
+    ListModel { id: emptyList }
     Component {
         id: hunkTemplate
         Item {
             id: hunkComp
-            height: hunkTitleRectRef.height + compTxt.contentHeight
+            height: hunkTitleRectRef.height + compTxt.contentHeight + hunkBotScrollRef.height
             width: hunkListViewRef.width
             property int index
             property int linesTo
             property int linesFrom
+            property int hunkMaxLineLength
+            property int newLineCols
+            property int oldLineCols
+            property bool atBottom: hunkListViewRef.indexBottom === index
             property ListModel lineHeights
             function load(elmId, idx) {
                 if (idx > -1) {
@@ -225,25 +199,30 @@ Rectangle {
                     }
                     linesFrom = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesFrom);
                     linesTo = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesTo);
+                    hunkMaxLineLength = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_hunkMaxLineLength);
                     var linesData = hunkLineCache.get(idx);
                     lineHeights = linesData.list;
                     compTxt.text = txt;
                     index = idx;
                     if (linesData.ready) {
+                        console.log("notify", index)
                         notify()
                     }
                 } else {
+                    lineHeights = emptyList;
                     compTxt.text = '';
                 }
             }
             function notify() {
-                lineCanvas.render = true;
+                newLineCols = lineHeights.get(0).newLineColumns;
+                oldLineCols = lineHeights.get(0).oldLineColumns;
                 lineCanvas.requestPaint();
+                lineNumCanvas.requestPaint();
             }
             Rectangle {
                 id: hunkTitleRectRef
-                anchors.top: parent.top
-                anchors.left: parent.left
+                x: lineNumCanvas.width
+                y: 0
                 width: parent.width
                 height: 20
                 color: "transparent"
@@ -253,43 +232,127 @@ Rectangle {
                         return decodeError ? " : failed to decode hunk as UTF-8"
                                            : " : " + (linesTo - linesFrom + 1) + " lines";
                     }
-                    x: 5
+                    x: 0
                     y: 4
                     opacity: 0.6
                     color: decodeError ? "red" : "black"
                     text: "Hunk " + (index + 1) + getLineText()
                 }
             }
-            Canvas {
-                id: lineCanvas
+            function renderCanvas(canvas, lineNums) {
+                var ctx = canvas.getContext('2d');
+                var y = 0;
+                if (lineNums) {
+                    ctx.fillStyle = Qt.rgba(0,0,0,0.5);
+                    ctx.textAlign = 'right';
+                    ctx.font = '8pt Consolas';
+                } else {
+                    ctx.font = 'bold 10pt Consolas';
+                    ctx.textAlign = 'start';
+                }
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                var oldColOffset = oldLineCols * Style.fontFixedWidth + (oldLineCols > 0 ? 2 : 0) * Style.fontFixedWidth;
+                var newColOffset = oldColOffset + 2 * Style.fontFixedWidth + newLineCols * Style.fontFixedWidth;
+                for(var i = 0; i < lineHeights.count; i++) {
+                    var line = lineHeights.get(i);
+                    var txtOffset = y + line.height / 2 + 2.5
+                    if (!lineNums) {
+                        ctx.fillStyle = Style.lineOriginColor(line.origin);
+                        ctx.fillRect(0, y, width, line.height);
+                        ctx.fillStyle = Qt.rgba(0,0,0,0.5);
+                        ctx.fillText(Style.lineOriginSigil(line.origin), 2, txtOffset);
+                    } else {
+                        if (line.oldLine > 0) {
+                            ctx.fillText(line.oldLine, oldColOffset, txtOffset);
+                        }
+                        if (line.newLine > 0) {
+                            ctx.fillText(line.newLine, newColOffset, txtOffset);
+                        }
+                    }
+                    y += line.height;
+                }
+            }
+            LayoutHelper {
+                function getWidth() {
+                    var add = (2 + (oldLineCols === 0 ? 0 : 2) + (newLineCols === 0 ? 0 : 2)) * Style.fontFixedWidth
+                    return oldLineCols * Style.fontFixedWidth + newLineCols * Style.fontFixedWidth + add;
+                }
                 x: 0
                 y: 20
                 height: compTxt.contentHeight
-                width: parent.width
-                property bool render: false
-                onPaint: {
-                    if (render && lineHeights && available) {
-                        render = false;
-                        var y = 0;
-                        var ctx = getContext("2d");
-                        var ts = Utils.now();
-                        for(var i = 0; i < lineHeights.count; i++) {
-                            var l = hunkComp.lineHeights.get(i);
-                            ctx.fillStyle = Style.lineOriginColor(l.origin);// === 10 ? 'white' : Qt.rgba(1,0,0,0.5);
-                            ctx.fillRect(0, y, width, l.height);
-                            y += l.height;
+                width:  getWidth()
+                enabled: false
+                Canvas {
+                    id: lineNumCanvas
+                    height: parent.height
+                    width: parent.width
+                    onPaint: {
+                        if (lineHeights && available) {
+                            renderCanvas(lineNumCanvas, true);
                         }
-                        console.log("CANVAS, line count", lineHeights.count, 'rendering took', Utils.duration(ts))
                     }
                 }
             }
-            TextElement {
-                x: 0
+            Rectangle {
+                id: diffRect
+                x: lineNumCanvas.width
                 y: 20
-                id: compTxt
-                width: parent.width
-                selectableText: true
-                fixedWidthFont: true
+                width: parent.width - x
+                height: compTxt.contentHeight
+                clip: true
+                Rectangle {
+                    id: diffContainerRectRef
+                    x: -hunkBotScrollRef.position * width
+                    width: compTxt.width
+                    height: compTxt.contentHeight
+                    color: "transparent"
+                    Canvas {
+                        id: lineCanvas
+                        height: compTxt.contentHeight
+                        width: compTxt.width + 10
+                        onPaint: {
+                            if (lineHeights && available) {
+                                renderCanvas(lineCanvas, false);
+                            }
+                        }
+                    }
+                    LayoutHelper {
+                        x: 0
+                        y: 0
+                        width: compTxt.width
+                        height: compTxt.height
+                        enabled: false
+                        TextElement {
+                            id: compTxt
+                            width: Math.max(diffRect.width, contentWidth + 20)
+                            height: contentHeight
+                            selectableText: true
+                            fixedWidthFont: true
+                            leftPadding: 10
+                            rightPadding: 10
+                        }
+                    }
+                }
+            }
+            CustomScrollBar {
+                id: hunkBotScrollRef
+                x: diffRect.x
+                function getYOffset() {
+                    if (atBottom && enabled) {
+                        return hunkListViewRef.height - hunkComp.parent.y - height;
+                    }
+                    return parent.height - height;
+                }
+                y: getYOffset()
+                policy: ScrollBar.AlwaysOn
+                orientation: Qt.Horizontal
+                height: 15
+                enabled: size < 1
+                width: parent.width - x
+                size: width / diffContainerRectRef.width
+//                stepSize: 1 / (hunkMaxLineLength * 0.5)
+//                scrollContainerSize: parent.width
+//                scrollContentSize: diffContainerRectRef.width
             }
         }
     }

@@ -10,6 +10,7 @@ Item {
     // method, where role value is the appropiate column value from below.
     property int diffs_filenameNew: 0x100
     property int hunks_hunk: 0x100
+    property int hunks_hunkMaxLineLength: 0x101
     property int hunks_lines: 0x102
     property int hunks_linesFrom: 0x103
     property int hunks_linesTo: 0x109

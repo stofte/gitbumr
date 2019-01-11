@@ -72,19 +72,19 @@ Item {
             transformOrigin: Item.TopLeft
             rotation: parent.getRightAngle()
         }
-        TextElement {
+        Text {
             x: parent.width - contentWidth - contentHeight - 2
             y: 2
             text: parent.width
-            fixedWidthFont: true
+            font.family: Style.fontNameFixedWidth
             font.pointSize: parent.textPointSize
             opacity: parent.textOpacity
         }
-        TextElement {
+        Text {
             x: parent.width - 2
             y: 4
             text: parent.height
-            fixedWidthFont: true
+            font.family: Style.fontNameFixedWidth
             font.pointSize: parent.textPointSize
             opacity: parent.textOpacity
             transform: Rotation {

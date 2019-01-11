@@ -46,7 +46,7 @@ Item {
     }
     WorkerScript {
         id: jsonParser
-        source: "../scripts/jsonParser.mjs"
+        source: "../scripts/jsonParser.js"
         onMessage: {
             if (messageObject.type === 'ready') {
                 var idx = messageObject.value;

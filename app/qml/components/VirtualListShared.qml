@@ -25,6 +25,9 @@ Item {
     property int itemIndex: 0
     // number of items in the model
     property int itemCount: 0
+    // the index which crosses the bottom
+    property int itemIndexBottom
+    property real bottomBorderLocalOffset
     function getVirtualListActiveCount() {
         if (vlIndex <= vlEnd) {
             return vlEnd - vlIndex + 1;

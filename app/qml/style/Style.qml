@@ -87,10 +87,10 @@ Item {
     readonly property int fontRendering: Text.QtRendering
     readonly property string fontName: mainFont.name
     readonly property string fontNameFixedWidth: fixedWidthFont.name
-
     readonly property real tabStopSize: onceOnlyRef.onceTabStopSize
     readonly property real tabStopFixedSize: onceOnlyRef.onceTabStopFixedSize
-    readonly property real fontFixedLineHeight: onceOnlyRef.oncFontFixedLineHeight
+    readonly property real fontFixedLineHeight: onceOnlyRef.onceFontFixedLineHeight
+    readonly property real fontFixedWidth: onceOnlyRef.onceFontFixedWidth
 
     Item {
         // This avoids setting unneeded dynamic bindings that qt  will complain about eventually,
@@ -98,11 +98,15 @@ Item {
         id: onceOnlyRef
         property real onceTabStopSize: 0
         property real onceTabStopFixedSize: 0
-        property real oncFontFixedLineHeight: 0
+        property real onceFontFixedLineHeight: 0
+        property real onceFontFixedWidth: 0
         Component.onCompleted: {
             onceTabStopSize = getTextDims("\t", false).width;
-            onceTabStopFixedSize = getTextDims("1234", true).width;
-            oncFontFixedLineHeight = getTextDims("1234", true).lineHeight;
+            var dims = getTextDims("1234", true);
+            onceTabStopFixedSize = dims.width;
+            onceFontFixedLineHeight = dims.lineHeight;
+            dims = getTextDims("X", true);
+            onceFontFixedWidth = dims.width;
         }
     }
     TextEdit {

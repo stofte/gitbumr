@@ -10,6 +10,12 @@ Rectangle {
     property bool debug: false
     property real preloadSize: 100
     property real contentHeight: shared.contentHeight
+    property real contentOffset: shared.contentOffset
+    // the item should only be marked as "bottom index"
+    // only within these offsets
+    property real bottomIndexTopOffset
+    property int indexBottom: shared.itemIndexBottom
+    property real bottomBorderLocalOffset
     property int textContentColumn
     property int heightColumn
     property int heightValueFactor: 1
@@ -80,13 +86,23 @@ Rectangle {
         }
         var fromIdx = -1;
         var toIdx = -1;
+        var bottomIdx = -1;
         var adjustedOffset = Math.max(offset - 100, 0);
         var toOffset = Math.min(offset + height + preloadSize, shared.contentHeight);
+        var bottomCrossFrom = offset + height - bottomIndexTopOffset;
+        var bottomCrossTo = offset + height;
         var sum = 0;
         for (var i = 0; i < items.model.rowCount(); i++) {
             var newSum = sum + shared.itemHeights[i];
             if (fromIdx === -1 && newSum >= adjustedOffset) {
                 fromIdx = i;
+            }
+            if (bottomIdx === -1 && newSum >= bottomCrossFrom) {
+                if (newSum >= bottomCrossTo) {
+                    bottomIdx = i;
+                } else {
+                    bottomIdx = -2;
+                }
             }
             if (toIdx === -1 && newSum >= toOffset) {
                 toIdx = i;
@@ -109,9 +125,11 @@ Rectangle {
         }
         var wrote = shared.vlIndex !== vlIndex || shared.vlEnd !== vlEnd || shared.itemIndex !== fromIdx;
 //        if (wrote) console.log("INDEX", fromIdx, "count", loadCount, "\t", vlIndex, "to", vlEnd);
+        shared.itemIndexBottom = bottomIdx;
         shared.itemIndex = fromIdx;
         shared.vlIndex = vlIndex;
         shared.vlEnd = vlEnd;
+//        console.log("bottomIndex", bottomIdx)
         shared.updating = false;
 //        if (wrote) console.log("INDEX updated");
     }
