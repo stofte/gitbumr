@@ -1,17 +1,22 @@
 import QtQuick 2.9
 
 Item {
+    id: root
+    property bool debug: false
     property ListModel model : ListModel { id: jsonModel }
     property int commitIndex: 0
     property alias count: jsonModel.count
 
     property variant jsonArray
-
+    signal modelUpdated()
     onJsonArrayChanged: updateJSONModel()
 
     function updateJSONModel() {
         jsonModel.clear();
-        if (!jsonArray) return;
+        if (!jsonArray) {
+            root.modelUpdated();
+            return;
+        }
         var ia = new Uint8Array(jsonArray);
         commitIndex = ia[0];
         var closedLanes = 0;
@@ -36,5 +41,9 @@ Item {
             }
             jsonModel.append(elm);
         }
+        if (debug) {
+            console.log("updateJSONModel", jsonModel.count)
+        }
+        root.modelUpdated();
     }
 }

@@ -11,13 +11,23 @@ Item {
     property int lanes
     Layout.fillHeight: true
     Layout.preferredWidth: graphWidth
-
+    property bool isSelected: false
+    property variant graphData
+    property bool isMergeNode
+    property bool debug: false
+    property bool requiresUpdates: false
     JsonListModel {
         id: graphModel
-        jsonArray: graph
+        debug: root.debug
+        jsonArray: root.graphData
+        onModelUpdated: {
+            if (requiresUpdates) {
+                canvas.requestPaint();
+            }
+        }
     }
-
     Canvas {
+        id: canvas
         Path {
             id: linePath
             startX: 0; startY: 0
@@ -56,8 +66,6 @@ Item {
 
         anchors.fill: parent
         anchors.rightMargin: 10
-        contextType: "2d"
-
         function paintPaths(ctx, laneFlags, offW, rowOffW, shiftOffW) {
             if (laneFlags.isVisible) {
                 // flags are merged, so we might both have a line through,
@@ -108,23 +116,31 @@ Item {
                 ctx.stroke();
             }
         }
-
-        onPaint: {
-            var halfG = graphHeight / 2;
-            context.lineWidth = 1;
-            context.strokeStyle = Qt.rgba(0.5,0.5,0.5,1);
-            context.fillStyle = isMerge ? Qt.rgba(0.5,0.5,0.5,1) : Qt.rgba(0.52549,0.7490,0.81960,1);
-            for(var i = 0; i < graphModel.model.count; i++) {
-                var elm = graphModel.model.get(i);
-                var offW = halfG + i * graphHeight;
-                var rowOffW = halfG + elm.rowCommitIndex * graphHeight;
-                var shiftOffW = offW + elm.rowShiftOffset * graphHeight;
-                paintPaths(context, elm, offW, rowOffW, shiftOffW);
+        function updateCanvas() {
+            if (root.debug) {
+                console.log("painting", isSelected, available)
             }
-            var cOffW = halfG + graphModel.commitIndex * graphHeight;
-            context.beginPath();
-            context.arc(cOffW, halfG, 3.5, 0, 2 * Math.PI);
-            context.fill();
+            if (available) {
+                var ctx = getContext("2d")
+                ctx.clearRect(0, 0, width, height);
+                var halfG = graphHeight / 2;
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = isSelected ? 'white' : Qt.rgba(0.5,0.5,0.5,1);
+                ctx.fillStyle = root.isMergeNode ? Qt.rgba(0.5,0.5,0.5,1) : Qt.rgba(0.52549,0.7490,0.81960,1);
+                for(var i = 0; i < graphModel.model.count; i++) {
+                    var elm = graphModel.model.get(i);
+                    var offW = halfG + i * graphHeight;
+                    var rowOffW = halfG + elm.rowCommitIndex * graphHeight;
+                    var shiftOffW = offW + elm.rowShiftOffset * graphHeight;
+                    paintPaths(ctx, elm, offW, rowOffW, shiftOffW);
+                }
+                var cOffW = halfG + graphModel.commitIndex * graphHeight;
+                ctx.beginPath();
+                ctx.arc(cOffW, halfG, 3.5, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+            }
         }
+        onPaint: updateCanvas()
     }
 }

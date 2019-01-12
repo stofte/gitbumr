@@ -209,7 +209,6 @@ Rectangle {
                     hunkBotScrollRef.position = 0;
                     index = idx;
                     if (linesData.ready) {
-                        console.log("notify", index)
                         notify()
                     }
                 } else {

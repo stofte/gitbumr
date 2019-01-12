@@ -73,17 +73,33 @@ Rectangle {
         }
         highlightFollowsCurrentItem: true
         highlight: Component{
-            Item {
+            Rectangle {
                 height: rowHeight + 200
                 z: 2 // placing the highlight above the list prevents flickering
                 clip: true
+                color: Style.selection
+                Rectangle {
+                    x: 5
+                    height: rowHeight
+                    width: graphViewSplitter.width
+                    color: "transparent"
+                    GraphView {
+                        anchors.fill: parent
+                        graphHeight: rowHeight
+                        graphWidth: graphViewSplitter.width
+                        graphData: historyListView.currentItem && historyListView.currentItem.graphValue
+                        isMergeNode: historyListView.currentItem && historyListView.currentItem.isMergeNode
+                        isSelected: true
+                        requiresUpdates: true
+                    }
+                }
                 Rectangle {
                     y: 0
                     // 8 == width of splitter itself
                     x: graphViewSplitter.width + 8
                     width: parent.width - graphViewSplitter.width - 8
                     height: rowHeight
-                    color: Style.selection
+                    color: "transparent"
                     Rectangle {
                         anchors.fill: parent
                         // these two margin values have been set using visual inspection.
@@ -141,7 +157,7 @@ Rectangle {
                     y: rowHeight
                     height: parent.height - rowHeight
                     width: parent.width
-                    color: Style.selection
+                    color: "transparent"
                     Rectangle {
                         x: 2
                         y: 2
@@ -195,6 +211,8 @@ Rectangle {
                 property string summaryText: summary
                 property string authorText: author
                 property string timeText: time
+                property variant graphValue: graph
+                property bool isMergeNode: isMerge
                 property int itemHeight: rowHeight + (ListView.isCurrentItem ? 200 : 0)
                 id: rootItem
                 height: itemHeight
@@ -216,8 +234,11 @@ Rectangle {
                             height: parent.height
                             width: parent.width
                             GraphView {
+                                id: graphComponentRef
                                 graphHeight: parent.height
                                 graphWidth: graphViewSplitter.width
+                                graphData: graphValue
+                                isMergeNode: rootItem.isMergeNode
                             }
                             Rectangle {
                                 clip: true
@@ -277,7 +298,6 @@ Rectangle {
             }
         }
     }
-
     DesktopScrollbar {
         id: realScrollref
         anchors.top: parent.top
