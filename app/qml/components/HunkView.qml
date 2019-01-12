@@ -189,6 +189,7 @@ Rectangle {
             property int hunkMaxLineLength
             property int newLineCols
             property int oldLineCols
+            property real lineNumWidth
             property bool atBottom: hunkListViewRef.indexBottom === index
             property ListModel lineHeights
             function load(elmId, idx) {
@@ -200,9 +201,12 @@ Rectangle {
                     linesFrom = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesFrom);
                     linesTo = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesTo);
                     hunkMaxLineLength = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_hunkMaxLineLength);
+                    oldLineCols = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesOldCols);
+                    newLineCols = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesNewCols);
                     var linesData = hunkLineCache.get(idx);
                     lineHeights = linesData.list;
                     compTxt.text = txt;
+                    hunkBotScrollRef.position = 0;
                     index = idx;
                     if (linesData.ready) {
                         console.log("notify", index)
@@ -214,14 +218,12 @@ Rectangle {
                 }
             }
             function notify() {
-                newLineCols = lineHeights.get(0).newLineColumns;
-                oldLineCols = lineHeights.get(0).oldLineColumns;
                 lineCanvas.requestPaint();
                 lineNumCanvas.requestPaint();
             }
             Rectangle {
                 id: hunkTitleRectRef
-                x: lineNumCanvas.width
+                x: 0
                 y: 0
                 width: parent.width
                 height: 20
@@ -232,7 +234,7 @@ Rectangle {
                         return decodeError ? " : failed to decode hunk as UTF-8"
                                            : " : " + (linesTo - linesFrom + 1) + " lines";
                     }
-                    x: 0
+                    x: 5
                     y: 4
                     opacity: 0.6
                     color: decodeError ? "red" : "black"
@@ -258,7 +260,7 @@ Rectangle {
                     var txtOffset = y + line.height / 2 + 2.5
                     if (!lineNums) {
                         ctx.fillStyle = Style.lineOriginColor(line.origin);
-                        ctx.fillRect(0, y, width, line.height);
+                        ctx.fillRect(0, y, canvas.width, line.height);
                         ctx.fillStyle = Qt.rgba(0,0,0,0.5);
                         ctx.fillText(Style.lineOriginSigil(line.origin), 2, txtOffset);
                     } else {
@@ -309,7 +311,7 @@ Rectangle {
                     Canvas {
                         id: lineCanvas
                         height: compTxt.contentHeight
-                        width: compTxt.width + 10
+                        width: compTxt.width
                         onPaint: {
                             if (lineHeights && available) {
                                 renderCanvas(lineCanvas, false);
@@ -317,8 +319,6 @@ Rectangle {
                         }
                     }
                     LayoutHelper {
-                        x: 0
-                        y: 0
                         width: compTxt.width
                         height: compTxt.height
                         enabled: false
