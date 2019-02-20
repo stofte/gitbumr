@@ -3,6 +3,7 @@ import QtQuick 2.0
 Item {
     property bool debug
     property real contentOffset
+    property bool disableViewPosition: false
     property variant itemOffsets
     property variant itemHeights
     property real contentHeight
@@ -34,5 +35,11 @@ Item {
         } else {
             return vliCount - vlIndex + vlEnd + 1;
         }
+    }
+    property bool constantMode
+    property bool selectionMode
+    property real defaultItemHeight
+    function selectionModeOffset(index) {
+        return index * defaultItemHeight
     }
 }

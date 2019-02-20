@@ -4,9 +4,10 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls 1.4 as QQC14
 import QtGraphicalEffects 1.0
 import QtQml 2.11
+import "../scripts/utils.js" as Utils
 import "../base"
 import "../style"
-import "../scripts/utils.js" as Utils
+import "virtuallist"
 
 Rectangle {
     // The hunk listings contains alot of state, to make it usable, chiefly:
@@ -186,26 +187,21 @@ Rectangle {
             property int index
             property int linesTo
             property int linesFrom
-            property int hunkMaxLineLength
             property int newLineCols
             property int oldLineCols
             property real lineNumWidth
             property bool atBottom: hunkListViewRef.indexBottom === index
             property ListModel lineHeights
-            function load(elmId, idx) {
+            function load(idx, elmId) {
                 if (idx > -1) {
-                    var txt = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_hunk);
-                    if (!txt) {
-                        throw new Error('undefined text for ', idx)
-                    }
-                    linesFrom = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesFrom);
-                    linesTo = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesTo);
-                    hunkMaxLineLength = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_hunkMaxLineLength);
-                    oldLineCols = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesOldCols);
-                    newLineCols = LibHelper.modelValue(gitModel.hunks, idx, LibHelper.hunks_linesNewCols);
+                    var rowData = LibHelper.getHunk(gitModel.hunks, idx);
                     var linesData = hunkLineCache.get(idx);
+                    linesFrom = rowData.linesFrom;
+                    linesTo = rowData.linesTo;
+                    oldLineCols = rowData.linesOldCols;
+                    newLineCols = rowData.linesNewCols;
                     lineHeights = linesData.list;
-                    compTxt.text = txt;
+                    compTxt.text = rowData.hunk;
                     hunkBotScrollRef.position = 0;
                     index = idx;
                     if (linesData.ready) {

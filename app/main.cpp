@@ -8,6 +8,7 @@
 #include <QQmlContext>
 #include <QFontDatabase>
 #include <QDebug>
+#include <QScreen>
 #include "Bindings.h"
 
 int main(int argc, char *argv[])
@@ -54,6 +55,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("DatabaseFileName", dbFilePath);
     engine.rootContext()->setContextProperty("MAX_U32_INT", quint32(4294967295));
+    // Using Windows 10, plain desktop no scaling, DevicePixelRatio is 96
+    engine.rootContext()->setContextProperty("LogicalDpi", QGuiApplication::primaryScreen()->logicalDotsPerInch());
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
 #if DEBUG

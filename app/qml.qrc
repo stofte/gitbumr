@@ -19,12 +19,13 @@
         <file>qml/base/TextElement.qml</file>
         <file>qml/base/LibHelper.qml</file>
         <file>qml/base/qmldir</file>
-        <file>qml/components/VirtualListView.qml</file>
-        <file>qml/components/VirtualListItem.qml</file>
-        <file>qml/components/VirtualListShared.qml</file>
         <file>qml/base/LayoutHelper.qml</file>
         <file>qml/base/HunkLineModelCache.qml</file>
         <file>qml/scripts/utils.js</file>
         <file>qml/scripts/jsonParser.js</file>
+        <file>qml/components/scrollbar2/ScrollBar2.qml</file>
+        <file>qml/components/virtuallist/VirtualListItem.qml</file>
+        <file>qml/components/virtuallist/VirtualListShared.qml</file>
+        <file>qml/components/virtuallist/VirtualListView.qml</file>
     </qresource>
 </RCC>

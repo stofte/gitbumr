@@ -21,13 +21,21 @@ QQC14.SplitView {
         id: gitModel
         onRevwalkFilterChanged: {
             // let the view know that the model is being reloaded
+            console.log("revFilter before true")
             historyViewRef.reload = true;
+            console.log("revFilter after true")
             logModel.filter(revwalkFilter);
+            console.log("revFilter before false")
+            historyViewRef.reload = false;
+            console.log("revFilter after false")
         }
     }
 
     Log {
         id: logModel
+        onRowsInserted: {
+            console.log("ROWS INSERTED", logModel.rowCount())
+        }
     }
 
     orientation: Qt.Horizontal

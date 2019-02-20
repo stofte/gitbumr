@@ -16,6 +16,9 @@ Item {
     property bool isMergeNode
     property bool debug: false
     property bool requiresUpdates: false
+    function requestPaint() {
+        canvas.requestPaint();
+    }
     JsonListModel {
         id: graphModel
         debug: root.debug

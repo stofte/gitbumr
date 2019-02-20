@@ -1,4 +1,5 @@
 import QtQuick 2.11
+import "../scripts/utils.js" as Utils
 import "../style"
 
 Item {
@@ -56,7 +57,7 @@ Item {
             x: 0
             y: parent.height - 1
             height: 1
-            width: LibHelper.hypot(parent.height, parent.width)
+            width: Utils.hypot(parent.height, parent.width)
             color: parent.debugColor
             opacity: parent.lineOpacity
             transformOrigin: Item.BottomLeft
@@ -66,7 +67,7 @@ Item {
             x: 0
             y: 0
             height: 1
-            width: LibHelper.hypot(parent.height, parent.width)
+            width: Utils.hypot(parent.height, parent.width)
             color: parent.debugColor
             opacity: parent.lineOpacity
             transformOrigin: Item.TopLeft
