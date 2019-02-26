@@ -188,7 +188,7 @@ pub trait BranchesTrait {
         false
     }
     fn fetch_more(&mut self) {}
-    fn sort(&mut self, u8, SortOrder) {}
+    fn sort(&mut self, _: u8, _: SortOrder) {}
     fn checkedout(&self, index: usize) -> bool;
     fn name(&self, index: usize) -> &str;
     fn oid(&self, index: usize) -> &str;
@@ -595,7 +595,7 @@ pub trait DiffsTrait {
         false
     }
     fn fetch_more(&mut self) {}
-    fn sort(&mut self, u8, SortOrder) {}
+    fn sort(&mut self, _: u8, _: SortOrder) {}
     fn filename_new(&self, index: usize) -> &str;
     fn filename_old(&self, index: usize) -> &str;
     fn patch(&self, index: usize) -> &str;
@@ -1103,7 +1103,7 @@ pub trait HunksTrait {
         false
     }
     fn fetch_more(&mut self) {}
-    fn sort(&mut self, u8, SortOrder) {}
+    fn sort(&mut self, _: u8, _: SortOrder) {}
     fn hunk(&self, index: usize) -> &str;
     fn hunk_max_line_length(&self, index: usize) -> u64;
     fn lines(&self, index: usize) -> u64;
@@ -1384,7 +1384,7 @@ pub trait LogTrait {
         false
     }
     fn fetch_more(&mut self) {}
-    fn sort(&mut self, u8, SortOrder) {}
+    fn sort(&mut self, _: u8, _: SortOrder) {}
     fn author(&self, index: usize) -> &str;
     fn cid(&self, index: usize) -> &str;
     fn graph(&self, index: usize) -> &[u8];
@@ -1685,7 +1685,7 @@ pub trait RepositoriesTrait {
         false
     }
     fn fetch_more(&mut self) {}
-    fn sort(&mut self, u8, SortOrder) {}
+    fn sort(&mut self, _: u8, _: SortOrder) {}
     fn current(&self, index: usize) -> bool;
     fn display_name(&self, index: usize) -> &str;
     fn id(&self, index: usize) -> i64;

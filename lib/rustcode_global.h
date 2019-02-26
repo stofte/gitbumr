@@ -1,0 +1,12 @@
+#ifndef RUSTCODE_GLOBAL_H
+#define RUSTCODE_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(RUSTCODE_LIBRARY)
+#  define RUSTCODESHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define RUSTCODESHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // RUSTCODE_GLOBAL_H

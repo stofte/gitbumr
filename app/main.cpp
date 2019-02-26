@@ -8,7 +8,6 @@
 #include <QQmlContext>
 #include <QFontDatabase>
 #include <QDebug>
-#include "Bindings.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,12 +23,12 @@ int main(int argc, char *argv[])
     app.setWindowIcon(QIcon(":/ApplicationIcon"));
     QFontDatabase::addApplicationFont(":/res/Roboto-Regular-latin-20.woff2");
     QFontDatabase::addApplicationFont(":/res/Roboto-Regular-latin-24.woff2");
-    qmlRegisterType<Repositories>("RustCode", 1, 0, "Repositories");
-    qmlRegisterType<Git>("RustCode", 1, 0, "Git");
-    qmlRegisterType<Branches>("RustCode", 1, 0, "Branches");
-    qmlRegisterType<Log>("RustCode", 1, 0, "Log");
-    qmlRegisterType<Commit>("RustCode", 1, 0, "Commit");
-    qmlRegisterType<Diffs>("RustCode", 1, 0, "Diffs");
+//    qmlRegisterType<Repositories>("RustCode", 1, 0, "Repositories");
+//    qmlRegisterType<Git>("RustCode", 1, 0, "Git");
+//    qmlRegisterType<Branches>("RustCode", 1, 0, "Branches");
+//    qmlRegisterType<Log>("RustCode", 1, 0, "Log");
+//    qmlRegisterType<Commit>("RustCode", 1, 0, "Commit");
+//    qmlRegisterType<Diffs>("RustCode", 1, 0, "Diffs");
 
 #if DEBUG
     QDir dataPath = QDir(QGuiApplication::applicationDirPath());

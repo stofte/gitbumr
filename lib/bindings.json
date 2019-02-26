@@ -1,7 +1,7 @@
 {
-    "cppFile": "app/Bindings.cpp",
+    "cppFile": "Bindings.cpp",
     "rust": {
-        "dir": "lib",
+        "dir": ".",
         "interfaceModule": "interface",
         "implementationModule": "implementation"
     },
