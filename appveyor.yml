@@ -5,7 +5,7 @@ install:
   - rustup-init -y
   - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
-  - set PATH=%PATH%;C:\Qt\5.11.2\msvc2017_64\bin
+  - set PATH=%PATH%;C:\Qt\5.11.3\msvc2017_64\bin
   - rustc --version
   - cargo --version
   - qmake --version
@@ -14,7 +14,7 @@ install:
 build_script:
   - qmake -config release
   - nmake
-  - pushd bin & del *.exp,*.lib & popd # files for development only
+  - pushd bin & dir & del *.exp,*.lib & popd # files for development only
   - windeployqt --verbose 0 --qmldir app bin\gitbumr.exe
   - move bin gitbumr
   - cd gitbumr & 7z a ..\app.zip .
