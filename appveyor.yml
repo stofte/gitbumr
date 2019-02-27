@@ -14,12 +14,18 @@ install:
 build_script:
   - qmake -config release
   - nmake
+  - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
+  - nmake check
   - pushd bin & dir & del *.exp,*.lib & popd # files for development only
   - windeployqt --verbose 0 --qmldir app bin\gitbumr.exe
   - move bin gitbumr
   - cd gitbumr & 7z a ..\app.zip .
 
-test: off
+# For tests to run on the commandline, the plugins must be copied to the qt installation folder.
+# When running in the IDE, the project files can setup the dependency, so this isn't required then.
+test_script:
+  - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
+  - nmake check
 
 artifacts:
   - path: app.zip
