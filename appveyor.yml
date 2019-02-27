@@ -12,17 +12,15 @@ install:
   - cl
 
 build_script:
-  - mkdir build & cd build
-  - qmake -config release ..
+  - qmake -config release
   - nmake
   - move app\bin gitbumr
-  - pushd gitbumr & dir & del *.exp,*.lib & popd # files for development only
   - windeployqt --verbose 0 --qmldir app gitbumr\gitbumr.exe
   - cd gitbumr & 7z a ..\app.zip .
 
 test_script:
   - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
-  - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
+  - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\lib\release
   - nmake check
 
 artifacts:
@@ -31,5 +29,3 @@ artifacts:
 # rustup takes minutes to install
 cache:
   - '%USERPROFILE%\.rustup -> appveyor.yml'
-
-
