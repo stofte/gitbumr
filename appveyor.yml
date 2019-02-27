@@ -14,14 +14,16 @@ install:
 build_script:
   - qmake -config release
   - nmake
-  - move app\bin gitbumr
-  - windeployqt --verbose 0 --qmldir app gitbumr\gitbumr.exe
-  - cd gitbumr & 7z a ..\app.zip .
 
 test_script:
   - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
   - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\lib\release
   - nmake check
+
+after_test:
+  - move app\bin gitbumr
+  - windeployqt --verbose 0 --qmldir app gitbumr\gitbumr.exe
+  - cd gitbumr & 7z a ..\app.zip .
 
 artifacts:
   - path: app.zip
