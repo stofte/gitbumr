@@ -15,9 +15,9 @@ build_script:
   - mkdir build & cd build
   - qmake -config release ..
   - nmake
-  - pushd bin & dir & del *.exp,*.lib & popd # files for development only
-  - windeployqt --verbose 0 --qmldir app bin\gitbumr.exe
-  - move bin gitbumr
+  - move app\bin gitbumr
+  - pushd gitbumr & dir & del *.exp,*.lib & popd # files for development only
+  - windeployqt --verbose 0 --qmldir app gitbumr\gitbumr.exe
   - cd gitbumr & 7z a ..\app.zip .
 
 test_script:
