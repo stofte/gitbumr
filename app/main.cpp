@@ -21,6 +21,9 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("fusion");
     QGuiApplication app(argc, argv);
     app.setWindowIcon(QIcon(":/ApplicationIcon"));
+    app.setOrganizationName("Svend Ezakie Tofte");
+    app.setOrganizationDomain("svend.dev");
+    app.setApplicationName("Gitbumr");
     QFontDatabase::addApplicationFont(":/res/Roboto-Regular-latin-20.woff2");
     QFontDatabase::addApplicationFont(":/res/Roboto-Regular-latin-24.woff2");
 //    qmlRegisterType<Repositories>("RustCode", 1, 0, "Repositories");
