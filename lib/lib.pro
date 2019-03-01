@@ -81,7 +81,6 @@ RUST_FILES = \
 #copyshit.commands = "copy $$PWD/qmldir $$DESTDIR/qmldir"
 
 rust_cargo.output = "$$PWD/target/$$RUST_TARGET/$$BUILD_MODE/rust.lib"
-message("$$DESTDIR/qmldir")
 rust_cargo.commands = $$CCRS_CFLAGS & \
     cargo build --manifest-path="$$PWD/Cargo.toml" --target=$$RUST_TARGET $$CARGO_FLAG
 rust_cargo.input = RUST_FILES
@@ -96,7 +95,7 @@ QMAKE_EXTRA_COMPILERS += rust_cargo
 #system($$system_quote(copy $$PWD/qmldir $$DESTDIR/qmldir))
 
 copydata.commands = copy $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)
-#message("copy $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)")
+# message("copy $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)")
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)

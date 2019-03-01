@@ -17,8 +17,10 @@ public slots:
         auto gitPath = env.value("TST_GIT_PATH");
         engine->rootContext()->setContextProperty("TST_GIT_PATH", gitPath);
     }
+
+    void cleanupTestCase() { }
 };
 
-QUICK_TEST_MAIN_WITH_SETUP(mytest, Setup)
+QUICK_TEST_MAIN_WITH_SETUP(TestSetup, Setup)
 
-#include "tst_stuff.moc"
+#include "tst_TestSetup.moc"

@@ -17,6 +17,7 @@ CONFIG(release, release|debug) {
 }
 message("Build configuration: $$BUILD_MODE")
 QML_IMPORT_PATH="$$OUT_PWD/../lib/release"
+QML_DESIGNER_IMPORT_PATH=$$QML_IMPORT_PATH
 QT += qml quick opengl quickcontrols2
 CONFIG += c++14
 CONFIG += qtquickcompiler # http://doc.qt.io/QtQuickCompiler/
@@ -41,3 +42,5 @@ win32 {
         mt  -nologo -manifest $$PWD/res/gitbumr.exe.manifest \
             -outputresource:gitbumr.exe;1
 }
+
+QML_IMPORT_PATH="$$OUT_PWD/../lib/release"

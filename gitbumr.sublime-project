@@ -3,14 +3,21 @@
     [
         {
             "path": "app",
-            "file_exclude_patterns": ["app.ico"],
+            "file_exclude_patterns": ["app.ico", "qml_qmlcache.qrc", "*.pro.user"],
+            "folder_exclude_patterns": ["bin", "debug", "release", "lib"],
             "name": "app"
         },
         {
             "path": "lib",
-            "folder_exclude_patterns": ["target"],
-            "file_exclude_patterns": ["Cargo.lock"],
+            "folder_exclude_patterns": ["target", "debug", "release"],
+            "file_exclude_patterns": ["Cargo.lock", "*.pro.user"],
             "name": "lib"
+        },
+        {
+            "path": "test",
+            "file_exclude_patterns": ["*.qmlc", "*.pro.user"],
+            "folder_exclude_patterns": ["target", "debug", "release"],
+            "name": "test"
         },
         {
             "file_include_patterns": ["*.json", "*.txt", "*.sublime-project", "readme.md", "appveyor.yml", "*.pro", "*.py"],

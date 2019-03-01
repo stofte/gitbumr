@@ -4,5 +4,5 @@ SUBDIRS=lib \
         test \
         app
 
-test.depends = lib app
+test.depends = lib
 app.depends = lib
