@@ -12,13 +12,13 @@ install:
   - cl
 
 build_script:
-  - qmake -config release
+  - mkdir build & cd build
+  - qmake -config release ..
   - nmake
 
 test_script:
   - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
   - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\lib\release
-  - echo %QML2_IMPORT_PATH%
   - nmake check
 
 after_test:
