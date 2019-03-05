@@ -8,5 +8,5 @@ SOURCES += \
 RESOURCES += qml.qrc
 
 # This points into the shadowbuild folder
-QML_IMPORT_PATH="$$OUT_PWD/../$$DESTDIR/lib/release"
-QML_DESIGNER_IMPORT_PATH="$$OUT_PWD/../$$DESTDIR/lib/release"
+QML_IMPORT_PATH="$$OUT_PWD/../lib/release"
+QML_DESIGNER_IMPORT_PATH="$$OUT_PWD/../lib/release"
