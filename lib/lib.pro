@@ -44,6 +44,9 @@ CONFIG(debug, debug|release) {
 CONFIG(release, release|debug) {
     BUILD_MODE=release
     CARGO_FLAG=--release
+    # https://doc.qt.io/qt-5/deployment-plugins.html#loading-and-verifying-plugins-dynamically
+    # force release mode for the plugin
+    CONFIG += release
     win32:CCRS_CFLAGS = cd & set CFLAGS=/MD
 }
 
@@ -95,7 +98,6 @@ QMAKE_EXTRA_COMPILERS += rust_cargo
 #system($$system_quote(copy $$PWD/qmldir $$DESTDIR/qmldir))
 
 copydata.commands = copy $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)
-# message("copy $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)")
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
