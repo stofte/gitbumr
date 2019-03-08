@@ -27,7 +27,7 @@ test_script:
 after_test:
   - move app\bin gitbumr
   - windeployqt --verbose 0 --qmldir %APPVEYOR_BUILD_FOLDER%\app gitbumr\gitbumr.exe
-  - cd gitbumr & 7z a ..\app.zip .
+  - cd gitbumr & 7z a ..\..\app.zip .
 
 artifacts:
   - path: app.zip
