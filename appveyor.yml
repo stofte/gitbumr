@@ -32,6 +32,7 @@ after_test:
   - pushd gitbumr & 7z a ..\..\app.zip . & popd
 
 on_finish:
+  - type xunit-results.xml
   - ps: $wc = New-Object 'System.Net.WebClient'
   - ps: $wc.UploadFile("$env:TEST_UPLOAD_URL", (Resolve-Path .\xunit-results.xml))
 
