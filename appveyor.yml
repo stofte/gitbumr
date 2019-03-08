@@ -9,6 +9,7 @@ install:
   - set RUST_BACKTRACE=full
   - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
   - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
+  - set TEST_UPLOAD_URL=https://ci.appveyor.com/api/testresults/xunit/%APPVEYOR_JOB_ID%
   - rustc --version
   - cargo --version
   - qmake --version
@@ -22,12 +23,17 @@ build_script:
 test_script:
 # todo: rust code doesnt handle detached heads, so do a proper branch checkout
   - git checkout develop
-  - nmake check
+  - test\release\test.exe -o xunit-results.xml,xunitxml
 
+# package
 after_test:
   - move app\bin gitbumr
   - windeployqt --verbose 0 --qmldir %APPVEYOR_BUILD_FOLDER%\app gitbumr\gitbumr.exe
-  - cd gitbumr & 7z a ..\..\app.zip .
+  - pushd gitbumr & 7z a ..\..\app.zip . & popd
+
+on_finish:
+  - ps: $wc = New-Object 'System.Net.WebClient'
+  - ps: $wc.UploadFile("$env:TEST_UPLOAD_URL", (Resolve-Path .\xunit-results.xml))
 
 artifacts:
   - path: app.zip
