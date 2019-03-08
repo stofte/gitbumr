@@ -64,6 +64,7 @@ pub fn is_git_repo(path: &str) -> Result<(), &'static str> {
 pub fn get_head(git_repo: &Repository) -> String {
     let hr = git_repo.head().unwrap();
     let n = hr.name().unwrap();
+    // todo: if the head is detached, n will be the string "HEAD" and not a refs
     let prefix = "refs/head/";
     let n_str = &n[prefix.len() + 1 .. n.len()];
     return n_str.to_string()

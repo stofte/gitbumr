@@ -6,10 +6,13 @@ install:
   - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
   - set PATH=%PATH%;C:\Qt\5.12.1\msvc2017_64\bin
+  - set RUST_BACKTRACE=full
+  - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
+  - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
   - rustc --version
   - cargo --version
   - qmake --version
-  - cl
+  - cl 
 
 build_script:
   - mkdir build & cd build
@@ -17,9 +20,8 @@ build_script:
   - nmake
 
 test_script:
-  - set RUST_BACKTRACE=full
-  - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
-  - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
+# todo: rust code doesnt handle detached heads, so do a proper branch checkout
+  - git checkout develop
   - nmake check
 
 after_test:
