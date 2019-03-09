@@ -6,14 +6,14 @@ install:
   - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
   - set PATH=%PATH%;C:\Qt\5.12.1\msvc2017_64\bin
-  - set RUST_BACKTRACE=full
-  - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
-  - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
-  - set TEST_UPLOAD_URL=https://ci.appveyor.com/api/testresults/xunit/%APPVEYOR_JOB_ID%
   - rustc --version
   - cargo --version
   - qmake --version
   - cl 
+  # unit tests
+  - set RUST_BACKTRACE=full
+  - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
+  - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
 
 build_script:
   - mkdir build & cd build
@@ -23,7 +23,7 @@ build_script:
 test_script:
 # todo: rust code doesnt handle detached heads, so do a proper branch checkout
   - git checkout develop
-  - test\release\test.exe -o xunit-results.xml,xunitxml
+  - test\release\test.exe
 
 # package
 after_test:
@@ -31,14 +31,5 @@ after_test:
   - windeployqt --verbose 0 --qmldir %APPVEYOR_BUILD_FOLDER%\app gitbumr\gitbumr.exe
   - pushd gitbumr & 7z a ..\..\app.zip . & popd
 
-on_finish:
-  - type xunit-results.xml
-  - ps: $wc = New-Object 'System.Net.WebClient'
-  - ps: $wc.UploadFile("$env:TEST_UPLOAD_URL", (Resolve-Path .\xunit-results.xml))
-
 artifacts:
   - path: app.zip
-
-# rustup takes minutes to install
-cache:
-  - '%USERPROFILE%\.rustup -> appveyor.yml'
