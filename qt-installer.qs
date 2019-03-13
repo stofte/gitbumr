@@ -44,7 +44,7 @@ Controller.prototype.ComponentSelectionPageCallback = function() {
     widget.deselectAll();
     // strings for package names comes from (pick version first)
     // https://github.com/qtproject/qtsdk/tree/master/packaging-tools/configurations/pkg_templates
-    widget.selectComponent("qt.qt5.5110.gcc_64");
+    widget.selectComponent("qt.qt5.5121.gcc_64");
     gui.clickButton(buttons.NextButton);
 }
 
