@@ -8,6 +8,9 @@ import "../style"
 
 Pane {
     anchors.fill: parent
+    background: Rectangle {
+        color: "transparent"
+    }
     Component.onCompleted: {
         repositoriesModel.init(DatabaseFileName);
     }
@@ -54,7 +57,7 @@ Pane {
                                 anchors.rightMargin: 2
                                 anchors.bottomMargin: 5
                                 color: "transparent"
-                                TextItem {
+                                TextElement {
                                     text: displayName
                                     verticalAlignment: Text.AlignVCenter
                                     font.bold: current
@@ -84,7 +87,7 @@ Pane {
             delegate: repositoriesDelegate
         }
         Button {
-            TextItem {
+            TextElement {
                 anchors.centerIn: parent
                 text: "Add"
             }

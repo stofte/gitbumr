@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/main.qml</file>
-        <file>qml/base/TextItem.qml</file>
         <file>qml/style/Style.qml</file>
         <file>qml/style/qmldir</file>
         <file>qml/components/RepositoryManager.qml</file>
@@ -9,5 +8,23 @@
         <file>qml/components/BranchView.qml</file>
         <file>qml/components/HistoryView.qml</file>
         <file>qml/components/GitView.qml</file>
+        <file>qml/components/GraphView.qml</file>
+        <file>qml/base/JsonListModel.qml</file>
+        <file>qml/components/DiffsView.qml</file>
+        <file>qml/components/HunkView.qml</file>
+        <file>qml/components/DesktopScrollbar.qml</file>
+        <file>qml/components/DiffStatusIcon.qml</file>
+        <file>qml/base/TypedArrayListModel.qml</file>
+        <file>qml/components/CustomScrollBar.qml</file>
+        <file>qml/base/TextElement.qml</file>
+        <file>qml/base/LibHelper.qml</file>
+        <file>qml/base/qmldir</file>
+        <file>qml/components/VirtualListView.qml</file>
+        <file>qml/components/VirtualListItem.qml</file>
+        <file>qml/components/VirtualListShared.qml</file>
+        <file>qml/base/LayoutHelper.qml</file>
+        <file>qml/base/HunkLineModelCache.qml</file>
+        <file>qml/scripts/utils.js</file>
+        <file>qml/scripts/jsonParser.js</file>
     </qresource>
 </RCC>

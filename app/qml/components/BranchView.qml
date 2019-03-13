@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.9
 import QtQuick.Controls 2.4
 import QtQuick.Layouts 1.3
 import RustCode 1.0
@@ -6,6 +6,9 @@ import "../base"
 import "../style"
 
 Pane {
+    background: Rectangle{
+        color: "transparent"
+    }
     ListView {
         anchors.fill: parent
         Component {
@@ -24,7 +27,7 @@ Pane {
                         anchors.fill: parent
                         anchors.margins: 5
                         color: "transparent"
-                        TextItem {
+                        TextElement {
                             text: name
                             verticalAlignment: Text.AlignVCenter
                             font.bold: checkedout

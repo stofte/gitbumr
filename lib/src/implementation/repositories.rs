@@ -1,4 +1,4 @@
-use std::{path::Path, println};
+use std::{path::Path};
 use rusqlite::{Connection, NO_PARAMS};
 use url::Url;
 use utils::{is_git_repo, pathbuf_filename_to_string, pathbuf_to_string};
@@ -197,13 +197,12 @@ fn get_repositories(repos: &Repositories) -> Vec<RepositoriesItem> {
 fn add_repository(repos: &mut Repositories, path: &str, name: &str) -> Result<i64, &'static str> {
     match &mut repos.conn {
         Some(conn) => {
-            let mut res = Err("err");
-            {
+            let mut res = {
                 // todo use try! macro https://docs.rs/rusqlite/0.14.0/rusqlite/struct.Transaction.html#example
                 let tx = conn.transaction().unwrap();
                 tx.execute("UPDATE repos SET open=0 WHERE 1=1", NO_PARAMS).unwrap();
                 // this works for now
-                res = match tx.execute("INSERT INTO repos(path, name, open) VALUES(?1, ?2, 1)", &[&path, &name]) {
+                match tx.execute("INSERT INTO repos(path, name, open) VALUES(?1, ?2, 1)", &[&path, &name]) {
                     Err(..) => {
                         tx.rollback().unwrap();
                         Err("Repository already added")
@@ -213,7 +212,7 @@ fn add_repository(repos: &mut Repositories, path: &str, name: &str) -> Result<i6
                         Ok(())
                     }
                 }
-            }
+            };
             match res {
                 Err(txt) => Err(txt),
                 Ok(()) => Ok(conn.last_insert_rowid())

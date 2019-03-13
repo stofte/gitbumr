@@ -7,7 +7,7 @@
 #include <QDir>
 #include <QQmlContext>
 #include <QFontDatabase>
-#include "Bindings.h"
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
@@ -21,27 +21,35 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("fusion");
     QGuiApplication app(argc, argv);
     app.setWindowIcon(QIcon(":/ApplicationIcon"));
+    app.setOrganizationName("Svend Ezakie Tofte");
+    app.setOrganizationDomain("svend.dev");
+    app.setApplicationName("Gitbumr");
     QFontDatabase::addApplicationFont(":/res/Roboto-Regular-latin-20.woff2");
     QFontDatabase::addApplicationFont(":/res/Roboto-Regular-latin-24.woff2");
-    qmlRegisterType<Repositories>("RustCode", 1, 0, "Repositories");
-    qmlRegisterType<Git>("RustCode", 1, 0, "Git");
-    qmlRegisterType<Branches>("RustCode", 1, 0, "Branches");
-    qmlRegisterType<Log>("RustCode", 1, 0, "Log");
 
 #if DEBUG
-    QString dataPath = QGuiApplication::applicationDirPath();
+    QDir dataPath = QDir(QGuiApplication::applicationDirPath());
 #else
-    QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    QDir dataPath = QDir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
 #endif
 
-    QString dbFilePath = QDir(dataPath).filePath("gitbumr.sqlite");
+    // seems qFile will not create the file if some part of the path is missing.
+    // mkpath should ensure all parent folders in the path exists.
+    if (!dataPath.exists()) {
+        dataPath.mkpath(dataPath.path());
+    }
+    QString dbFilePath = dataPath.filePath("gitbumr.sqlite");
     QFile dbFile(dbFilePath);
     if (!dbFile.exists()) {
-        dbFile.open(QIODevice::WriteOnly);
-        dbFile.close();
+        if (dbFile.open(QIODevice::WriteOnly)) {
+            dbFile.close();
+        } else {
+            qDebug() << "Db file did not exist, and could not create it";
+        }
     }
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("DatabaseFileName", dbFilePath);
+    engine.rootContext()->setContextProperty("MAX_U32_INT", quint32(4294967295));
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
 #if DEBUG

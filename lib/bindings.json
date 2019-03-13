@@ -1,7 +1,7 @@
 {
-    "cppFile": "app/Bindings.cpp",
+    "cppFile": "Bindings.cpp",
     "rust": {
-        "dir": "lib",
+        "dir": ".",
         "interfaceModule": "interface",
         "implementationModule": "implementation"
     },
@@ -63,6 +63,9 @@
             "type": "Object",
             "properties": {
                 "branches": { "type": "Branches" },
+                "commit": { "type": "Commit" },
+                "diffs": { "type": "Diffs" },
+                "hunks": { "type": "Hunks" },
                 "revwalkFilter": { "type": "QString" }
             },
             "functions": {
@@ -70,26 +73,86 @@
                     "return": "void",
                     "mut": true,
                     "arguments": [{ "name": "path", "type": "QString" }]
+                },
+                "loadCommit": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "oid", "type": "QString" }
+                    ]
+                },
+                "loadDiff": {
+                    "return": "void",
+                    "mut": true,
+                    "arguments": [
+                        { "name": "oid", "type": "QString" },
+                        { "name": "index", "type": "quint64" }
+                    ]
                 }
+            }
+        },
+        "Commit": {
+            "type": "Object",
+            "properties": {
+                "author": { "type": "QString" },
+                "cid": { "type": "QString" },
+                "committer": { "type": "QString" },
+                "message": { "type": "QString" },
+                "time": { "type": "QString" },
+                "tree": { "type": "QString" }
+            }
+        },
+        "Diffs": {
+            "type": "List",
+            "itemProperties": {
+                "filenameNew": { "type": "QString" },
+                "filenameOld": { "type": "QString" },
+                "patch": { "type": "QString" },
+                "status": { "type": "QString" }
+            },
+            "properties": {
+                "commitOid": { "type": "QString" },
+                "maxFilenameLength": { "type": "quint64" }
+            }
+        },
+        "Hunks": {
+            "type": "List",
+            "itemProperties": {
+                "hunk": { "type": "QString" },
+                "hunkMaxLineLength": { "type": "quint64" },
+                "lines": { "type": "quint64" },
+                "linesFrom": { "type": "quint64" },
+                "linesNew": { "type": "QByteArray" },
+                "linesNewCols": { "type": "quint64" },
+                "linesOld": { "type": "QByteArray" },
+                "linesOldCols": { "type": "quint64" },
+                "linesOrigin": { "type": "QByteArray" },
+                "linesTo": { "type": "quint64" }
+            },
+            "properties": {
+                "hunkListings": { "type": "QString" }
             }
         },
         "Branches": {
             "type": "List",
             "itemProperties": {
-                "name": { "type": "QString" },
                 "checkedout": { "type": "bool" },
+                "name": { "type": "QString" },
                 "oid": { "type": "QString" }
             }
         },
         "Log": {
             "type": "List",
             "itemProperties": {
-                "oid": { "type": "QString" },
+                "cid": { "type": "QString" },
+                "timeHumanized": { "type": "QString" },
                 "time": { "type": "QString" },
                 "author": { "type": "QString" },
-                "message": { "type": "QString" }
+                "message": { "type": "QString" },
+                "summary": { "type": "QString" },
+                "graph": { "type": "QByteArray" },
+                "isMerge": { "type": "bool" }
             },
-            
             "functions": {
                 "load": {
                     "return": "void",

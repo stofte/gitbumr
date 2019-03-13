@@ -7,13 +7,30 @@ import "base"
 import "style"
 
 ApplicationWindow {
-    id: root
+    id: appRoot
     visible: true
     width: 1000
-    height: 600
-
+    x: 100
+    y: 25
+    height: 450
+    color: Style.window
     property variant repoMgr;
-
+    // Some basic handling of selected text. this isn't perfect, but at least
+    // prevents the window from having multiple visible text selections as once.
+    // For now, we deselect old text if some new item is touched, since theres
+    // no way to currently restore the focus without destroying the existing
+    // selection. The isTextElement property is defined for TextElement items.
+    property variant prevActiveTextElement;
+    onActiveFocusItemChanged: {
+        if (activeFocusItem !== prevActiveTextElement) {
+            if (prevActiveTextElement) {
+                prevActiveTextElement.deselect();
+            }
+            if (activeFocusItem && activeFocusItem.isTextElement) {
+                prevActiveTextElement = activeFocusItem;
+            }
+        }
+    }
     Repositories {
         id: repositoriesModel
         onActiveRepositoryChanged: {
@@ -25,57 +42,49 @@ ApplicationWindow {
             }
         }
     }
-
     Component.onCompleted: {
         // to actually cause repositoriesModel to be created on windows load,
         // the window using the model must be created on load.
         if (!repoMgr) {
             var component = Qt.createComponent("components/RepositoryManager.qml");
-            repoMgr = component.createObject(root);
+            repoMgr = component.createObject(appRoot);
             if (!repositoriesModel.activeRepository) {
                 noRepoView.visible = true;
             }
         }
     }
-
     Page {
+        background: Rectangle {
+            color: "transparent"
+        }
         anchors.fill: parent
         header: ToolBar {
             topPadding: 5
             rightPadding: 5
             bottomPadding: 5
             leftPadding: 5
+
             RowLayout {
                 anchors.fill: parent
                 ToolButton {
                     font.family: Style.fontName
                     font.pointSize: Style.fontPointSize
-                    Layout.fillHeight: true
-                    Layout.preferredWidth: repoTextLabel.width + 10
-                    Layout.preferredHeight: repoTextLabel.height + 10
                     onClicked: {
                         repoMgr.show();
                     }
-                    TextItem {
-                        anchors.centerIn: parent
-                        id: repoTextLabel
-                        text: qsTr("Repositories")
-                    }
+                    text: "Repositories"
                 }
             }
         }
-
         GitView { id: gitView }
-
         Pane {
             id: noRepoView
             anchors.fill: parent
             visible: false
-            TextItem {
+            TextElement {
                 anchors.centerIn: parent
                 text: "No repository open"
             }
         }
     }
-
 }

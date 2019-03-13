@@ -5,27 +5,32 @@ install:
   - rustup-init -y
   - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
-  - set PATH=%PATH%;C:\Qt\5.11.2\msvc2017_64\bin
+  - set PATH=%PATH%;C:\Qt\5.12.1\msvc2017_64\bin
   - rustc --version
   - cargo --version
   - qmake --version
-  - cl
+  - cl 
+  # unit tests
+  - set RUST_BACKTRACE=full
+  - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
+  - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
 
 build_script:
-  - qmake -config release
+  - mkdir build & cd build
+  - qmake -config release ..
   - nmake
-  - pushd bin & del *.exp,*.lib & popd # files for development only
-  - windeployqt --verbose 0 --qmldir app bin\gitbumr.exe
-  - move bin gitbumr
-  - cd gitbumr & 7z a ..\app.zip .
 
-test: off
+test_script:
+# todo: rust code doesnt handle detached heads, so do a proper branch checkout
+  - git checkout develop
+  - test\release\test.exe
+
+# package
+after_test:
+  - move app\bin gitbumr
+  - xcopy "%QML2_IMPORT_PATH%\RustCode" gitbumr\RustCode /I
+  - windeployqt --verbose 0 --qmldir %APPVEYOR_BUILD_FOLDER%\app gitbumr\gitbumr.exe
+  - pushd gitbumr & 7z a ..\..\app.zip . & popd
 
 artifacts:
   - path: app.zip
-
-# rustup takes minutes to install
-cache:
-  - '%USERPROFILE%\.rustup -> appveyor.yml'
-
-

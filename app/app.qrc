@@ -3,5 +3,7 @@
         <file alias="ApplicationIcon">res/app.ico</file>
         <file>res/Roboto-Regular-latin-20.woff2</file>
         <file>res/Roboto-Regular-latin-24.woff2</file>
+        <file>res/svg/up.svg</file>
+        <file>res/svg/up-active.svg</file>
     </qresource>
 </RCC>

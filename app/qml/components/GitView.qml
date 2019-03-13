@@ -20,6 +20,8 @@ QQC14.SplitView {
     Git {
         id: gitModel
         onRevwalkFilterChanged: {
+            // let the view know that the model is being reloaded
+            historyViewRef.reload = true;
             logModel.filter(revwalkFilter);
         }
     }
@@ -38,9 +40,48 @@ QQC14.SplitView {
         id: branchView
         Layout.fillHeight: true
         Layout.minimumWidth: 100
-        Layout.preferredWidth: 200
+        Layout.preferredWidth: parent.width * 0.5
     }
-    HistoryView {
-        Layout.fillHeight: true
+
+    QQC14.SplitView {
+        orientation: Qt.Horizontal
+        handleDelegate: Rectangle {
+            color: Style.dark
+            width: 1
+        }
+        HistoryView {
+            id: historyViewRef
+            width: parent.width * 0.5
+            clip: true
+            onSelectedChanged: {
+                gitModel.loadCommit(selected);
+                diffsViewRef.commitId = selected;
+            }
+        }
+        QQC14.SplitView {
+            orientation: Qt.Vertical
+            width: parent.width * 0.5
+            handleDelegate: Rectangle {
+                color: Style.dark
+                height: 1
+            }
+            DiffsView {
+                id: diffsViewRef
+                height: 150
+                width: parent.width
+                onDiffChanged: {
+                    hunkViewRef.hunkId = null;
+                    gitModel.loadDiff(commitOid, index);
+                    hunkViewRef.hunkId = ""+commitOid+index;
+                    hunkViewRef.filenameOld = filenameOld;
+                    hunkViewRef.filenameNew = filenameNew;
+                    hunkViewRef.statusText = status;
+                }
+            }
+            HunkView {
+                id: hunkViewRef
+                height: parent.height - diffsViewRef.height
+            }
+        }
     }
 }
