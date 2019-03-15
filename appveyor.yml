@@ -27,6 +27,7 @@ test_script:
 after_test:
   - move app\bin gitbumr
   - xcopy "%QML2_IMPORT_PATH%\RustCode" gitbumr\RustCode /I
+  - del /s /q *.lib *.exp
   - windeployqt --verbose 0 --qmldir %APPVEYOR_BUILD_FOLDER%\app gitbumr\gitbumr.exe
   - pushd gitbumr & 7z a ..\..\app.zip . & popd
 
