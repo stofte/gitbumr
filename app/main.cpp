@@ -8,6 +8,7 @@
 #include <QQmlContext>
 #include <QFontDatabase>
 #include <QDebug>
+#include <QScreen>
 
 int main(int argc, char *argv[])
 {
