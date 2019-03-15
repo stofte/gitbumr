@@ -7,8 +7,8 @@ TestCase {
     name: "GitTests"
 
     Git { id: gitModel }
-
     Log { id: logModel }
+    About { id: proxyTest }
 
     function test_01_can_load_git_repository() {
         verify(!gitModel.revwalkFilter, "revwalkFilter is empty");
@@ -21,5 +21,10 @@ TestCase {
         logModel.load(TST_GIT_PATH);
         logModel.filter(gitModel.revwalkFilter);
         verify(logModel.rowCount() > 0, "Failed to load log rows");
+    }
+
+    function test_03_qml_int_stub_testing() {
+        proxyTest.loadGit(TST_GIT_PATH);
+        verify(proxyTest.getFilter().length > 0, "proxy revwalkFilter has value");
     }
 }

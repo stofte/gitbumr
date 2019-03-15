@@ -28,7 +28,8 @@ HEADERS += \
         Bindings.h \
         rustcode_plugin.h
 
-DISTFILES = qmldir
+DISTFILES = qmldir \
+    plugins.qmltypes
 
 BUILD_MODE=debug
 CCRS_CFLAGS=pwd # noop
@@ -102,3 +103,6 @@ first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
 QMAKE_EXTRA_TARGETS += first copydata
+
+RESOURCES += \
+    qml.qrc
