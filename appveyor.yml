@@ -21,8 +21,6 @@ build_script:
   - nmake
 
 test_script:
-# todo: rust code doesnt handle detached heads, so do a proper branch checkout
-  - git checkout develop
   - test\release\test.exe
 
 # package
