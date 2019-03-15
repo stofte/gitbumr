@@ -61,18 +61,22 @@ pub fn is_git_repo(path: &str) -> Result<(), &'static str> {
     }
 }
 
-pub fn get_head(git_repo: &Repository) -> String {
+pub fn get_head(git_repo: &Repository) -> Result<String, &'static str> {
     let hr = git_repo.head().unwrap();
     let n = hr.name().unwrap();
+    // if the head is detached, there's no branch ref
+    if n == "HEAD" {
+        return Ok(n.to_string())
+    }
     let prefix = "refs/head/";
     let n_str = &n[prefix.len() + 1 .. n.len()];
-    return n_str.to_string()
+    return Ok(n_str.to_string())
 }
 
 pub fn local_branches(repo: &Repository) -> Vec<BranchesItem> {
     let mut vec = Vec::new();
     let bs = repo.branches(Some(BranchType::Local)).unwrap();
-    let head_name = get_head(&repo);
+    let head_name = get_head(&repo).unwrap();
     for b in bs {
         let bb = b.unwrap().0;
         let b_ref = &*bb.get();

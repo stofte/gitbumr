@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<RCC>
+    <qresource prefix="/">
+        <file alias="qml/style/qmldir">qml/style/qmldir</file>
+        <file alias="qml/base/qmldir">qml/base/qmldir</file>
+    </qresource>
+</RCC>
