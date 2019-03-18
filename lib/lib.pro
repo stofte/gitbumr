@@ -33,6 +33,7 @@ DISTFILES = qmldir
 BUILD_MODE=debug
 CCRS_CFLAGS=pwd # noop
 RUST_TARGET=x86_64-pc-windows-msvc
+linux:RUST_TARGET=x86_64-unknown-linux-gnu
 CONFIG(debug, debug|release) {
     DEFINES += DEBUG
     # the cc-rs crate looks at the CFLAGS, but curl breaks
