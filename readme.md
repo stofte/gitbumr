@@ -43,8 +43,15 @@ Other notes
 
 ## Ubuntu requirements
 
-These are still incomplete.
+These instructions have been tested on Ubuntu 18.04.2 LTS and only cover building
+the application.
 
- - For Ubuntu 18 the following packages should be installed
-   `build-essential libgl1-mesa-dev libxrender1 libfontconfig1 qt5-qmake`
- - rust also requires `libssl-dev pkg-config`
+ - Install these packages `libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev`
+ - Download Qt installer: `wget http://mirrors.dotsrc.org/qtproject/archive/qt/5.12/5.12.1/qt-opensource-linux-x64-5.12.1.run`
+ - Mark installer as runnable `chmod +x qt-opensource-linux-x64-5.12.1.run`
+ - Install `./qt-opensource-linux-x64-5.12.1.run`
+ - `curl https://sh.rustup.rs -sSf | sh` and then set the path `source $HOME/.cargo/env`
+
+The Qt toolkit on Linux seems to refer to GCC, but who knows. For myself, 
+QtCreator kept looking for `clang++` which I installed in addition to the 
+previously listed dependencies.
