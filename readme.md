@@ -1,10 +1,21 @@
 # Gitbumr [![Build status](https://ci.appveyor.com/api/projects/status/211dlbqs63w61har?svg=true)](https://ci.appveyor.com/project/stofte/gitbumr)
 
-Qt based Git client using a rust backend.
+Qt based Git client using a rust backend. This is a hobby-project, wip, eg do not commit important things with this client.
+
+# Development
+
+Following are requirements to build the repository locally.
+
+ - [rustc 1.33.0](https://rustup.rs/)
+ - [Qt 5.12.1](https://www.qt.io/offline-installers)
+ - [rust-qt-binding-generator](https://github.com/KDE/rust-qt-binding-generator)
+
+The project has a QtCreator project, which doubles as a project file and a
+makefile for [qmake](http://doc.qt.io/qt-5/qmake-manual.html).
 
 ## Rust+Qt bindings
 
-The project uses [rust-qt-binding-generator](https://github.com/KDE/rust-qt-binding-generator) 
+The project uses `rust-qt-binding-generator`
 to generate both a rust interface and a C++ interface for use by Qt. Since
 generating bindings happens only when the interface changes, it's a manual
 build step.
@@ -16,55 +27,42 @@ regenerate the binding code.
 
 ## Windows requirements
 
-The project has a QtCreator project, which doubles as a project file and a
-makefile for [qmake](http://doc.qt.io/qt-5/qmake-manual.html).
+Visual Studio 2017 and Native SDK. Windows CLI build steps can be found in the
+[appveyor.yml](appveyor.yml) build spec.
 
- - Qt 5.12.1
- - Visual Studio 2017 and Native SDK
+## Ubuntu requirements
 
-Windows CLI build steps can be found in the [appveyor.yml](appveyor.yml) build
-pec.
+Tested on Ubuntu 18.04.2 LTS (from Windows, using putty/[VcXsrv](https://sourceforge.net/projects/vcxsrv/))
 
-QtCreator has some gotchas:
+ - Get rust installed: `curl https://sh.rustup.rs -sSf | sh` and then set the path `source $HOME/.cargo/env` (or restarting the shell should also work)
+ - Qt installer and/or Rust requires these packages installed `libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev libfontconfig build-essential libxrender1 libssl-dev pkg-config libgl1-mesa-dev`
+ - Download Qt installer: `wget http://mirrors.dotsrc.org/qtproject/archive/qt/5.12/5.12.1/qt-opensource-linux-x64-5.12.1.run`
+ - Mark installer as runnable `chmod +x qt-opensource-linux-x64-5.12.1.run`
+ - Install `./qt-opensource-linux-x64-5.12.1.run`
+ - Ensure *Tools > QtCreator* and *Qt > Desktop gcc 64-bit* are selected
 
- - After editing the project file, manually run qmake by right-clicking the top
-   node in Projects pane
- - When adding qml components, Use Tools -> QML/JS -> Reset Code Model, to fix
-   IDE errors
- - [Qt+Win+OpenGL](https://wiki.qt.io/Qt_5_on_Windows_ANGLE_and_OpenGL) is host
-   to a multitude of [weird issues and crashes](https://bugreports.qt.io/browse/QTBUG-46074?jql=text%20~%20%22QT_OPENGL%22%20and%20text%20~%20%22Windows%22)
+## Automated Tests
 
-Other notes
+Running the tests requires environment variables set. 
+
+ - `TST_GIT_PATH` path to a git repository used for tests.
+ - `QML2_IMPORT_PATH` is used by QtCreator when looking for QML plugins. If the 
+repository is checked out at `C:\src\gitbumr` and shadowbuild has been configured inside
+the repository, set the following path:
+`QML2_IMPORT_PATH=C:\src\gitbumr\build-gitbumr-Desktop_Qt_5_12_1_MSVC2017_64bit-Release\lib\release`
+
+## Other notes
 
  - `app/res/gitbumr.rc` should be windows-1252 encoded
  - `itemProperties` in `binding.json` should be sorted alphabetically to avoid
    confusion since `rust_qt_binding_generator` sorts these when generating the
    user role index used to access the values in QML.
 
-## Ubuntu requirements
+QtCreator has some gotchas:
 
-These instructions have been tested on Ubuntu 18.04.2 LTS and only cover building
-the application.
-
- - Qt requires these packages installed `libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev libfontconfig build-essential libxrender1`
- - Get rust installed: `curl https://sh.rustup.rs -sSf | sh` and then set the path `source $HOME/.cargo/env`
- - Other rust/lib depedencies `libssl-dev pkg-config libgl1-mesa-dev`
- - Download Qt installer: `wget http://mirrors.dotsrc.org/qtproject/archive/qt/5.12/5.12.1/qt-opensource-linux-x64-5.12.1.run`
- - Mark installer as runnable `chmod +x qt-opensource-linux-x64-5.12.1.run`
- - Install `./qt-opensource-linux-x64-5.12.1.run`
-
-## Tests
-
-Running the tests requires environment variables set. Firstly, the IDE must know where
-to find the `RustCode` plugin itself, secondly a path to a git repository must be given.
-
- - `TST_GIT_PATH=C:\some\git\repository`
-
-QtCreator uses the following for the IDE itself and running tests, when looking for 
-QML plugins. For ease of use, it's recommended to point the path into the Qt shadowbuild folder. If the 
-repository is checked out at `C:\src\gitbumr`, set the following path:
-
- - `QML2_IMPORT_PATH=C:\src\gitbumr\build-gitbumr-Desktop_Qt_5_12_1_MSVC2017_64bit-Release\lib\release`
-
-After building the lib project, a `RustCode` folder should be created in the above location,
-with a associated `qmldir` file as well.
+ - After editing the project files, manually run qmake by right-clicking the top
+   node in Projects pane
+ - When adding qml components, Use Tools -> QML/JS -> Reset Code Model, to fix
+   IDE errors
+ - [Qt+Win+OpenGL](https://wiki.qt.io/Qt_5_on_Windows_ANGLE_and_OpenGL) is host
+   to a multitude of [weird issues and crashes](https://bugreports.qt.io/browse/QTBUG-46074?jql=text%20~%20%22QT_OPENGL%22%20and%20text%20~%20%22Windows%22)
