@@ -85,6 +85,7 @@ RUST_FILES = \
 #copyshit.commands = "copy $$PWD/qmldir $$DESTDIR/qmldir"
 
 rust_cargo.output = "$$PWD/target/$$RUST_TARGET/$$BUILD_MODE/rust.lib"
+linux:rust_cargo.output = "$$PWD/target/$$RUST_TARGET/$$BUILD_MODE/librust.a"
 rust_cargo.commands = $$CCRS_CFLAGS & \
     cargo build --manifest-path="$$PWD/Cargo.toml" --target=$$RUST_TARGET $$CARGO_FLAG
 rust_cargo.input = RUST_FILES
@@ -98,7 +99,9 @@ QMAKE_EXTRA_COMPILERS += rust_cargo
 # DISTFILES is only used when dist target is run via make. Just do a basic copy instead.
 #system($$system_quote(copy $$PWD/qmldir $$DESTDIR/qmldir))
 
-copydata.commands = copy $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)
+COPY_CMD=copy
+linux:COPY_CMD=cp
+copydata.commands = $$COPY_CMD $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
