@@ -46,13 +46,25 @@ Other notes
 These instructions have been tested on Ubuntu 18.04.2 LTS and only cover building
 the application.
 
- - Qt requires these packages installed `libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev`
+ - Qt requires these packages installed `libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev libfontconfig build-essential libxrender1`
+ - Get rust installed: `curl https://sh.rustup.rs -sSf | sh` and then set the path `source $HOME/.cargo/env`
+ - Other rust/lib depedencies `libssl-dev pkg-config libgl1-mesa-dev`
  - Download Qt installer: `wget http://mirrors.dotsrc.org/qtproject/archive/qt/5.12/5.12.1/qt-opensource-linux-x64-5.12.1.run`
  - Mark installer as runnable `chmod +x qt-opensource-linux-x64-5.12.1.run`
  - Install `./qt-opensource-linux-x64-5.12.1.run`
- - `curl https://sh.rustup.rs -sSf | sh` and then set the path `source $HOME/.cargo/env`
- - Rust backend further requires `libssl-dev pkg-config`
 
-The Qt toolkit on Linux seems to refer to GCC, but who knows. For myself, 
-QtCreator kept looking for `clang++` which I installed in addition to the 
-previously listed dependencies.
+## Tests
+
+Running the tests requires environment variables set. Firstly, the IDE must know where
+to find the `RustCode` plugin itself, secondly a path to a git repository must be given.
+
+ - `TST_GIT_PATH=C:\some\git\repository`
+
+QtCreator uses the following for the IDE itself and running tests, when looking for 
+QML plugins. For ease of use, it's recommended to point the path into the Qt shadowbuild folder. If the 
+repository is checked out at `C:\src\gitbumr`, set the following path:
+
+ - `QML2_IMPORT_PATH=C:\src\gitbumr\build-gitbumr-Desktop_Qt_5_12_1_MSVC2017_64bit-Release\lib\release`
+
+After building the lib project, a `RustCode` folder should be created in the above location,
+with a associated `qmldir` file as well.
