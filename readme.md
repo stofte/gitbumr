@@ -45,8 +45,7 @@ Tested on Ubuntu 18.04.2 LTS from Windows, using PuTTY/[VcXsrv](https://sourcefo
  - Install `./qt-opensource-linux-x64-5.12.1.run`
  - Ensure *Tools > QtCreator* and *Qt > Desktop gcc 64-bit* are selected
 
-Be sure to run VcXsrv in the [right configuration](https://github.com/Microsoft/WSL/issues/2855#issuecomment-358861903).
-If using PuTTY, also remember to check "Enable X11 forwarding" under *Connection > SSH > X11*,
+Be sure to run VcXsrv in the [right configuration](https://github.com/Microsoft/WSL/issues/2855#issuecomment-358861903) and remember to set/export `LIBGL_ALWAYS_INDIRECT=1` in the shell. If using PuTTY, also remember to check "Enable X11 forwarding" under *Connection > SSH > X11*,
 and instead of setting the `DISPLAY` env variable in the shell (which did not work for me),
 enter `:0` for "X display location".
 
