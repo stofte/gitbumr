@@ -32,11 +32,15 @@ Visual Studio 2017 and Native SDK. Windows CLI build steps can be found in the
 
 ## Ubuntu requirements
 
-Tested on Ubuntu 18.04.2 LTS (from Windows, using putty/[VcXsrv](https://sourceforge.net/projects/vcxsrv/))
+Tested on Ubuntu 18.04.2 LTS from Windows, using PuTTY/[VcXsrv](https://sourceforge.net/projects/vcxsrv/)
 
- - Get rust installed: `curl https://sh.rustup.rs -sSf | sh` and then set the path `source $HOME/.cargo/env` (or restarting the shell should also work)
- - Qt installer and/or Rust requires these packages installed `libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev libfontconfig build-essential libxrender1 libssl-dev pkg-config libgl1-mesa-dev`
- - Download Qt installer: `wget http://mirrors.dotsrc.org/qtproject/archive/qt/5.12/5.12.1/qt-opensource-linux-x64-5.12.1.run`
+ - Get rust installed: `curl https://sh.rustup.rs -sSf | sh` and then set the path
+   `source $HOME/.cargo/env` (or restarting the shell should also work)
+ - Qt installer and/or Rust requires these packages installed
+   `libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev libfontconfig`
+   `build-essential libxrender1 libssl-dev pkg-config libgl1-mesa-dev`
+ - Download Qt installer:
+   `wget http://mirrors.dotsrc.org/qtproject/archive/qt/5.12/5.12.1/qt-opensource-linux-x64-5.12.1.run`
  - Mark installer as runnable `chmod +x qt-opensource-linux-x64-5.12.1.run`
  - Install `./qt-opensource-linux-x64-5.12.1.run`
  - Ensure *Tools > QtCreator* and *Qt > Desktop gcc 64-bit* are selected
@@ -46,7 +50,7 @@ Tested on Ubuntu 18.04.2 LTS (from Windows, using putty/[VcXsrv](https://sourcef
 Running the tests requires environment variables set. 
 
  - `TST_GIT_PATH` path to a git repository used for tests.
- - `QML2_IMPORT_PATH` is used by QtCreator when looking for QML plugins. If the 
+ - `QML2_IMPORT_PATH` is used by Qt when looking for QML plugins. If the 
 repository is checked out at `C:\src\gitbumr` and shadowbuild has been configured inside
 the repository, set the following path:
 `QML2_IMPORT_PATH=C:\src\gitbumr\build-gitbumr-Desktop_Qt_5_12_1_MSVC2017_64bit-Release\lib\release`
