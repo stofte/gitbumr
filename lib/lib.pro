@@ -33,6 +33,7 @@ DISTFILES = qmldir
 BUILD_MODE=debug
 CCRS_CFLAGS=pwd # noop
 RUST_TARGET=x86_64-pc-windows-msvc
+linux:RUST_TARGET=x86_64-unknown-linux-gnu
 CONFIG(debug, debug|release) {
     DEFINES += DEBUG
     # the cc-rs crate looks at the CFLAGS, but curl breaks
@@ -59,6 +60,9 @@ win32 {
     LIBS += WS2_32.lib Userenv.lib Advapi32.lib Shell32.lib \
         winhttp.lib Rpcrt4.lib OLE32.LIB Userenv.lib user32.lib
 }
+linux {
+    LIBS += -lssl
+}
 
 # if you are using Shadow build, you need to get the output folder
 CONFIG(release, debug|release): DESTDIR = $$OUT_PWD/release/RustCode
@@ -84,6 +88,7 @@ RUST_FILES = \
 #copyshit.commands = "copy $$PWD/qmldir $$DESTDIR/qmldir"
 
 rust_cargo.output = "$$PWD/target/$$RUST_TARGET/$$BUILD_MODE/rust.lib"
+linux:rust_cargo.output = "$$PWD/target/$$RUST_TARGET/$$BUILD_MODE/librust.a"
 rust_cargo.commands = $$CCRS_CFLAGS & \
     cargo build --manifest-path="$$PWD/Cargo.toml" --target=$$RUST_TARGET $$CARGO_FLAG
 rust_cargo.input = RUST_FILES
@@ -97,7 +102,9 @@ QMAKE_EXTRA_COMPILERS += rust_cargo
 # DISTFILES is only used when dist target is run via make. Just do a basic copy instead.
 #system($$system_quote(copy $$PWD/qmldir $$DESTDIR/qmldir))
 
-copydata.commands = copy $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)
+COPY_CMD=copy
+linux:COPY_CMD=cp
+copydata.commands = $$COPY_CMD $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
