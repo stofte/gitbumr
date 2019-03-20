@@ -60,6 +60,9 @@ win32 {
     LIBS += WS2_32.lib Userenv.lib Advapi32.lib Shell32.lib \
         winhttp.lib Rpcrt4.lib OLE32.LIB Userenv.lib user32.lib
 }
+linux {
+    LIBS += -lssl
+}
 
 # if you are using Shadow build, you need to get the output folder
 CONFIG(release, debug|release): DESTDIR = $$OUT_PWD/release/RustCode
