@@ -27,7 +27,7 @@ regenerate the binding code.
 
 ## Windows requirements
 
-Visual Studio 2017 and Native SDK. Windows CLI build steps can be found in the
+Visual Studio 2017 and Native SDK (check it in the VS installer). Windows CLI build steps can be found in the
 [appveyor.yml](appveyor.yml) build spec.
 
 ## Ubuntu requirements
@@ -44,6 +44,11 @@ Tested on Ubuntu 18.04.2 LTS from Windows, using PuTTY/[VcXsrv](https://sourcefo
  - Mark installer as runnable `chmod +x qt-opensource-linux-x64-5.12.1.run`
  - Install `./qt-opensource-linux-x64-5.12.1.run`
  - Ensure *Tools > QtCreator* and *Qt > Desktop gcc 64-bit* are selected
+
+Be sure to run VcXsrv in the [right configuration](https://github.com/Microsoft/WSL/issues/2855#issuecomment-358861903).
+If using PuTTY, also remember to check "Enable X11 forwarding" under *Connection > SSH > X11*,
+and instead of setting the `DISPLAY` env variable in the shell (which did not work for me),
+enter `:0` for "X display location".
 
 ## Automated Tests
 
