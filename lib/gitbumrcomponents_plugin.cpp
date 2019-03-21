@@ -1,7 +1,7 @@
-#include "rustcode_plugin.h"
+#include "gitbumrcomponents_plugin.h"
 #include <qqml.h>
 
-void RustCodePlugin::registerTypes(const char *uri)
+void GitbumrComponentsPlugin::registerTypes(const char *uri)
 {
     qmlRegisterType<Repositories>(uri, 1, 0, "Repositories");
     qmlRegisterType<Git>(uri, 1, 0, "Git");
