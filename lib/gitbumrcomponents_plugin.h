@@ -1,7 +1,7 @@
 #include <QQmlExtensionPlugin>
 #include "Bindings.h"
 
-class RustCodePlugin : public QQmlExtensionPlugin
+class GitbumrComponentsPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)

@@ -21,14 +21,13 @@ build_script:
   - nmake
 
 test_script:
-# todo: rust code doesnt handle detached heads, so do a proper branch checkout
-  - git checkout develop
   - test\release\test.exe
 
 # package
 after_test:
   - move app\bin gitbumr
-  - xcopy "%QML2_IMPORT_PATH%\RustCode" gitbumr\RustCode /I
+  - xcopy "%QML2_IMPORT_PATH%\GitbumrComponents" gitbumr\GitbumrComponents /I
+  - del /s /q *.lib *.exp
   - windeployqt --verbose 0 --qmldir %APPVEYOR_BUILD_FOLDER%\app gitbumr\gitbumr.exe
   - pushd gitbumr & 7z a ..\..\app.zip . & popd
 
