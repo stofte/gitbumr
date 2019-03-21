@@ -54,15 +54,19 @@ also remember to check "Enable X11 forwarding" under *Connection > SSH > X11*,
 and instead of setting the `DISPLAY` env variable in the shell, enter `:0` in
 the "X display location" field.
 
-## Automated Tests
+## Environment variables
 
-Running the tests requires environment variables set. 
+Running the tests requires environment variables set.
 
  - `TST_GIT_PATH` path to a git repository used for tests.
  - `QML2_IMPORT_PATH` is used by Qt when looking for QML plugins. If the 
 repository is checked out at `C:\src\gitbumr` and shadowbuild has been configured inside
 the repository, set the following path:
 `QML2_IMPORT_PATH=C:\src\gitbumr\build-gitbumr-Desktop_Qt_5_12_1_MSVC2017_64bit-Release\lib\release`
+
+*QtCreator must have QML2_IMPORT_PATH set to run the application,* as the
+plugin cannot be loaded in the IDE environment otherwise. Set env variables
+via *Projects > Build Environment*.
 
 ## Other notes
 
