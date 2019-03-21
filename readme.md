@@ -13,26 +13,25 @@ Following are requirements to build the repository locally.
  - [rust-qt-binding-generator](https://github.com/KDE/rust-qt-binding-generator) 
 
 The project has a QtCreator project, which doubles as a project file and a
-makefile for [qmake](http://doc.qt.io/qt-5/qmake-manual.html). Generated bindings
-are checked into sourcecontrol so the rust-qt binding generator is not required
-for just building.
+makefile for [qmake](http://doc.qt.io/qt-5/qmake-manual.html).
 
 ## Rust+Qt bindings
 
 The project uses `rust-qt-binding-generator`
 to generate both a rust interface and a C++ interface for use by Qt. Since
 generating bindings happens only when the interface changes, it's a manual
-build step.
+build step. Generated bindings are checked into sourcecontrol so the generator
+is not required when just building.
 
-Checking out the project, and build a release executable
-`cargo build --release`, then add the executable to your path. Run
-`rust_qt_binding_generator binding.json` in this project root folder, to
+To use the generator check out the project and build a release executable
+`cargo build --release`, then add the executable to your path for convinience.
+Run `rust_qt_binding_generator binding.json` in the `lib` project folder to
 regenerate the binding code.
 
 ## Windows requirements
 
-Visual Studio 2017 and Native SDK (check it in the VS installer). Windows CLI build steps can be found in the
-[appveyor.yml](appveyor.yml) build spec.
+Visual Studio 2017 and Native SDK (check it in the VS installer). Windows CLI
+build steps can be found in the [appveyor.yml](appveyor.yml) build spec.
 
 ## Ubuntu requirements
 
