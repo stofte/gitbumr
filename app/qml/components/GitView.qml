@@ -2,7 +2,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Controls 1.4 as QQC14
 import QtQuick.Layouts 1.3
-import RustCode 1.0
+import GitbumrComponents 1.0
 import "../style"
 import "../base"
 

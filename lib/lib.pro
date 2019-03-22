@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT += qml quick quickcontrols2
-TARGET = rust
+TARGET = gitcomponents
 TEMPLATE = lib
 CONFIG += c++14 plugin
 
@@ -22,11 +22,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         Bindings.cpp \
-        rustcode_plugin.cpp
+        gitbumrcomponents_plugin.cpp
 
 HEADERS += \
         Bindings.h \
-        rustcode_plugin.h
+        gitbumrcomponents_plugin.h
 
 DISTFILES = qmldir \
     plugins.qmltypes
@@ -52,11 +52,10 @@ CONFIG(release, release|debug) {
     win32:CCRS_CFLAGS = cd & set CFLAGS=/MD
 }
 
-DESTDIR = $$BUILD_MODE/RustCode
+DESTDIR = $$BUILD_MODE/GitbumrComponents
 # Note that this is the rust "blob" itself,
 # so it's not in placed in the DESTDIR folder.
 LIBS += -L"$$PWD/target/$$RUST_TARGET/$$BUILD_MODE" -lrust
-#message("LIBS => $$PWD/target/$$RUST_TARGET/$$BUILD_MODE")
 win32 {
     LIBS += WS2_32.lib Userenv.lib Advapi32.lib Shell32.lib \
         winhttp.lib Rpcrt4.lib OLE32.LIB Userenv.lib user32.lib
@@ -66,8 +65,8 @@ linux {
 }
 
 # if you are using Shadow build, you need to get the output folder
-CONFIG(release, debug|release): DESTDIR = $$OUT_PWD/release/RustCode
-CONFIG(debug, debug|release): DESTDIR = $$OUT_PWD/debug/RustCode
+CONFIG(release, debug|release): DESTDIR = $$OUT_PWD/release/GitbumrComponents
+CONFIG(debug, debug|release): DESTDIR = $$OUT_PWD/debug/GitbumrComponents
 
 #CONFIG(release, debug|release): DESTDIR = release
 #CONFIG(debug, debug|release): DESTDIR = debug
@@ -86,8 +85,6 @@ RUST_FILES = \
     src/implementation/hunks.rs \
     src/implementation/diffs.rs
 
-#copyshit.commands = "copy $$PWD/qmldir $$DESTDIR/qmldir"
-
 rust_cargo.output = "$$PWD/target/$$RUST_TARGET/$$BUILD_MODE/rust.lib"
 linux:rust_cargo.output = "$$PWD/target/$$RUST_TARGET/$$BUILD_MODE/librust.a"
 rust_cargo.commands = $$CCRS_CFLAGS & \
@@ -99,9 +96,6 @@ rust_cargo.input = RUST_FILES
 # allow a clean build.
 # rust_cargo.clean = this_file_is_not_here & cargo clean --manifest-path="$$PWD/lib/Cargo.toml"
 QMAKE_EXTRA_COMPILERS += rust_cargo
-#QMAKE_POST_LINK = copy qmldir $$DESTDIR/qmldir
-# DISTFILES is only used when dist target is run via make. Just do a basic copy instead.
-#system($$system_quote(copy $$PWD/qmldir $$DESTDIR/qmldir))
 
 COPY_CMD=copy
 linux:COPY_CMD=cp

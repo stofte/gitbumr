@@ -1,9 +1,9 @@
-#include "rustcode_plugin.h"
+#include "gitbumrcomponents_plugin.h"
 #include <qqml.h>
 #include <QQuickItem>
 #include <QUrl>
 
-void RustCodePlugin::registerTypes(const char *uri)
+void GitbumrComponentsPlugin::registerTypes(const char *uri)
 {
 	// register basic rust types
     qmlRegisterType<Repositories>(uri, 1, 0, "Repositories");

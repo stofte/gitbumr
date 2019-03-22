@@ -1,6 +1,8 @@
 # Gitbumr [![Build status](https://ci.appveyor.com/api/projects/status/211dlbqs63w61har?svg=true)](https://ci.appveyor.com/project/stofte/gitbumr)
 
-Qt based Git client using a rust backend. This is a hobby-project, wip, eg do not commit important things with this client.
+Qt based Git client using a rust backend. WIP.
+
+![Log view](https://i.imgur.com/NLjuY5R.png "Log view")
 
 # Development
 
@@ -8,7 +10,7 @@ Following are requirements to build the repository locally.
 
  - [rustc 1.33.0](https://rustup.rs/)
  - [Qt 5.12.1](https://www.qt.io/offline-installers)
- - [rust-qt-binding-generator](https://github.com/KDE/rust-qt-binding-generator)
+ - [rust-qt-binding-generator](https://github.com/KDE/rust-qt-binding-generator) 
 
 The project has a QtCreator project, which doubles as a project file and a
 makefile for [qmake](http://doc.qt.io/qt-5/qmake-manual.html).
@@ -18,17 +20,18 @@ makefile for [qmake](http://doc.qt.io/qt-5/qmake-manual.html).
 The project uses `rust-qt-binding-generator`
 to generate both a rust interface and a C++ interface for use by Qt. Since
 generating bindings happens only when the interface changes, it's a manual
-build step.
+build step. Generated bindings are checked into sourcecontrol so the generator
+is not required when just building.
 
-Checking out the project, and build a release executable
-`cargo build --release`, then add the executable to your path. Run
-`rust_qt_binding_generator binding.json` in this project root folder, to
+To use the generator check out the project and build a release executable
+`cargo build --release`, then add the executable to your path for convinience.
+Run `rust_qt_binding_generator binding.json` in the `lib` project folder to
 regenerate the binding code.
 
 ## Windows requirements
 
-Visual Studio 2017 and Native SDK (check it in the VS installer). Windows CLI build steps can be found in the
-[appveyor.yml](appveyor.yml) build spec.
+Visual Studio 2017 and Native SDK (check it in the VS installer). Windows CLI
+build steps can be found in the [appveyor.yml](appveyor.yml) build spec.
 
 ## Ubuntu requirements
 
@@ -45,19 +48,25 @@ Tested on Ubuntu 18.04.2 LTS from Windows, using PuTTY/[VcXsrv](https://sourcefo
  - Install `./qt-opensource-linux-x64-5.12.1.run`
  - Ensure *Tools > QtCreator* and *Qt > Desktop gcc 64-bit* are selected
 
-Be sure to run VcXsrv in the [right configuration](https://github.com/Microsoft/WSL/issues/2855#issuecomment-358861903) and remember to set/export `LIBGL_ALWAYS_INDIRECT=1` in the shell. If using PuTTY, also remember to check "Enable X11 forwarding" under *Connection > SSH > X11*,
-and instead of setting the `DISPLAY` env variable in the shell (which did not work for me),
-enter `:0` for "X display location".
+Be sure to run VcXsrv in the [right configuration](https://github.com/Microsoft/WSL/issues/2855#issuecomment-358861903)
+and remember to set/export `LIBGL_ALWAYS_INDIRECT=1` in the shell. If using PuTTY,
+also remember to check "Enable X11 forwarding" under *Connection > SSH > X11*,
+and instead of setting the `DISPLAY` env variable in the shell, enter `:0` in
+the "X display location" field.
 
-## Automated Tests
+## Environment variables
 
-Running the tests requires environment variables set. 
+Running the tests requires environment variables set.
 
  - `TST_GIT_PATH` path to a git repository used for tests.
  - `QML2_IMPORT_PATH` is used by Qt when looking for QML plugins. If the 
 repository is checked out at `C:\src\gitbumr` and shadowbuild has been configured inside
 the repository, set the following path:
 `QML2_IMPORT_PATH=C:\src\gitbumr\build-gitbumr-Desktop_Qt_5_12_1_MSVC2017_64bit-Release\lib\release`
+
+*QtCreator must have QML2_IMPORT_PATH set to run the application,* as the
+plugin cannot be loaded in the IDE environment otherwise. Set env variables
+via *Projects > Build Environment*.
 
 ## Other notes
 
