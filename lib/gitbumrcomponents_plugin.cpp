@@ -13,6 +13,6 @@ void GitbumrComponentsPlugin::registerTypes(const char *uri)
     qmlRegisterType<Commit>(uri, 1, 0, "Commit");
     qmlRegisterType<Diffs>(uri, 1, 0, "Diffs");
     // register qml types
-    const QString prefix = "qrc:/qml/";
-    qmlRegisterType(QUrl(prefix + "About.qml"), uri, 1, 0, "About");
+    const QString prefix = "qrc:/components/";
+    qmlRegisterType(QUrl(prefix + "GitApp.qml"), uri, 1, 0, "GitApp");
 }

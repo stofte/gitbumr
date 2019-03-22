@@ -8,7 +8,7 @@ TestCase {
 
     Git { id: gitModel }
     Log { id: logModel }
-    About { id: proxyTest }
+    GitApp { id: proxyTest }
 
     function test_01_can_load_git_repository() {
         verify(!gitModel.revwalkFilter, "revwalkFilter is empty");

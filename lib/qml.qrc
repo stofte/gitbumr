@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
-        <file>qml/About.qml</file>
+    <qresource prefix="/components">
+        <file alias="GitApp.qml">qml/components/gitapp/GitApp.qml</file>
     </qresource>
 </RCC>
