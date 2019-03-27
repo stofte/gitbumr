@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>tst_GitTests.qml</file>
+        <file>tests/tst_GitTests.qml</file>
+        <file>tests/tst_ScrollTests.qml</file>
     </qresource>
 </RCC>

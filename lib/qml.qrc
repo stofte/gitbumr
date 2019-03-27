@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/components">
         <file alias="GitApp.qml">qml/components/gitapp/GitApp.qml</file>
+        <file alias="ScrollBar2.qml">qml/components/scrollbar/ScrollBar2.qml</file>
     </qresource>
 </RCC>

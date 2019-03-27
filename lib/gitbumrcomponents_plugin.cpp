@@ -15,4 +15,5 @@ void GitbumrComponentsPlugin::registerTypes(const char *uri)
     // register qml types
     const QString prefix = "qrc:/components/";
     qmlRegisterType(QUrl(prefix + "GitApp.qml"), uri, 1, 0, "GitApp");
+    qmlRegisterType(QUrl(prefix + "ScrollBar2.qml"), uri, 1, 0, "ScrollBar2");
 }
