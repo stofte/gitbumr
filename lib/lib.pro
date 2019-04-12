@@ -60,7 +60,7 @@ win32 {
         winhttp.lib Rpcrt4.lib OLE32.LIB Userenv.lib user32.lib
 }
 linux {
-    LIBS += -lssl
+    LIBS += -lssl -lcurl
 }
 
 # if you are using Shadow build, you need to get the output folder
@@ -96,6 +96,7 @@ rust_cargo.input = RUST_FILES
 # rust_cargo.clean = this_file_is_not_here & cargo clean --manifest-path="$$PWD/lib/Cargo.toml"
 QMAKE_EXTRA_COMPILERS += rust_cargo
 
+# copies qmldir file to the component folder
 COPY_CMD=copy
 linux:COPY_CMD=cp
 copydata.commands = $$COPY_CMD $$shell_path($$PWD/qmldir) $$shell_path($$DESTDIR/qmldir)

@@ -40,7 +40,7 @@ win32 {
     # embed manifest
     QMAKE_POST_LINK = pushd $$MT_DESTDIR & \
         mt  -nologo -manifest $$PWD/res/gitbumr.exe.manifest \
-            -outputresource:gitbumr.exe;1
+            -outputresource:gitbumr.exe;1 & popd
 }
 
 QML_IMPORT_PATH="$$OUT_PWD/../lib/release"

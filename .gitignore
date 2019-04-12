@@ -4,4 +4,5 @@ lib/target
 *.qmlc
 *.sublime-workspace
 # qt shadow build folders
-build*
+build/**
+build-gitbumr-*

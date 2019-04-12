@@ -1,35 +1,65 @@
-image: Visual Studio 2017
+image:
+  - Ubuntu
+  - Visual Studio 2017
+
+environment:
+  RUST_BACKTRACE: full
+  QT_LINUX_BIN: qt-unified-linux-x64-online.run
+  QT_LINUX_URL: https://download.qt.io/official_releases/online_installers/qt-unified-linux-x64-online.run
+  QT_DEPLOY_BIN: linuxdeployqt-6-x86_64.AppImage
+  QT_DEPLOY_URL: https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
+  UBUNTU_PKGS: libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev libfontconfig build-essential libxrender1 libssl-dev pkg-config libgl1-mesa-dev libegl1-mesa-lts-xenial libcurl3-dev
 
 install:
-  - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
-  - rustup-init -y
-  - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
-  - set PATH=%PATH%;C:\Qt\5.12.1\msvc2017_64\bin
+  - cmd: set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
+  - cmd: set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
+  - sh: source ./build_fns.sh
+  - cmd: appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
+  - cmd: rustup-init.exe -y
+  - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+  - cmd: set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+  - cmd: set PATH=%PATH%;C:\Qt\5.12.1\msvc2017_64\bin
+  - sh: curl https://sh.rustup.rs -sSf | sh -s -- -y
+  - sh: sudo apt-get update -qq -y
+  - sh: sudo apt-get install -qq -y $UBUNTU_PKGS
+  - sh: if [ ! -f "$QT_LINUX_BIN" ]; then wget -nv $QT_LINUX_URL; fi
+  - sh: if [ ! -f "$QT_DEPLOY_BIN" ]; then wget -nv $QT_DEPLOY_URL; fi
+  - sh: chmod +x $QT_LINUX_BIN
+  - sh: chmod a+x $QT_DEPLOY_BIN
+  - sh: ./$QT_LINUX_BIN --script qt-installer.qs -platform minimal # install qt
+  - sh: gitbumr_build_env # sets up rust and qt paths
   - rustc --version
-  - cargo --version
   - qmake --version
-  - cl 
-  # unit tests
-  - set RUST_BACKTRACE=full
-  - set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
-  - set QML2_IMPORT_PATH=%APPVEYOR_BUILD_FOLDER%\build\lib\release
+  - cmd: cl
+  - sh: gcc --version
 
 build_script:
-  - mkdir build & cd build
+  - mkdir build
+  - cd build
   - qmake -config release ..
-  - nmake
+  - cmd: nmake
+  - sh: make
+  - cd ..
 
 test_script:
-  - test\release\test.exe
+  - cmd: build\test\release\test.exe
+  - sh: ./build/test/test -platform minimal
 
-# package
 after_test:
-  - move app\bin gitbumr
-  - del /s /q *.lib *.exp
-  - xcopy "%QML2_IMPORT_PATH%\GitbumrComponents" gitbumr\GitbumrComponents /I
-  - windeployqt --verbose 0 --qmldir %APPVEYOR_BUILD_FOLDER%\app gitbumr\gitbumr.exe
-  - pushd gitbumr & 7z a ..\..\app.zip . & popd
+  - cmd: cd build
+  - cmd: move app\bin gitbumr
+  - cmd: xcopy "%QML2_IMPORT_PATH%\GitbumrComponents" gitbumr\GitbumrComponents /I
+  - cmd: del /s /q *.lib *.exp
+  - cmd: windeployqt --verbose 0 --qmldir %APPVEYOR_BUILD_FOLDER%\app gitbumr\gitbumr.exe
+  - cmd: pushd gitbumr & 7z a "..\..\Gitbumr-%APPVEYOR_BUILD_VERSION%.zip" . & popd
+  - cmd: cd ..
+  - cmd: dir
+  - sh: gitbumr_pack_step
 
 artifacts:
-  - path: app.zip
+  - path: Gitbumr-%APPVEYOR_BUILD_VERSION%.zip
+  - path: Gitbumr-$APPVEYOR_BUILD_VERSION-x86_64.AppImage
+
+cache:
+  - $QT_DEPLOY_BIN -> appveyor.yml
+  - $QT_LINUX_BIN -> appveyor.yml

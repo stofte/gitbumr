@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Gitbumr
+Comment=Git client
+Exec=gitbumr
+Icon=gitbumr
+Categories=Development;
