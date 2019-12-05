@@ -1,6 +1,6 @@
 image:
   - Ubuntu
-  - Visual Studio 2017
+  - Visual Studio 2019
 
 environment:
   RUST_BACKTRACE: full
@@ -18,7 +18,7 @@ install:
   - cmd: rustup-init.exe -y
   - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
   - cmd: set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-  - cmd: set PATH=%PATH%;C:\Qt\5.12.1\msvc2017_64\bin
+  - cmd: set PATH=%PATH%;C:\Qt\5.12.5\msvc2017_64\bin
   - sh: curl https://sh.rustup.rs -sSf | sh -s -- -y
   - sh: sudo apt-get update -qq -y
   - sh: sudo apt-get install -qq -y $UBUNTU_PKGS
