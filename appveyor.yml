@@ -8,7 +8,7 @@ environment:
   QT_LINUX_URL: https://download.qt.io/official_releases/online_installers/qt-unified-linux-x64-online.run
   QT_DEPLOY_BIN: linuxdeployqt-6-x86_64.AppImage
   QT_DEPLOY_URL: https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
-  UBUNTU_PKGS: libgl1-mesa-glx libx11-xcb1 libxkbcommon-x11-dev libfontconfig build-essential libxrender1 libssl-dev pkg-config libgl1-mesa-dev libegl1-mesa-dev-lts-xenial libcurl3-dev
+  UBUNTU_PKGS: libgl1-mesa-dev libxkbcommon-x11-dev x11-apps build-essential pkg-config libssl-dev libcurl3-dev
 
 install:
   - cmd: set TST_GIT_PATH=%APPVEYOR_BUILD_FOLDER%
